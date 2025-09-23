@@ -4,7 +4,7 @@
   // 適用する VS Code の拡張機能・設定を定義します。
   // ユーザーストーリーマッピングの Step 1（プロジェクトの clone → VS Code で開く →
   // 追加設定なしで Claude Code / Codex CLI / Gemini CLI を即利用）を満たす設計です。
-  "name": "Claym AI 開発環境",
+  "name": "Claym AI Dev Environment",
 
   // 同梱の Dockerfile を用いてコンテナをビルドします。
   // Dockerfile は Ubuntu 24.10 / Node.js / Python のほか、
@@ -17,7 +17,7 @@
   "forwardPorts": [24282, 9323],
   "portsAttributes": {
     "24282": {
-      "label": "Serena MCP ダッシュボード",
+      "label": "Serena MCP dashboard",
       "onAutoForward": "silent"
     },
     "9323": {
