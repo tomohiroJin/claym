@@ -51,21 +51,18 @@
   // コンテナ開始時の VS Code 設定。
   // 端末の既定シェルを zsh にし、JS/TS と Python の保存時フォーマットを有効化、
   // Python の既定インタープリタ設定などを行います。詳しくは README を参照。
-  "settings": {
-    "terminal.integrated.defaultProfile.linux": "zsh",
-    "editor.formatOnSave": true,
-    "python.formatting.provider": "black",
-    "python.linting.pylintEnabled": true,
-    "python.analysis.typeCheckingMode": "basic",
-    "git.autofetch": true
-  },
-
   // VS Code に自動導入する拡張機能セット。
   // AI 連携（Claude / ChatGPT）、Git ワークフロー強化、Markdown 編集支援、
   // Python 開発支援、Playwright テスト支援など。必要に応じて増減してください。
   "customizations": {
     "vscode": {
       "extensions": [
+        // AI アシスト
+        "anthropic.claude-code", // エディタ内チャットなど Claude Code 連携
+        "openai.chatgpt", // クイック質問用の ChatGPT 連携
+        // Git / GitHub
+        "eamodio.gitlens", // Git 機能の強化
+        "github.vscode-pull-request-github", // VS Code 内で PR / Issues を操作
         // AI アシスト
         "anthropic.claude-code", // エディタ内チャットなど Claude Code 連携
         "openai.chatgpt", // クイック質問用の ChatGPT 連携
@@ -86,12 +83,15 @@
         "ms-playwright.playwright",
         // コラボレーション
         "ms-vsliveshare.vsliveshare"
-      ]
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "editor.formatOnSave": true,
+        "python.formatting.provider": "black",
+        "python.linting.pylintEnabled": true,
+        "python.analysis.typeCheckingMode": "basic",
+        "git.autofetch": true
+      }
     }
-  },
-
-  // コンテナ作成後に任意の初期化を行うシェルスクリプトを実行します。
-  // このスクリプトは AI CLI へ MCP サーバを登録するため、毎回手動追加する必要がありません。
-  // スクリプト自体は Dockerfile でイメージ内にコピーされています。
-  "postCreateCommand": "bash /usr/local/bin/post-create-setup.sh"
+  }
 }
