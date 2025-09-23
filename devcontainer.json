@@ -1,0 +1,107 @@
+{
+  // Claym development container configuration for VS Code
+  // This file defines how the development environment is built and what
+  // VS Code extensions and settings are applied when the container
+  // launches.  It is designed to satisfy the first step of the user
+  // story mapping: cloning the project, opening it in VS Code, and
+  // immediately using Claude Code, Codex CLI and Gemini CLI without
+  // manual setup.
+  "name": "Claym AI Dev Environment",
+
+  // Build the container using the accompanying Dockerfile.  The
+  // Dockerfile installs Ubuntu 24.10, Node.js and Python, along
+  // with the AI CLI tools and MCP servers.
+  "dockerFile": "Dockerfile",
+
+  // Forward ports so you can access local services.  Port 24282 is
+  // used by Serena’s web dashboard and port 9323 is used by the
+  // Playwright MCP to serve a snapshot UI.  These ports are silent
+  // unless you explicitly open them.
+  "forwardPorts": [24282, 9323],
+  "portsAttributes": {
+    "24282": {
+      "label": "Serena MCP dashboard",
+      "onAutoForward": "silent"
+    },
+    "9323": {
+      "label": "Playwright MCP UI",
+      "onAutoForward": "openBrowser"
+    }
+  },
+
+  // Run arguments ensure the container has permissions to launch
+  // Playwright browsers and other tools that need extra privileges.
+  "runArgs": [
+    // Playwright requires elevated privileges when launching a headless browser.  
+    // We add SYS_ADMIN to allow Chromium to create namespaces and disable the 
+    // seccomp profile so that sandboxing works correctly.  Enlarging the 
+    // shared memory segment prevents "out of shared memory" errors when the
+    // browser loads large pages or uses multiple tabs.
+    "--cap-add=SYS_ADMIN",
+    "--security-opt=seccomp=unconfined",
+    "--shm-size=1g"
+  ],
+
+  // Map environment variables from your host into the container.  In
+  // practice you would export these variables in your host shell or
+  // populate them via VS Code’s Secrets storage.  They allow the
+  // AI CLI tools to authenticate without interactive login.
+  "remoteEnv": {
+    "ANTHROPIC_API_KEY": "${localEnv:ANTHROPIC_API_KEY}",
+    "OPENAI_API_KEY": "${localEnv:OPENAI_API_KEY}",
+    "GEMINI_API_KEY": "${localEnv:GEMINI_API_KEY}",
+    "GITHUB_TOKEN": "${localEnv:GITHUB_TOKEN}",
+    "FIRECRAWL_API_KEY": "${localEnv:FIRECRAWL_API_KEY}"
+  },
+
+  // Set up VS Code when the container starts.  These settings
+  // configure the terminal to use zsh, enable formatting on save for
+  // JavaScript/TypeScript and Python, and give Python a default
+  // interpreter.  See README for more details.
+  "settings": {
+    "terminal.integrated.defaultProfile.linux": "zsh",
+    "editor.formatOnSave": true,
+    "python.formatting.provider": "black",
+    "python.linting.pylintEnabled": true,
+    "python.analysis.typeCheckingMode": "basic",
+    "git.autofetch": true
+  },
+
+  // Automatically install a set of extensions into VS Code.  These
+  // extensions provide deep integration with the AI CLIs (Claude and
+  // ChatGPT), improve Git workflows, enhance Markdown editing and
+  // Python support, and add Playwright test tooling.  Feel free to
+  // add or remove extensions to suit your own workflow.
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        // AI assistance
+        "anthropic.claude-code",          // Claude Code integration for inline chat
+        "openai.chatgpt",                 // ChatGPT integration for quick queries
+        // Git & GitHub
+        "eamodio.gitlens",                // Enhanced Git features
+        "github.vscode-pull-request-github", // Manage PRs and issues in VS Code
+        // Markdown editing and preview
+        "yzhang.markdown-all-in-one",
+        "shd101wyy.markdown-preview-enhanced",
+        // Code quality and formatting
+        "streetsidesoftware.code-spell-checker", // Spell checking for multiple languages
+        "dbaeumer.vscode-eslint",         // JavaScript/TypeScript linting
+        "esbenp.prettier-vscode",         // Code formatter for JS/TS
+        "ms-python.python",               // Python language support
+        "ms-python.pylint",               // Python linting
+        "ms-python.black-formatter",      // Python formatting
+        // Playwright testing (optional but useful if you use Playwright MCP)
+        "ms-playwright.playwright",
+        // Collaboration
+        "ms-vsliveshare.vsliveshare"
+      ]
+    }
+  },
+
+  // After the container is created, run a shell script to perform
+  // optional one-time setup.  This script registers the MCP servers
+  // with the AI CLI tools, so you don’t have to add them manually
+  // each time.  The script is copied into the image by the Dockerfile.
+  "postCreateCommand": "bash /usr/local/bin/post-create-setup.sh"
+}
