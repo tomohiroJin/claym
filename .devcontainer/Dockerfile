@@ -8,7 +8,7 @@
 # Oh My Zsh も含めています。使い方の詳細は README または devcontainer.json を参照してください。
 ##############################
 
-FROM ubuntu:24.10
+FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 # 既定の作業ディレクトリとして /workspace を使用します。
@@ -24,7 +24,6 @@ WORKDIR /workspace
 # 動かすために多数のシステムライブラリを必要とします。
 # fzf / zoxide / ripgrep / bat / fd-find / eza / tree / tldr などの
 # モダンな CLI ツール群と、快適な端末表示のためのフォントも導入します。
-
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     build-essential \
@@ -65,7 +64,7 @@ RUN apt-get update \
     libgbm1 \
     libpango-1.0-0 \
     libpangocairo-1.0-0 \
-    libasound2 \
+    libasound2t64 \
     libx11-xcb1 \
     libxss1 \
     libxkbcommon0 \
