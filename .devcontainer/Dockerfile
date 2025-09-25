@@ -125,23 +125,32 @@ RUN npx playwright install chromium --with-deps
 # ----------------------------------------------------------------------------
 # Python 環境と MCP サーバ
 #
+# pipx の導入（システム共通パスにバイナリを配置）
 # Python 製 MCP サーバを pip で導入します。--no-cache-dir でイメージサイズを削減します。
 # Serena は uv で実行するため、uv は後段で別途導入します。
 # ImageSorcery MCP のインストール後は post-install コマンドを実行して、
 # 物体検出や OCR に用いる機械学習モデルを取得します。
 # これらのモデルはイメージ内にキャッシュされ、初回利用時のダウンロードを防ぎます。
+ENV PIPX_HOME=/opt/pipx \
+    PIPX_BIN_DIR=/usr/local/bin
+RUN apt-get update \
+    && (apt-get install -y --no-install-recommends pipx \
+    || apt-get install -y --no-install-recommends python3-pipx) \
+    && pipx ensurepath
 
-RUN pip install --no-cache-dir \
-    markitdown-mcp \
-    imagesorcery-mcp \
-    mcp-github \
+# ----------------------------------------------------------------------------
+# Python 製 MCP サーバ（pipx で安全に導入）
+RUN pipx install markitdown-mcp \
+    && pipx install imagesorcery-mcp \
+    && pipx install mcp-github \
     && imagesorcery-mcp --post-install
 
 # uv のインストール（Serena MCP が利用）。
 # インストーラは静的バイナリを ~/.local/bin に配置します。
 # ここでは /usr/local/bin に明示的に配置して、PATH を変更せず全ユーザーから利用可能にします。
 # uv の使い方の詳細は Serena のドキュメントを参照してください。
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh -s -- --install-dir /usr/local/bin
+RUN curl -LsSf https://astral.sh/uv/install.sh | \
+    env UV_INSTALL_DIR=/usr/local/bin UV_NO_MODIFY_PATH=1 sh
 
 # Serena を /opt にクローンします。依存関係は実行時に uv に任せます。
 # uv run を使うことで、Serena の Python 依存はシステム Python から分離された

@@ -1,45 +1,25 @@
 {
   // Claym 開発コンテナ構成（VS Code 用）
-  // このファイルは開発環境のビルド方法と、コンテナ起動時に
-  // 適用する VS Code の拡張機能・設定を定義します。
-  // ユーザーストーリーマッピングの Step 1（プロジェクトの clone → VS Code で開く →
-  // 追加設定なしで Claude Code / Codex CLI / Gemini CLI を即利用）を満たす設計です。
   "name": "Claym AI Dev Environment",
 
-  // 同梱の Dockerfile を用いてコンテナをビルドします。
-  // Dockerfile は Ubuntu 24.10 / Node.js / Python のほか、
-  // AI 向け CLI ツールと MCP サーバの導入まで行います。
+  // コンテナビルド
   "dockerFile": "Dockerfile",
 
-  // ローカルサービスへアクセスできるようポートを転送します。
-  // 24282 は Serena の Web ダッシュボード、9323 は Playwright MCP の
-  // スナップショット UI 用です。明示的に開かない限りサイレントです。
+  // ポート転送
   "forwardPorts": [24282, 9323],
   "portsAttributes": {
-    "24282": {
-      "label": "Serena MCP dashboard",
-      "onAutoForward": "silent"
-    },
-    "9323": {
-      "label": "Playwright MCP UI",
-      "onAutoForward": "openBrowser"
-    }
+    "24282": { "label": "Serena MCP dashboard", "onAutoForward": "silent" },
+    "9323": { "label": "Playwright MCP UI", "onAutoForward": "openBrowser" }
   },
 
-  // 追加権限が必要なツール（ヘッドレスブラウザ等）を起動できるように実行引数を指定します。
+  // 追加権限（Playwright 等用）
   "runArgs": [
-    // Playwright はヘッドレスブラウザの起動時に昇格権限を要します。
-    // Chromium の名前空間作成等のため SYS_ADMIN を付与し、
-    // サンドボックス動作を安定させるため seccomp を無効化します。
-    // 大きなページや複数タブで発生する共有メモリエラーを避けるため /dev/shm を拡張します。
     "--cap-add=SYS_ADMIN",
     "--security-opt=seccomp=unconfined",
     "--shm-size=1g"
   ],
 
-  // ホストの環境変数をコンテナへ受け渡します。
-  // これらはホスト側シェルで export するか、VS Code の Secrets から供給してください。
-  // 対話的ログインなしで AI CLI を認証できます。
+  // 認証トークン（あれば利用、無ければそのまま起動）
   "remoteEnv": {
     "ANTHROPIC_API_KEY": "${localEnv:ANTHROPIC_API_KEY}",
     "OPENAI_API_KEY": "${localEnv:OPENAI_API_KEY}",
@@ -48,40 +28,29 @@
     "FIRECRAWL_API_KEY": "${localEnv:FIRECRAWL_API_KEY}"
   },
 
-  // コンテナ開始時の VS Code 設定。
-  // 端末の既定シェルを zsh にし、JS/TS と Python の保存時フォーマットを有効化、
-  // Python の既定インタープリタ設定などを行います。詳しくは README を参照。
-  // VS Code に自動導入する拡張機能セット。
-  // AI 連携（Claude / ChatGPT）、Git ワークフロー強化、Markdown 編集支援、
-  // Python 開発支援、Playwright テスト支援など。必要に応じて増減してください。
-  "customizations": {
+  // VS Code の拡張と設定（重複を整理済み）
+  "customizations": {a
     "vscode": {
       "extensions": [
         // AI アシスト
-        "anthropic.claude-code", // エディタ内チャットなど Claude Code 連携
-        "openai.chatgpt", // クイック質問用の ChatGPT 連携
+        "anthropic.claude-code",
+        "openai.chatgpt",
         // Git / GitHub
-        "eamodio.gitlens", // Git 機能の強化
-        "github.vscode-pull-request-github", // VS Code 内で PR / Issues を操作
-        // AI アシスト
-        "anthropic.claude-code", // エディタ内チャットなど Claude Code 連携
-        "openai.chatgpt", // クイック質問用の ChatGPT 連携
-        // Git / GitHub
-        "eamodio.gitlens", // Git 機能の強化
-        "github.vscode-pull-request-github", // VS Code 内で PR / Issues を操作
-        // Markdown 編集・プレビュー
+        "eamodio.gitlens",
+        "github.vscode-pull-request-github",
+        // Markdown
         "yzhang.markdown-all-in-one",
         "shd101wyy.markdown-preview-enhanced",
         // 品質・整形
-        "streetsidesoftware.code-spell-checker", // 多言語スペルチェック
-        "dbaeumer.vscode-eslint", // JS/TS の Lint
-        "esbenp.prettier-vscode", // JS/TS のフォーマッタ
-        "ms-python.python", // Python 言語サポート
-        "ms-python.pylint", // Python Lint
-        "ms-python.black-formatter", // Python フォーマッタ
-        // Playwright テスト（Playwright MCP を使うなら便利）
+        "streetsidesoftware.code-spell-checker",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-python.python",
+        "ms-python.pylint",
+        "ms-python.black-formatter",
+        // Playwright
         "ms-playwright.playwright",
-        // コラボレーション
+        // コラボ
         "ms-vsliveshare.vsliveshare"
       ],
       "settings": {
@@ -93,5 +62,20 @@
         "git.autofetch": true
       }
     }
-  }
+  },
+
+  // コンテナ内ユーザー
+  "remoteUser": "vscode",
+
+  // Git の設定（あれば使う／無ければスルー）※readonly 推奨
+  "mounts": [
+    "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached,readonly",
+    "source=${localEnv:HOME}/.git-credentials,target=/home/vscode/.git-credentials,type=bind,consistency=cached,readonly"
+  ],
+
+  // 初回：safe.directory 登録 → MCP 自動登録
+  "postCreateCommand": "sudo git config --system --add safe.directory ${containerWorkspaceFolder} && bash /usr/local/bin/post-create-setup.sh",
+
+  // 起動毎：ワークスペースの所有者を vscode に（保存権限対策）
+  "postStartCommand": "sudo chown -R vscode:vscode ${containerWorkspaceFolder} || true"
 }
