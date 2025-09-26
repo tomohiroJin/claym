@@ -29,7 +29,7 @@
   },
 
   // VS Code の拡張と設定（重複を整理済み）
-  "customizations": {a
+  "customizations": {
     "vscode": {
       "extensions": [
         // AI アシスト
