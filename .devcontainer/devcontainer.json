@@ -6,12 +6,17 @@
   "dockerFile": "Dockerfile",
 
   // ポート転送
-  "forwardPorts": [24282, 9323],
+  "forwardPorts": [24282, 9323, 1455],
   "portsAttributes": {
     "24282": { "label": "Serena MCP dashboard", "onAutoForward": "silent" },
-    "9323": { "label": "Playwright MCP UI", "onAutoForward": "openBrowser" }
+    "9323": { "label": "Playwright MCP UI", "onAutoForward": "openBrowser" },
+    "1455": { "label": "codex-oauth", "protocol": "http" }
   },
-
+  "otherPortsAttributes": {
+    // ポートを検出したら自動で転送（通知だけでもOK）
+    "onAutoForward": "notify",      // "openBrowser" にすると自動でブラウザを開く
+    "protocol": "http"
+  },
   // 追加権限（Playwright 等用）
   "runArgs": [
     "--cap-add=SYS_ADMIN",
@@ -67,11 +72,8 @@
   // コンテナ内ユーザー
   "remoteUser": "vscode",
 
-  // Git の設定（あれば使う／無ければスルー）※readonly 推奨
-  "mounts": [
-    "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached,readonly",
-    "source=${localEnv:HOME}/.git-credentials,target=/home/vscode/.git-credentials,type=bind,consistency=cached,readonly"
-  ],
+  // Git 等のホスト依存設定は devcontainer.local.json で指定
+  "mounts": [],
 
   // 初回：safe.directory 登録 → MCP 自動登録
   "postCreateCommand": "sudo git config --system --add safe.directory ${containerWorkspaceFolder} && bash /usr/local/bin/post-create-setup.sh",

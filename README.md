@@ -55,6 +55,29 @@
 **反映手順（例）**
 ホストのシェルで `export ANTHROPIC_API_KEY=...` 等 → VS Code を **Reopen in Container**。
 
+### 4.1 devcontainer.local.json での Git 認証設定
+
+共有の `devcontainer.json` では `mounts` を空にし、ホスト固有の Git 設定や資格情報は `devcontainer.local.json` で上書きします。このファイルは `.gitignore` 済みなのでマシンごとに自由に調整してください。
+
+`devcontainer.local.json` のサンプル（SSH エージェント + HTTPS 資格情報）:
+
+```json
+{
+  "mounts": [
+    "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,readonly",
+    "source=${localEnv:HOME}/.git-credentials,target=/home/vscode/.git-credentials,type=bind,readonly",
+    "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind",
+    "source=${localEnv:SSH_AUTH_SOCK},target=/ssh-agent,type=bind"
+  ],
+  "remoteEnv": {
+    "SSH_AUTH_SOCK": "/ssh-agent"
+  },
+  "postStartCommand": "sudo chown -R vscode:vscode ${containerWorkspaceFolder} || true; chmod 600 /home/vscode/.ssh/id_* 2>/dev/null || true"
+}
+```
+
+> `remoteEnv` や `postStartCommand` はベース設定にマージされますが、配列（`mounts` など）は完全に置き換わります。追加で `runArgs` を編集する場合はベースの値もコピーしてから追記してください。設定後は VS Code で **Dev Containers: Rebuild Container** を実行すると反映されます。
+
 ---
 
 ## 5. 動作確認コマンド
