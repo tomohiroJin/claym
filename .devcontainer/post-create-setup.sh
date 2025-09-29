@@ -24,6 +24,17 @@ ROOT="${WORKSPACE_FOLDER:-$PWD}"
 info "Workspace: ${ROOT}"
 
 # ===== 事前チェック =====
+# imagesorcery-mcp のログディレクトリ権限を設定
+info "imagesorcery-mcp のログディレクトリ権限を設定中..."
+if [[ -d "/opt/pipx/venvs/imagesorcery-mcp/lib/python3.12/site-packages/imagesorcery_mcp/logs" ]]; then
+  sudo chown -R vscode:vscode /opt/pipx/venvs/imagesorcery-mcp/lib/python3.12/site-packages/imagesorcery_mcp/logs >/dev/null 2>&1 || warn "ログディレクトリの権限設定に失敗しました"
+  sudo chmod 755 /opt/pipx/venvs/imagesorcery-mcp/lib/python3.12/site-packages/imagesorcery_mcp/logs >/dev/null 2>&1 || warn "ログディレクトリの権限設定に失敗しました"
+else
+  sudo mkdir -p /opt/pipx/venvs/imagesorcery-mcp/lib/python3.12/site-packages/imagesorcery_mcp/logs >/dev/null 2>&1 || warn "ログディレクトリの作成に失敗しました"
+  sudo chown -R vscode:vscode /opt/pipx/venvs/imagesorcery-mcp/lib/python3.12/site-packages/imagesorcery_mcp/logs >/dev/null 2>&1 || warn "ログディレクトリの権限設定に失敗しました"
+  sudo chmod 755 /opt/pipx/venvs/imagesorcery-mcp/lib/python3.12/site-packages/imagesorcery_mcp/logs >/dev/null 2>&1 || warn "ログディレクトリの権限設定に失敗しました"
+fi
+
 if ! have claude; then
   warn "Claude Code CLI が見つかりません。MCP 登録はスキップします。"
   exit 0

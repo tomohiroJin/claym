@@ -78,6 +78,6 @@
   // 初回：safe.directory 登録 → MCP 自動登録
   "postCreateCommand": "sudo git config --system --add safe.directory ${containerWorkspaceFolder} && bash /usr/local/bin/post-create-setup.sh",
 
-  // 起動毎：ワークスペースの所有者を vscode に（保存権限対策）
-  "postStartCommand": "sudo chown -R vscode:vscode ${containerWorkspaceFolder} || true"
+  // 起動毎：ワークスペースの所有者を vscode に（保存権限対策）+ imagesorcery-mcp ログディレクトリ権限設定
+  "postStartCommand": "sudo chown -R vscode:vscode ${containerWorkspaceFolder} || true; sudo mkdir -p /opt/pipx/venvs/imagesorcery-mcp/lib/python3.12/site-packages/imagesorcery_mcp/logs && sudo chown -R vscode:vscode /opt/pipx/venvs/imagesorcery-mcp/lib/python3.12/site-packages/imagesorcery_mcp/logs && sudo chmod 755 /opt/pipx/venvs/imagesorcery-mcp/lib/python3.12/site-packages/imagesorcery_mcp/logs || true"
 }
