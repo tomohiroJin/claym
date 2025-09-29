@@ -1,6 +1,6 @@
 # Claym 開発コンテナ README（エージェント向け）
 
-このリポジトリは **Ubuntu 24.10** をベースに、次の目的で構成された VS Code Dev Container を提供します。
+このリポジトリは **Ubuntu 24.04 LTS** をベースに、次の目的で構成された VS Code Dev Container を提供します。
 
 * **Step 1**（本リポジトリの範囲）
   Claude Code / Codex CLI / Gemini CLI をプリインストールし、**起動→認証→チャット開始** まで即実行。
@@ -14,13 +14,19 @@
 ## 1. 主要ファイル
 
 * `Dockerfile`
-  Ubuntu 24.10 + Node.js 20 + Python、AI CLI（Claude / Codex / Gemini）と MCP 群（Playwright / Filesystem / MarkItDown / ImageSorcery / GitHub / Firecrawl）を導入。開発用 CLI（zsh / fzf / zoxide / ripgrep / bat / fd / eza / tldr）も含みます。
+  Ubuntu 24.04 LTS + Node.js 20 + Python、AI CLI（Claude / Codex / Gemini）と MCP 群（Playwright / Filesystem / MarkItDown / ImageSorcery / GitHub / Firecrawl / Serena）を導入。開発用 CLI（zsh / fzf / zoxide / ripgrep / bat / fd / eza / tldr）も含みます。
 * `devcontainer.json`
-  VS Code 用の Dev Container 設定。ポート転送、追加権限（Playwright 用）、拡張機能の自動導入、環境変数の受け渡し、**postCreateCommand** を定義。
+  VS Code 用の Dev Container 設定。ポート転送、追加権限（Playwright 用）、拡張機能の自動導入、環境変数の受け渡し、**postCreateCommand** と **postStartCommand** を定義。serena MCP の自動起動にも対応。
 * `post-create-setup.sh`
   コンテナ作成後に実行。**Claude Code** に各 MCP を**冪等に登録**します（存在する場合のみ、API キーがある場合のみ等）。
-
-> 既存の補助スクリプトがある場合（例: `start-serena.sh` など）は、必要時に組み込み可能です。
+* `start-serena.sh`
+  serena MCP サーバーを起動するためのヘルパースクリプト。postStartCommand から自動実行されます。
+* `.claude/`
+  Claude Code の設定ファイルディレクトリ。MCP サーバーの設定と許可された実行コマンドを管理。
+* `.serena/`
+  serena MCP サーバーの設定ディレクトリ。プロジェクト設定とログファイルを含む。
+* `.gitignore`
+  開発環境で生成される一時ファイル、ログ、設定ファイルを除外。Claude Code の local 設定も含む。
 
 ---
 
@@ -58,6 +64,10 @@
 ### 4.1 devcontainer.local.json での Git 認証設定
 
 共有の `devcontainer.json` では `mounts` を空にし、ホスト固有の Git 設定や資格情報は `devcontainer.local.json` で上書きします。このファイルは `.gitignore` 済みなのでマシンごとに自由に調整してください。
+
+### 4.2 Claude Code 設定ファイル
+
+`.claude/settings.local.json` は個別環境用の Claude Code 設定ファイルで、セキュリティ上の理由から `.gitignore` で除外されています。このファイルには MCP サーバーの許可設定や実行コマンドの権限設定が含まれます。
 
 `devcontainer.local.json` のサンプル（SSH エージェント + HTTPS 資格情報）:
 
@@ -183,7 +193,23 @@ claude mcp remove <name> # 解除（必要時）
 
 ---
 
-## 10. 連絡事項
+## 10. ファイル管理とgitignore設定
+
+プロジェクトには包括的な `.gitignore` ファイルが設定されており、以下のファイル・ディレクトリが自動的に除外されます：
+
+* **Claude Code 設定**: `.claude/settings.local.json`（個人設定）
+* **開発言語関連**: Node.js、Python の依存関係・ビルドファイル・仮想環境
+* **IDE/エディタ**: VSCode、IntelliJ IDEA、vim/emacs の設定・一時ファイル
+* **OS 自動生成**: macOS、Windows、Linux の各種システムファイル
+* **ログファイル**: 各種 `*.log` ファイル、serena MCP ログディレクトリ
+* **MCP サーバーデータ**: `.serena/data/`、`.serena/cache/` 等
+* **環境変数・設定**: 各種 `.env` ファイル、データベースファイル
+
+これにより、個人設定や実行時生成ファイルが誤ってコミットされることを防ぎます。
+
+---
+
+## 11. 連絡事項
 
 * 重要な変更（キーや権限など）がある場合は **Docker 再ビルド** または **Reopen in Container** を実施してください。
-* 既知の制約: Ubuntu 24.10 での各パッケージは更新により挙動が変わることがあります。安定運用にはバージョン固定をご検討ください。
+* 既知の制約: Ubuntu 24.04 LTS での各パッケージは更新により挙動が変わることがあります。安定運用にはバージョン固定をご検討ください。
