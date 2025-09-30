@@ -189,7 +189,7 @@ claude mcp remove <name> # 解除（必要時）
 
 * **Step 2**: CLI/ライブラリの追加（`ffmpeg` / `imagemagick` / `git-lfs` の高度利用等）。
 * **Step 3**: MCP の拡充・設定の最適化（自動承認ポリシー、参照パス制限、外部アクセス制御）。
-* **他クライアント対応**: Codex / Gemini 側の MCP 登録仕様が安定したら、自動登録を `post-create-setup.sh` に追加。
+* **他クライアント対応**: Gemini CLI が利用可能になりました。今後は Gemini および Codex への MCP 自動登録対応を進める予定です。
 
 ---
 
