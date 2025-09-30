@@ -1,0 +1,13 @@
+{
+  "general": {
+    "preferredEditor": "vscode"
+  },
+  "security": {
+    "auth": {
+      "selectedType": "oauth-personal"
+    }
+  },
+  "ui": {
+    "theme": "Default"
+  }
+}
