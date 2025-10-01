@@ -9,5 +9,43 @@
   },
   "ui": {
     "theme": "Default"
+  },
+  "mcpServers": {
+    "serena": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "/opt/serena",
+        "serena",
+        "start-mcp-server",
+        "--context",
+        "ide-assistant",
+        "--project",
+        "/workspaces/claym"
+      ]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest"
+      ]
+    },
+    "markitdown": {
+      "command": "markitdown-mcp",
+      "args": []
+    },
+    "imagesorcery": {
+      "command": "imagesorcery-mcp",
+      "args": []
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/workspaces/claym"
+      ]
+    }
   }
 }

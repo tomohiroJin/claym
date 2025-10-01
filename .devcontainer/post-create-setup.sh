@@ -49,7 +49,14 @@ else
   warn "Codex CLI が見つかりません。Codex 向け MCP 登録はスキップします。"
 fi
 
-if ! $HAVE_CLAUDE && ! $HAVE_CODEX; then
+HAVE_GEMINI=false
+if have gemini; then
+  HAVE_GEMINI=true
+else
+  warn "Gemini CLI が見つかりません。Gemini 向け MCP 登録はスキップします。"
+fi
+
+if ! $HAVE_CLAUDE && ! $HAVE_CODEX && ! $HAVE_GEMINI; then
   warn "MCP 登録対象の CLI が存在しないため処理を終了します。"
   exit 0
 fi
@@ -108,6 +115,17 @@ add_codex_mcp () {
   fi
 }
 
+add_codex_mcp_sse () {
+  # 使い方: add_codex_mcp_sse <表示名> <sse_url>
+  local name="$1" url="$2"
+  info "Codex: MCP '${name}' (SSE) を登録します..."
+  if codex mcp add "$name" "$url" >/dev/null 2>&1; then
+    info "Codex: '${name}' 登録完了"
+  else
+    warn "Codex: '${name}' の登録でエラー（既に登録済みの可能性）"
+  fi
+}
+
 add_codex_mcp_with_env () {
   # 使い方: add_codex_mcp_with_env <表示名> VAR=VALUE <cmd> [args...]
   local name="$1" env_kv="$2"; shift 2
@@ -116,6 +134,30 @@ add_codex_mcp_with_env () {
     info "Codex: '${name}' 登録完了"
   else
     warn "Codex: '${name}' の登録でエラー（既に登録済みの可能性）"
+  fi
+}
+
+# ===== Gemini 用 登録ヘルパ =====
+add_gemini_mcp () {
+  # 使い方: add_gemini_mcp <表示名> <command> [args...]
+  local name="$1"; shift
+  info "Gemini: MCP '${name}' を登録します..."
+  if gemini mcp add "$name" "$@" >/dev/null 2>&1; then
+    info "Gemini: '${name}' 登録完了"
+  else
+    warn "Gemini: '${name}' の登録でエラー（既に登録済みの可能性）"
+  fi
+}
+
+add_gemini_mcp_with_env () {
+  # 使い方: add_gemini_mcp_with_env <表示名> VAR=VALUE <cmd> [args...]
+  local name="$1" env_kv="$2"; shift 2
+  info "Gemini: MCP '${name}' を環境変数付きで登録します (${env_kv})..."
+  # Gemini CLIの環境変数設定コマンドの仕様に合わせて調整が必要な場合があります
+  if env "$env_kv" gemini mcp add "$name" "$@" >/dev/null 2>&1; then
+    info "Gemini: '${name}' 登録完了"
+  else
+    warn "Gemini: '${name}' の登録でエラー（既に登録済みの可能性）"
   fi
 }
 
@@ -130,6 +172,10 @@ if $HAVE_UV; then
     add_codex_mcp "serena" uv run --directory /opt/serena serena \
       start-mcp-server --context ide-assistant --project "$ROOT"
   fi
+  if $HAVE_GEMINI; then
+    add_gemini_mcp "serena" uv run --directory /opt/serena serena \
+      start-mcp-server --context ide-assistant --project "$ROOT"
+  fi
 else
   warn "uv が見つからないため Serena MCP 登録をスキップしました。必要なら 'uv' を導入してください。"
 fi
@@ -141,6 +187,9 @@ if $HAVE_NPX; then
   fi
   if $HAVE_CODEX; then
     add_codex_mcp "playwright" npx @playwright/mcp@latest
+  fi
+  if $HAVE_GEMINI; then
+    add_gemini_mcp "playwright" npx @playwright/mcp@latest
   fi
 else
   warn "npx が見つからないため Playwright MCP 登録をスキップしました。Node/npm の導入を確認してください。"
@@ -154,6 +203,9 @@ if have markitdown-mcp; then
   if $HAVE_CODEX; then
     add_codex_mcp "markitdown" markitdown-mcp
   fi
+  if $HAVE_GEMINI; then
+    add_gemini_mcp "markitdown" markitdown-mcp
+  fi
 else
   warn "markitdown-mcp が見つかりません。'pip install markitdown-mcp' 後に再実行してください。"
 fi
@@ -165,6 +217,9 @@ if have imagesorcery-mcp; then
   fi
   if $HAVE_CODEX; then
     add_codex_mcp "imagesorcery" imagesorcery-mcp
+  fi
+  if $HAVE_GEMINI; then
+    add_gemini_mcp "imagesorcery" imagesorcery-mcp
   fi
 else
   warn "imagesorcery-mcp が見つかりません。'pip install imagesorcery-mcp && imagesorcery-mcp --post-install' 後に再実行してください。"
@@ -178,6 +233,9 @@ if $HAVE_NPX; then
   if $HAVE_CODEX; then
     add_codex_mcp "filesystem" npx -y @modelcontextprotocol/server-filesystem "$ROOT"
   fi
+  if $HAVE_GEMINI; then
+    add_gemini_mcp "filesystem" npx -y @modelcontextprotocol/server-filesystem "$ROOT"
+  fi
 else
   warn "npx が見つからないため Filesystem MCP 登録をスキップしました。"
 fi
@@ -187,7 +245,10 @@ if $HAVE_CLAUDE; then
   add_claude_mcp_sse "context7" "https://mcp.context7.com/sse"
 fi
 if $HAVE_CODEX; then
-  warn "Codex: context7 (SSE) は現行 CLI で未サポートのためスキップしました。"
+  add_codex_mcp_sse "context7" "https://mcp.context7.com/sse"
+fi
+if $HAVE_GEMINI; then
+  warn "Gemini: context7 (SSE) は現行 CLI で未サポートの可能性があります。スキップします。"
 fi
 
 # 7) GitHub MCP（PAT がある場合のみ）
@@ -198,6 +259,9 @@ if [[ -n "${GITHUB_TOKEN:-}" ]]; then
     fi
     if $HAVE_CODEX; then
       add_codex_mcp_with_env "github" "GITHUB_TOKEN=${GITHUB_TOKEN}" uvx mcp-github
+    fi
+    if $HAVE_GEMINI; then
+      add_gemini_mcp_with_env "github" "GITHUB_TOKEN=${GITHUB_TOKEN}" uvx mcp-github
     fi
   else
     warn "uv が見つからないため GitHub MCP 登録をスキップしました。"
@@ -215,6 +279,9 @@ if [[ -n "${FIRECRAWL_API_KEY:-}" ]]; then
     if $HAVE_CODEX; then
       add_codex_mcp_with_env "firecrawl" "FIRECRAWL_API_KEY=${FIRECRAWL_API_KEY}" npx -y firecrawl-mcp
     fi
+    if $HAVE_GEMINI; then
+      add_gemini_mcp_with_env "firecrawl" "FIRECRAWL_API_KEY=${FIRECRAWL_API_KEY}" npx -y firecrawl-mcp
+    fi
   else
     warn "npx が見つからないため Firecrawl MCP 登録をスキップしました。"
   fi
@@ -226,10 +293,10 @@ fi
 cat <<'EOF'
 
 ────────────────────────────────────────
-MCP 登録の初期設定が完了しました（Claude Code / Codex 用）。
+MCP 登録の初期設定が完了しました（Claude Code / Codex / Gemini 用）。
 
 ■ 使い始める
-  - 端末で `claude chat` または `codex` を実行し、各 MCP が利用できるか確認してください。
+  - 端末で `claude chat`、`codex`、または `gemini` を実行し、各 MCP が利用できるか確認してください。
   - API キーが未設定の場合は、ホスト側の環境変数に設定し
     Dev Container を再接続すると、remoteEnv 経由で渡されます。
 
@@ -242,9 +309,10 @@ MCP 登録の初期設定が完了しました（Claude Code / Codex 用）。
 ■ 解除・再登録
   - Claude: `claude mcp remove <name>`
   - Codex:  `codex mcp remove <name>`
+  - Gemini:  `gemini mcp remove <name>`
   - 再登録: 本スクリプトを再実行（重複は自動的に無視）
 
-※ Gemini CLI については、公式に MCP 管理コマンドが提供され次第、このスクリプトに追記してください。
+※ 各 CLI で MCP の動作に問題がある場合は、コンテナを再起動してから本スクリプトを再実行してください。
 ────────────────────────────────────────
 EOF
 
