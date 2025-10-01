@@ -2,294 +2,147 @@
 # post-create-setup.sh
 # コンテナ作成直後に実行される初期化スクリプト。
 # 目的：
-#  - Claude Code CLI に各種 MCP サーバを登録（冪等）
+#  - Claude Code CLI / Codex CLI / Gemini CLI に各種 MCP サーバを登録（冪等）
 #  - （任意）API キーがある場合のみ GitHub MCP / Firecrawl MCP を登録
 #  - ワークスペースルートを基準に Filesystem / Serena を安全に稼働
 #
 # 注意：
 #  - Codex CLI / Gemini CLI への MCP 自動登録は、現状の CLI 仕様が変わりやすいため
-#    デフォルトでは実施しません（必要に応じてこのスクリプトに追記してください）。
+#    必要に応じて本スクリプトを調整してください。
 #  - 何度実行しても致命的なエラーにならないよう best-effort で進みます。
 
 set -Eeuo pipefail
 
-# ===== ユーティリティ =====
-info () { printf '\033[1;34m[INFO]\033[0m %s\n' "$*"; }
-warn () { printf '\033[1;33m[WARN]\033[0m %s\n' "$*"; }
-err  () { printf '\033[1;31m[ERR ]\033[0m %s\n' "$*"; }
-have () { command -v "$1" >/dev/null 2>&1; }
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# 共通ユーティリティを読込
+# shellcheck source=./scripts/helpers/logging.sh
+source "${SCRIPT_DIR}/scripts/helpers/logging.sh"
+# shellcheck source=./scripts/helpers/mcp_cli.sh
+source "${SCRIPT_DIR}/scripts/helpers/mcp_cli.sh"
 
-# VS Code Dev Containers では作業ディレクトリはワークスペース直下のはず。
 ROOT="${WORKSPACE_FOLDER:-$PWD}"
 info "Workspace: ${ROOT}"
 
-# ===== 事前チェック =====
-# imagesorcery-mcp のログディレクトリ権限を設定
-info "imagesorcery-mcp のログディレクトリ権限を設定中..."
-if [[ -d "/opt/pipx/venvs/imagesorcery-mcp/lib/python3.12/site-packages/imagesorcery_mcp/logs" ]]; then
-  sudo chown -R vscode:vscode /opt/pipx/venvs/imagesorcery-mcp/lib/python3.12/site-packages/imagesorcery_mcp/logs >/dev/null 2>&1 || warn "ログディレクトリの権限設定に失敗しました"
-  sudo chmod 755 /opt/pipx/venvs/imagesorcery-mcp/lib/python3.12/site-packages/imagesorcery_mcp/logs >/dev/null 2>&1 || warn "ログディレクトリの権限設定に失敗しました"
-else
-  sudo mkdir -p /opt/pipx/venvs/imagesorcery-mcp/lib/python3.12/site-packages/imagesorcery_mcp/logs >/dev/null 2>&1 || warn "ログディレクトリの作成に失敗しました"
-  sudo chown -R vscode:vscode /opt/pipx/venvs/imagesorcery-mcp/lib/python3.12/site-packages/imagesorcery_mcp/logs >/dev/null 2>&1 || warn "ログディレクトリの権限設定に失敗しました"
-  sudo chmod 755 /opt/pipx/venvs/imagesorcery-mcp/lib/python3.12/site-packages/imagesorcery_mcp/logs >/dev/null 2>&1 || warn "ログディレクトリの権限設定に失敗しました"
-fi
+ensure_imagesorcery_log_dir() {
+  local log_dir="/opt/pipx/venvs/imagesorcery-mcp/lib/python3.12/site-packages/imagesorcery_mcp/logs"
+  info "imagesorcery-mcp のログディレクトリ権限を設定中..."
+  if ! sudo mkdir -p "$log_dir" >/dev/null 2>&1; then
+    warn "ログディレクトリの作成に失敗しました"
+    return
+  fi
+  if ! sudo chown -R vscode:vscode "$log_dir" >/dev/null 2>&1; then
+    warn "ログディレクトリの権限設定に失敗しました"
+  fi
+  if ! sudo chmod 755 "$log_dir" >/dev/null 2>&1; then
+    warn "ログディレクトリの権限設定に失敗しました"
+  fi
+}
 
-HAVE_CLAUDE=false
-if have claude; then
-  HAVE_CLAUDE=true
-else
-  warn "Claude Code CLI が見つかりません。Claude 向け MCP 登録はスキップします。"
-fi
+ensure_imagesorcery_log_dir
 
-HAVE_CODEX=false
-if have codex; then
-  HAVE_CODEX=true
-else
-  warn "Codex CLI が見つかりません。Codex 向け MCP 登録はスキップします。"
-fi
-
-HAVE_GEMINI=false
-if have gemini; then
-  HAVE_GEMINI=true
-else
-  warn "Gemini CLI が見つかりません。Gemini 向け MCP 登録はスキップします。"
-fi
-
-if ! $HAVE_CLAUDE && ! $HAVE_CODEX && ! $HAVE_GEMINI; then
-  warn "MCP 登録対象の CLI が存在しないため処理を終了します。"
+if ! mcp_detect_available_clis; then
   exit 0
 fi
 
-# uv / npx / python などの存在チェック（見つからない場合は後続で必要部分のみ警告）
-HAVE_UV=false; have uv && HAVE_UV=true
-HAVE_NPX=false; have npx && HAVE_NPX=true
-HAVE_PY=false; have python3 && HAVE_PY=true
-
-# ===== Claude 用 登録ヘルパ =====
-# 既存登録の検出は CLI 仕様変更の影響を受けやすいので、
-# ここでは「追加を試み、重複エラーは無視」という方針で冪等化します。
-add_claude_mcp () {
-  # 使い方: add_claude_mcp <表示名> -- <command> [args...]
-  local name="$1"; shift
-  info "Claude: MCP '${name}' を登録します..."
-  if claude mcp add "$name" "$@" >/dev/null 2>&1; then
-    info "Claude: '${name}' 登録完了"
-  else
-    # 既に登録済みや軽微なエラーは無視（ログのみ）
-    warn "Claude: '${name}' の登録でエラー（既に登録済みの可能性）"
-  fi
-}
-
-add_claude_mcp_sse () {
-  # 使い方: add_claude_mcp_sse <表示名> <sse_url>
-  local name="$1" url="$2"
-  info "Claude: MCP '${name}' (SSE) を登録します..."
-  if claude mcp add --transport sse "$name" "$url" >/dev/null 2>&1; then
-    info "Claude: '${name}' 登録完了"
-  else
-    warn "Claude: '${name}' の登録でエラー（既に登録済みの可能性）"
-  fi
-}
-
-add_claude_mcp_with_env () {
-  # 使い方: add_claude_mcp_with_env <表示名> VAR=VALUE -- <cmd> [args...]
-  local name="$1" env_kv="$2"; shift 2
-  info "Claude: MCP '${name}' を環境変数付きで登録します (${env_kv})..."
-  if claude mcp add "$name" -e "$env_kv" -- "$@" >/dev/null 2>&1; then
-    info "Claude: '${name}' 登録完了"
-  else
-    warn "Claude: '${name}' の登録でエラー（既に登録済みの可能性）"
-  fi
-}
-
-# ===== Codex 用 登録ヘルパ =====
-add_codex_mcp () {
-  # 使い方: add_codex_mcp <表示名> <command> [args...]
-  local name="$1"; shift
-  info "Codex: MCP '${name}' を登録します..."
-  if codex mcp add "$name" "$@" >/dev/null 2>&1; then
-    info "Codex: '${name}' 登録完了"
-  else
-    warn "Codex: '${name}' の登録でエラー（既に登録済みの可能性）"
-  fi
-}
-
-add_codex_mcp_sse () {
-  # 使い方: add_codex_mcp_sse <表示名> <sse_url>
-  local name="$1" url="$2"
-  info "Codex: MCP '${name}' (SSE) を登録します..."
-  if codex mcp add "$name" "$url" >/dev/null 2>&1; then
-    info "Codex: '${name}' 登録完了"
-  else
-    warn "Codex: '${name}' の登録でエラー（既に登録済みの可能性）"
-  fi
-}
-
-add_codex_mcp_with_env () {
-  # 使い方: add_codex_mcp_with_env <表示名> VAR=VALUE <cmd> [args...]
-  local name="$1" env_kv="$2"; shift 2
-  info "Codex: MCP '${name}' を環境変数付きで登録します (${env_kv})..."
-  if codex mcp add "$name" --env "$env_kv" "$@" >/dev/null 2>&1; then
-    info "Codex: '${name}' 登録完了"
-  else
-    warn "Codex: '${name}' の登録でエラー（既に登録済みの可能性）"
-  fi
-}
-
-# ===== Gemini 用 登録ヘルパ =====
-add_gemini_mcp () {
-  # 使い方: add_gemini_mcp <表示名> <command> [args...]
-  local name="$1"; shift
-  info "Gemini: MCP '${name}' を登録します..."
-  if gemini mcp add "$name" "$@" >/dev/null 2>&1; then
-    info "Gemini: '${name}' 登録完了"
-  else
-    warn "Gemini: '${name}' の登録でエラー（既に登録済みの可能性）"
-  fi
-}
-
-add_gemini_mcp_with_env () {
-  # 使い方: add_gemini_mcp_with_env <表示名> VAR=VALUE <cmd> [args...]
-  local name="$1" env_kv="$2"; shift 2
-  info "Gemini: MCP '${name}' を環境変数付きで登録します (${env_kv})..."
-  # Gemini CLIの環境変数設定コマンドの仕様に合わせて調整が必要な場合があります
-  if env "$env_kv" gemini mcp add "$name" "$@" >/dev/null 2>&1; then
-    info "Gemini: '${name}' 登録完了"
-  else
-    warn "Gemini: '${name}' の登録でエラー（既に登録済みの可能性）"
-  fi
-}
-
-# ===== 登録実行 =====
-# 1) Serena MCP（uv 実行・プロジェクト限定）
-if $HAVE_UV; then
-  if $HAVE_CLAUDE; then
-    add_claude_mcp "serena" -- uv run --directory /opt/serena serena \
-      start-mcp-server --context ide-assistant --project "$ROOT"
-  fi
-  if $HAVE_CODEX; then
-    add_codex_mcp "serena" uv run --directory /opt/serena serena \
-      start-mcp-server --context ide-assistant --project "$ROOT"
-  fi
-  if $HAVE_GEMINI; then
-    add_gemini_mcp "serena" uv run --directory /opt/serena serena \
-      start-mcp-server --context ide-assistant --project "$ROOT"
-  fi
+HAVE_UV=false
+if have uv; then
+  HAVE_UV=true
 else
-  warn "uv が見つからないため Serena MCP 登録をスキップしました。必要なら 'uv' を導入してください。"
+  warn "uv が見つかりません。必要な MCP の登録をスキップする場合があります。"
 fi
 
-# 2) Playwright MCP（ブラウザ自動取得済みを前提）
-if $HAVE_NPX; then
-  if $HAVE_CLAUDE; then
-    add_claude_mcp "playwright" -- npx @playwright/mcp@latest
-  fi
-  if $HAVE_CODEX; then
-    add_codex_mcp "playwright" npx @playwright/mcp@latest
-  fi
-  if $HAVE_GEMINI; then
-    add_gemini_mcp "playwright" npx @playwright/mcp@latest
-  fi
+HAVE_NPX=false
+if have npx; then
+  HAVE_NPX=true
 else
-  warn "npx が見つからないため Playwright MCP 登録をスキップしました。Node/npm の導入を確認してください。"
+  warn "npx が見つかりません。Node/npm の導入を確認してください。"
 fi
 
-# 3) MarkItDown MCP（ドキュメント → Markdown 変換）
-if have markitdown-mcp; then
-  if $HAVE_CLAUDE; then
-    add_claude_mcp "markitdown" -- markitdown-mcp
+register_serena() {
+  if ! $HAVE_UV; then
+    warn "uv が見つからないため Serena MCP 登録をスキップしました。必要なら 'uv' を導入してください。"
+    return
   fi
-  if $HAVE_CODEX; then
-    add_codex_mcp "markitdown" markitdown-mcp
-  fi
-  if $HAVE_GEMINI; then
-    add_gemini_mcp "markitdown" markitdown-mcp
-  fi
-else
-  warn "markitdown-mcp が見つかりません。'pip install markitdown-mcp' 後に再実行してください。"
-fi
+  mcp_register_command_all "serena" \
+    uv run --directory /opt/serena serena \
+    start-mcp-server --context ide-assistant --project "$ROOT"
+}
 
-# 4) ImageSorcery MCP（画像処理・OCR・物体検出）
-if have imagesorcery-mcp; then
-  if $HAVE_CLAUDE; then
-    add_claude_mcp "imagesorcery" -- imagesorcery-mcp
+register_playwright() {
+  if ! $HAVE_NPX; then
+    warn "npx が見つからないため Playwright MCP 登録をスキップしました。"
+    return
   fi
-  if $HAVE_CODEX; then
-    add_codex_mcp "imagesorcery" imagesorcery-mcp
-  fi
-  if $HAVE_GEMINI; then
-    add_gemini_mcp "imagesorcery" imagesorcery-mcp
-  fi
-else
-  warn "imagesorcery-mcp が見つかりません。'pip install imagesorcery-mcp && imagesorcery-mcp --post-install' 後に再実行してください。"
-fi
+  mcp_register_command_all "playwright" \
+    npx @playwright/mcp@latest
+}
 
-# 5) Filesystem MCP（ワークスペース配下のみアクセス許可）
-if $HAVE_NPX; then
-  if $HAVE_CLAUDE; then
-    add_claude_mcp "filesystem" -- npx -y @modelcontextprotocol/server-filesystem "$ROOT"
+register_markitdown() {
+  if ! have markitdown-mcp; then
+    warn "markitdown-mcp が見つかりません。'pip install markitdown-mcp' 後に再実行してください。"
+    return
   fi
-  if $HAVE_CODEX; then
-    add_codex_mcp "filesystem" npx -y @modelcontextprotocol/server-filesystem "$ROOT"
-  fi
-  if $HAVE_GEMINI; then
-    add_gemini_mcp "filesystem" npx -y @modelcontextprotocol/server-filesystem "$ROOT"
-  fi
-else
-  warn "npx が見つからないため Filesystem MCP 登録をスキップしました。"
-fi
+  mcp_register_command_all "markitdown" \
+    markitdown-mcp
+}
 
-# 6) Context7 MCP（SSE 経由ドキュメント検索）
-if $HAVE_CLAUDE; then
-  add_claude_mcp_sse "context7" "https://mcp.context7.com/sse"
-fi
-if $HAVE_CODEX; then
-  add_codex_mcp_sse "context7" "https://mcp.context7.com/sse"
-fi
-if $HAVE_GEMINI; then
-  warn "Gemini: context7 (SSE) は現行 CLI で未サポートの可能性があります。スキップします。"
-fi
+register_imagesorcery() {
+  if ! have imagesorcery-mcp; then
+    warn "imagesorcery-mcp が見つかりません。'pip install imagesorcery-mcp && imagesorcery-mcp --post-install' 後に再実行してください。"
+    return
+  fi
+  mcp_register_command_all "imagesorcery" \
+    imagesorcery-mcp
+}
 
-# 7) GitHub MCP（PAT がある場合のみ）
-if [[ -n "${GITHUB_TOKEN:-}" ]]; then
-  if $HAVE_UV; then
-    if $HAVE_CLAUDE; then
-      add_claude_mcp_with_env "github" "GITHUB_TOKEN=${GITHUB_TOKEN}" -- uvx mcp-github
-    fi
-    if $HAVE_CODEX; then
-      add_codex_mcp_with_env "github" "GITHUB_TOKEN=${GITHUB_TOKEN}" uvx mcp-github
-    fi
-    if $HAVE_GEMINI; then
-      add_gemini_mcp_with_env "github" "GITHUB_TOKEN=${GITHUB_TOKEN}" uvx mcp-github
-    fi
-  else
+register_filesystem() {
+  if ! $HAVE_NPX; then
+    warn "npx が見つからないため Filesystem MCP 登録をスキップしました。"
+    return
+  fi
+  mcp_register_command_all "filesystem" \
+    npx -y @modelcontextprotocol/server-filesystem "$ROOT"
+}
+
+register_context7() {
+  mcp_register_sse_all "context7" "https://mcp.context7.com/sse"
+}
+
+register_github() {
+  if [[ -z "${GITHUB_TOKEN:-}" ]]; then
+    info "GITHUB_TOKEN が未設定のため GitHub MCP は登録しません。後で設定して再実行してください。"
+    return
+  fi
+  if ! $HAVE_UV; then
     warn "uv が見つからないため GitHub MCP 登録をスキップしました。"
+    return
   fi
-else
-  info "GITHUB_TOKEN が未設定のため GitHub MCP は登録しません。後で設定して再実行してください。"
-fi
+  mcp_register_env_command_all "github" "GITHUB_TOKEN=${GITHUB_TOKEN}" \
+    uvx mcp-github
+}
 
-# 8) Firecrawl MCP（API キーがある場合のみ）
-if [[ -n "${FIRECRAWL_API_KEY:-}" ]]; then
-  if $HAVE_NPX; then
-    if $HAVE_CLAUDE; then
-      add_claude_mcp_with_env "firecrawl" "FIRECRAWL_API_KEY=${FIRECRAWL_API_KEY}" -- npx -y firecrawl-mcp
-    fi
-    if $HAVE_CODEX; then
-      add_codex_mcp_with_env "firecrawl" "FIRECRAWL_API_KEY=${FIRECRAWL_API_KEY}" npx -y firecrawl-mcp
-    fi
-    if $HAVE_GEMINI; then
-      add_gemini_mcp_with_env "firecrawl" "FIRECRAWL_API_KEY=${FIRECRAWL_API_KEY}" npx -y firecrawl-mcp
-    fi
-  else
+register_firecrawl() {
+  if [[ -z "${FIRECRAWL_API_KEY:-}" ]]; then
+    info "FIRECRAWL_API_KEY が未設定のため Firecrawl MCP は登録しません。"
+    return
+  fi
+  if ! $HAVE_NPX; then
     warn "npx が見つからないため Firecrawl MCP 登録をスキップしました。"
+    return
   fi
-else
-  info "FIRECRAWL_API_KEY が未設定のため Firecrawl MCP は登録しません。"
-fi
+  mcp_register_env_command_all "firecrawl" "FIRECRAWL_API_KEY=${FIRECRAWL_API_KEY}" \
+    npx -y firecrawl-mcp
+}
 
-# ===== 仕上げメッセージ =====
+register_serena
+register_playwright
+register_markitdown
+register_imagesorcery
+register_filesystem
+register_context7
+register_github
+register_firecrawl
+
 cat <<'EOF'
 
 ────────────────────────────────────────
