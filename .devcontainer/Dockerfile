@@ -1,7 +1,7 @@
 ##############################
 # Claym AI 開発用コンテナ向け Dockerfile
 #
-# このイメージは Ubuntu 24.10 に、安定版の Node.js と Python を組み合わせて導入します。
+# このイメージは Ubuntu 24.04 LTS に、安定版の Node.js と Python を組み合わせて導入します。
 # さらに Anthropic の Claude Code CLI、OpenAI の Codex CLI、Google の Gemini CLI を
 # 事前インストールし、プロジェクトで使用する Model Context Protocol (MCP) サーバ群も
 # 同梱します。使いやすいシェル環境のために、モダンなコマンドラインツール群と
