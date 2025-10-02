@@ -59,7 +59,6 @@ Pipfile.lock
 poetry.lock
 
 # IDEs and Editors
-.vscode/settings.json
 .vscode/launch.json
 .vscode/tasks.json
 .vscode/*.code-workspace
