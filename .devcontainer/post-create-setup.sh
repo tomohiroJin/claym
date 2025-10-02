@@ -19,24 +19,40 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/scripts/helpers/logging.sh"
 # shellcheck source=./scripts/helpers/mcp_cli.sh
 source "${SCRIPT_DIR}/scripts/helpers/mcp_cli.sh"
+# shellcheck source=./scripts/helpers/imagesorcery.sh
+source "${SCRIPT_DIR}/scripts/helpers/imagesorcery.sh"
 
 ROOT="${WORKSPACE_FOLDER:-$PWD}"
 info "Workspace: ${ROOT}"
 
 ensure_imagesorcery_log_dir() {
-  local log_dir="/opt/pipx/venvs/imagesorcery-mcp/lib/python3.12/site-packages/imagesorcery_mcp/logs"
   info "imagesorcery-mcp のログディレクトリ権限を設定中..."
-  if ! sudo mkdir -p "$log_dir" >/dev/null 2>&1; then
-    warn "ログディレクトリの作成に失敗しました"
+
+  local log_dirs=()
+  if mapfile -t log_dirs < <(imagesorcery_log_dirs); then
+    if (( ${#log_dirs[@]} == 0 )); then
+      warn "imagesorcery-mcp のログディレクトリが検出できなかったためスキップしました"
+      return
+    fi
+  else
+    warn "imagesorcery-mcp のログディレクトリ検出処理が失敗しました"
     return
   fi
-  if ! sudo chown -R vscode:vscode "$log_dir" >/dev/null 2>&1; then
-    warn "ログディレクトリの権限設定に失敗しました"
-  fi
-  if ! sudo chmod 755 "$log_dir" >/dev/null 2>&1; then
-    warn "ログディレクトリの権限設定に失敗しました"
-  fi
+
+  for log_dir in "${log_dirs[@]}"; do
+    if ! sudo mkdir -p "$log_dir" >/dev/null 2>&1; then
+      warn "ログディレクトリの作成に失敗しました: $log_dir"
+      continue
+    fi
+    if ! sudo chown -R vscode:vscode "$log_dir" >/dev/null 2>&1; then
+      warn "ログディレクトリの所有者設定に失敗しました: $log_dir"
+    fi
+    if ! sudo chmod 755 "$log_dir" >/dev/null 2>&1; then
+      warn "ログディレクトリの権限設定に失敗しました: $log_dir"
+    fi
+  done
 }
+
 
 ensure_imagesorcery_log_dir
 
