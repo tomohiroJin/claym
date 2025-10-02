@@ -45,7 +45,7 @@ Claym プロジェクトでは、AI エージェント（Claude Code / Codex CLI
 - 追加権限: `--cap-add=SYS_ADMIN`, `--security-opt=seccomp=unconfined`, `--shm-size=1g`
 - `remoteEnv`: ホスト側の `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` / `GEMINI_API_KEY` / `GITHUB_TOKEN` / `FIRECRAWL_API_KEY` をコンテナへ伝搬
 - `postCreateCommand`: ワークスペースを `git safe.directory` に登録した後、`/usr/local/bin/post-create-setup.sh` を実行して MCP を登録
-- `postStartCommand`: ワークスペースと ImageSorcery ログの権限調整、Serena ディレクトリの所有者変更、最後に `/usr/local/bin/start-serena.sh`（ユーザー用意の想定）をバックグラウンド実行
+- `postStartCommand`: ワークスペースと ImageSorcery ログの権限調整、Serena ディレクトリの所有者変更を実施
 - VS Code 拡張: Claude Code, OpenAI, GitLens, Markdown ツール、Python LSP/formatter、Playwright 拡張などを自動導入
 
 ## 4. セットアップと利用手順
@@ -77,7 +77,6 @@ claude mcp list
 - Filesystem MCP のアクセス範囲は `post-create-setup.sh` 内の `$ROOT` を変更して調整
 - Serena の `--context` や `--project` オプションも同スクリプトで変更可能
 - `devcontainer.local.json` の `mounts` に SSH や Git 設定を追加して認証情報を共有
-- `/usr/local/bin/start-serena.sh` はリポジトリに含まれていないため、自動起動したい場合は同名スクリプトを作成して配置してください（Serena を常駐させたくない場合は `postStartCommand` から削除）
 - 追加ツールが必要な場合は `Dockerfile` に追記し、Dev Container の Rebuild を実行
 
 ## 6. トラブルシューティング
@@ -91,7 +90,6 @@ claude mcp list
 - Dockerfile は最新安定版を取得する構成（`@latest`）のため、上流更新で挙動が変わる可能性があります。安定運用が必要な場合はバージョン固定を検討してください
 - 追加の Linux ツールやライブラリ（Step 2 以降のタスク）は未導入。用途に応じて拡張してください
 - Codex / Gemini CLI の MCP API は仕様変更が発生しやすいため、挙動に差異を感じたら `post-create-setup.sh` のコマンドを確認してください
-- Container 起動時に `start-serena.sh` が存在しない場合は警告が表示されるので、常駐が不要であれば `postStartCommand` から該当部分を削除してください
 
 ## 8. 参考
 - `post-create-setup.sh`: MCP 登録ロジックとヘルパー呼び出しの中心
