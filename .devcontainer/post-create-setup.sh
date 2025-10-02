@@ -14,15 +14,30 @@
 set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# 共通ユーティリティを読込
-# shellcheck source=./scripts/helpers/logging.sh
-source "${SCRIPT_DIR}/scripts/helpers/logging.sh"
-# shellcheck source=./scripts/helpers/mcp_cli.sh
-source "${SCRIPT_DIR}/scripts/helpers/mcp_cli.sh"
-# shellcheck source=./scripts/helpers/imagesorcery.sh
-source "${SCRIPT_DIR}/scripts/helpers/imagesorcery.sh"
-
 ROOT="${WORKSPACE_FOLDER:-$PWD}"
+DEVCONTAINER_DIR="${ROOT}/.devcontainer"
+HELPERS_DIR=""
+
+if [[ -d "${DEVCONTAINER_DIR}/scripts/helpers" ]]; then
+  HELPERS_DIR="${DEVCONTAINER_DIR}/scripts/helpers"
+elif [[ -d "${SCRIPT_DIR}/scripts/helpers" ]]; then
+  HELPERS_DIR="${SCRIPT_DIR}/scripts/helpers"
+else
+  echo "ERROR: ヘルパースクリプト群が見つかりませんでした。" >&2
+  echo "       .devcontainer/scripts/helpers を配置してから再実行してください。" >&2
+  exit 1
+fi
+
+# shellcheck source=.devcontainer/scripts/helpers/logging.sh
+# shellcheck disable=SC1090
+source "${HELPERS_DIR}/logging.sh"
+# shellcheck source=.devcontainer/scripts/helpers/mcp_cli.sh
+# shellcheck disable=SC1090
+source "${HELPERS_DIR}/mcp_cli.sh"
+# shellcheck source=.devcontainer/scripts/helpers/imagesorcery.sh
+# shellcheck disable=SC1090
+source "${HELPERS_DIR}/imagesorcery.sh"
+
 info "Workspace: ${ROOT}"
 
 ensure_imagesorcery_log_dir() {
