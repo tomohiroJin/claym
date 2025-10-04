@@ -73,6 +73,19 @@ claude mcp list
 - フォールバックとして VS Code Secrets でも設定可能
 - `devcontainer.local.json` で Mount や `remoteEnv` を追加するとホスト固有設定を安全に共有できます（ `.gitignore` 済み）
 
+### 4.5 環境ヘルスチェック
+コンテナ起動直後やトラブルシューティング時は、ヘルスチェックを実施すると前提条件の崩れを素早く検知できます。
+
+```bash
+bash scripts/health/check-environment.sh         # フルチェック（既定）
+bash scripts/health/check-environment.sh --quick # 主要項目のみ
+bash scripts/health/check-environment.sh --json  # JSON サマリ出力
+```
+
+- クリティカルな検査失敗で終了コード 1、警告のみで 2、問題なしは 0 を返します。
+- `--list-checks` で利用可能なチェック ID を表示し、`--skip <id>` で特定の検査を除外できます（例: `--skip serena-ready`）。
+- チェック内容の詳細は `scripts/health/README.md` を参照してください。
+
 ## 5. カスタマイズのヒント
 - Filesystem MCP のアクセス範囲は `post-create-setup.sh` 内の `$ROOT` を変更して調整
 - Serena の `--context` や `--project` オプションも同スクリプトで変更可能
