@@ -1,0 +1,35 @@
+name: Environment Health Check
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run health check in dev container
+        uses: devcontainers/ci@v0.3
+        with:
+          runCmd: |
+            scripts/health/check-environment.sh --json > health-check-result.json
+            cat health-check-result.json
+            # Exit with the same code as the health check
+            scripts/health/check-environment.sh --no-color
+
+      - name: Upload health check results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: health-check-results
+          path: health-check-result.json
+          retention-days: 30
