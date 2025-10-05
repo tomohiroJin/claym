@@ -90,17 +90,42 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # ----------------------------------------------------------------------------
-# v0.2.0: GitHub CLI のインストール
+# v0.2.0: GitHub CLI 公式APTリポジトリ追加
 #
 # GitHub の公式 CLI をインストールします。
 # Issue・PR・リポジトリ管理などをコマンドラインから実行できます。
-RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
-    | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
-    && chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
-    | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends gh \
+RUN type -p curl >/dev/null || (apt-get update && apt-get install -y curl ca-certificates gnupg) \
+    && mkdir -p /etc/apt/keyrings \
+    && curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+       | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg >/dev/null \
+    && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+       | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+
+# ----------------------------------------------------------------------------
+# v0.2.0 追加仕様: ネットワーク/解析/整形ツールの追加
+#
+# Git/GitHub強化、HTTP/ネットワーク疎通、ログ/テキスト加工、SSL/証明書確認のツールを導入します。
+# Ubuntu 24.04のAPTで入るものを優先し、保守性を重視しています。
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    # Git/GitHub強化
+    gh \
+    git-delta \
+    # HTTP/ネットワーク
+    xh \
+    iputils-ping \
+    bind9-dnsutils \
+    traceroute \
+    mtr-tiny \
+    netcat-openbsd \
+    socat \
+    lsof \
+    whois \
+    # 構造化データ/整形（yqはnpm版を使用するためここでは除外）
+    miller \
+    moreutils \
+    # SSL（opensslは既存システムに含まれているが明示的に追加）
+    openssl \
     && rm -rf /var/lib/apt/lists/*
 
 # ロケールとタイムゾーンの設定。

@@ -55,6 +55,32 @@ Claym プロジェクトでは、AI エージェント（Claude Code / Codex CLI
 - **gh CLI**（CLI）: GitHub公式コマンドラインツール
 - **tmux**（CLI）: ターミナルマルチプレクサ（オプション）
 
+### 2.1.2 v0.2.0 追加仕様で追加されたツール
+
+#### Git/GitHub強化
+- **gh**（CLI）: GitHub CLI（公式APTリポジトリから導入、自動認証対応）
+- **git-delta**（CLI）: git diffを見やすく表示（シンタックスハイライト強化）
+
+#### HTTP/ネットワークツール
+- **xh**（CLI）: Rust製の人間に優しいHTTPクライアント（curl互換風）
+
+#### ネットワーク疎通・診断
+- **iputils-ping**（CLI）: ICMP疎通確認
+- **bind9-dnsutils**（CLI）: dig等のDNSツール
+- **traceroute**（CLI）: 経路追跡
+- **mtr-tiny**（CLI）: ping + tracerouteの連続計測
+- **netcat-openbsd**（CLI）: ポート疎通・簡易サーバ
+- **socat**（CLI）: ソケット多機能ツール（プロキシ・ポートフォワード等）
+- **lsof**（CLI）: プロセスが開くファイル/ポート一覧
+- **whois**（CLI）: ドメイン情報照会
+
+#### 構造化データ/テキスト整形
+- **miller**（CLI）: CSV/TSV/JSONLの整形・集計
+- **moreutils**（CLI）: pee, ts, sponge等の小粒ツール群
+
+#### セキュリティ/SSL
+- **openssl**（CLI）: s_clientで証明書/ハンドシェイク確認（既存システムに含まれるが明示的に追加）
+
 ### 2.2 プリインストール済み AI CLI
 | CLI | 起動コマンド | 主用途 | 備考 |
 | --- | --- | --- | --- |
@@ -110,6 +136,7 @@ claude mcp list
 - ホスト側で `export ANTHROPIC_API_KEY=...` のように環境変数を設定してからコンテナを再接続
 - フォールバックとして VS Code Secrets でも設定可能
 - `devcontainer.local.json` で Mount や `remoteEnv` を追加するとホスト固有設定を安全に共有できます（ `.gitignore` 済み）
+- **GitHub CLI 認証**: `GITHUB_TOKEN` が環境変数に設定されている場合、コンテナ作成時に自動的に `gh auth login` が実行されます。トークンが無い場合でもコンテナは正常に起動します。
 
 ### 4.5 環境ヘルスチェック
 コンテナ起動直後やトラブルシューティング時は、ヘルスチェックを実施すると前提条件の崩れを素早く検知できます。
@@ -141,6 +168,7 @@ bash scripts/health/check-environment.sh --json  # JSON サマリ出力
 - Dockerfile は最新安定版を取得する構成（`@latest`）のため、上流更新で挙動が変わる可能性があります。安定運用が必要な場合はバージョン固定を検討してください
 - Codex / Gemini CLI の MCP API は仕様変更が発生しやすいため、挙動に差異を感じたら `post-create-setup.sh` のコマンドを確認してください
 - v0.2.0 で追加されたライブラリ・ツールは、ビジネス職のデータ分析や市場調査、レポート作成を支援する目的で選定されています。より高度な分析や特殊なツールが必要な場合は、Dockerfileに追記してリビルドしてください
+- v0.2.0 追加仕様では、Ubuntu 24.04のAPTで入るものを優先し、保守性を重視しています。CLI×AI前提のワークフローを想定し、GitHub業務のCLI完結、Web/ログ解析の初動高速化、ネットワーク調査のCLI完結を実現します
 
 ## 8. 参考
 - `post-create-setup.sh`: MCP 登録ロジックとヘルパー呼び出しの中心
