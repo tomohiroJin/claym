@@ -43,9 +43,12 @@
         // Git / GitHub
         "eamodio.gitlens",
         "github.vscode-pull-request-github",
+        "GitHub.vscode-github-actions",
+        "waderyan.gitblame",
         // Markdown
         "yzhang.markdown-all-in-one",
         "shd101wyy.markdown-preview-enhanced",
+        "bierner.markdown-mermaid",
         // 品質・整形
         "streetsidesoftware.code-spell-checker",
         "dbaeumer.vscode-eslint",
@@ -56,7 +59,20 @@
         // Playwright
         "ms-playwright.playwright",
         // コラボ
-        "ms-vsliveshare.vsliveshare"
+        "ms-vsliveshare.vsliveshare",
+        // v0.2.0 追加仕様2: HTTP/API/OpenAPI
+        "humao.rest-client",
+        "42Crunch.vscode-openapi",
+        "redhat.vscode-yaml",
+        // v0.2.0 追加仕様2: ログ・データ視覚支援
+        "mechatroner.rainbow-csv",
+        "emilast.LogFileHighlighter",
+        // v0.2.0 追加仕様2: シェル/コンフィグ編集の品質
+        "timonwong.shellcheck",
+        "foxundermoon.shell-format",
+        "tamasfe.even-better-toml",
+        // v0.2.0 追加仕様2: コンテナ・体裁
+        "EditorConfig.EditorConfig"
       ],
       "settings": {
         "terminal.integrated.defaultProfile.linux": "zsh",
@@ -64,7 +80,32 @@
         "python.formatting.provider": "black",
         "python.linting.pylintEnabled": true,
         "python.analysis.typeCheckingMode": "basic",
-        "git.autofetch": true
+        "git.autofetch": true,
+        // v0.2.0 追加仕様2: HTTP/REST
+        "rest-client.environmentVariables": {
+          "$shared": {
+            "baseUrl": "http://localhost:3000"
+          }
+        },
+        "rest-client.previewResponsePanelTakeFocus": false,
+        // v0.2.0 追加仕様2: YAML（GitHub Actions / OpenAPI）
+        "yaml.format.enable": true,
+        "yaml.validation": true,
+        "yaml.schemas": {
+          "https://json.schemastore.org/github-workflow.json": "file://**/.github/workflows/*",
+          "https://raw.githubusercontent.com/OAI/OpenAPI-Specification/main/schemas/v3.0/schema.json": [
+            "file://**/openapi.yaml",
+            "file://**/openapi.yml"
+          ]
+        },
+        // v0.2.0 追加仕様2: Markdown
+        "markdown.preview.breaks": true,
+        "markdown.extension.toc.orderedList": false,
+        // v0.2.0 追加仕様2: Shell/品質
+        "shellformat.flags": "-i 2 -ci",
+        "shellcheck.customArgs": ["--severity=warning"],
+        // v0.2.0 追加仕様2: CSV
+        "rainbow-csv.separator.guess": true
       }
     }
   },

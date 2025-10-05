@@ -112,6 +112,32 @@ Claym プロジェクトでは、AI エージェント（Claude Code / Codex CLI
 - `postStartCommand`: ワークスペースと ImageSorcery ログの権限調整、Serena ディレクトリの所有者変更を実施
 - VS Code 拡張: Claude Code, OpenAI, GitLens, Markdown ツール、Python LSP/formatter、Playwright 拡張などを自動導入
 
+### 3.1 v0.2.0 追加仕様2で導入されたVS Code拡張
+
+#### Git/GitHub 運用・レビュー
+- **GitHub.vscode-github-actions**: GitHub Actions YAML補完・定義支援
+- **waderyan.gitblame**: 行単位のblame表示（ステータスバー）
+
+#### HTTP / API / OpenAPI
+- **humao.rest-client**: エディタ内でHTTPリクエスト送信・レスポンス保存
+- **42Crunch.vscode-openapi**: OpenAPI/Swaggerスキーマ検証・補完
+- **redhat.vscode-yaml**: YAMLスキーマ検証（GitHub Actions、OpenAPI対応）
+
+#### ログ・データ視覚支援
+- **mechatroner.rainbow-csv**: CSV/TSVの列ごとの色分け・クイックフィルタ
+- **emilast.LogFileHighlighter**: ログファイルのタイムスタンプ・レベル色付け
+
+#### 文章作成・レポーティング
+- **bierner.markdown-mermaid**: Mermaid図の記述補助
+
+#### シェル / コンフィグ編集の品質
+- **timonwong.shellcheck**: シェルスクリプトの静的解析
+- **foxundermoon.shell-format**: sh/bashのフォーマッタ
+- **tamasfe.even-better-toml**: TOML補完・検証
+
+#### コンテナ・体裁
+- **EditorConfig.EditorConfig**: 体裁統一（スペース/インデント/改行コード）
+
 ## 4. セットアップと利用手順
 ### 4.1 前提条件
 - Docker（Desktop など）
@@ -156,6 +182,25 @@ bash scripts/health/check-environment.sh --json  # JSON サマリ出力
 - Serena の `--context` や `--project` オプションも同スクリプトで変更可能
 - `devcontainer.local.json` の `mounts` に SSH や Git 設定を追加して認証情報を共有
 - 追加ツールが必要な場合は `Dockerfile` に追記し、Dev Container の Rebuild を実行
+
+### 5.1 v0.2.0 追加仕様2の運用Tips
+
+#### REST Clientの活用
+- `.http` ファイルを作成して HTTP リクエストを記述
+- `{{baseUrl}}` 変数を使用すると `devcontainer.json` の設定値が反映されます
+- 例：`GET {{baseUrl}}/api/users`
+
+#### OpenAPIの活用
+- `openapi.yaml` を配置すると自動的にスキーマ検証が効きます
+- REST Client でテスト → Pandoc/Markdown でレポート作成の流れがスムーズ
+
+#### CSVログの一次確認
+- Rainbow CSV でカラム色分け → `jq`/`miller` で整形 → レポートへ
+- CSV ファイルを開くと自動的に色分けされます
+
+#### GitHub Actions YAML
+- `.github/workflows/` 配下のファイルで自動補完・検証が効きます
+- スキーマエラーがあればエディタ上で即座に確認できます
 
 ## 6. トラブルシューティング
 - **CLI が見つからない**: `npm list -g --depth=0` や `pipx list` でインストール状況を確認。必要なら `npm install -g @anthropic-ai/claude-code` などを再実行
