@@ -17,6 +17,44 @@ Claym プロジェクトでは、AI エージェント（Claude Code / Codex CLI
 - モダン CLI: ripgrep, fd, bat, fzf, zoxide, eza, tldr, tree
 - フォントと X 関連ライブラリを追加し、Playwright/Chromium と ImageSorcery に対応
 
+### 2.1.1 v0.2.0 で追加されたライブラリ・ツール
+
+#### 数値・表データ分析
+- **Pandas**（Python）: データフレーム操作の定番
+- **csvkit**（CLI + Python）: CSV操作用コマンドラインツール群
+- **IPython / Jupyter**（Python）: 対話型実行環境とノートブック
+
+#### ログ解析・テキスト解析
+- **GoAccess**（CLI）: リアルタイムWebアクセスログ解析・可視化ツール
+- **yq**（npm）: YAMLデータのコマンドライン処理
+- **lnav**（CLI）: SQLクエリ可能な汎用ログビューワ
+
+#### Webデータ取得・API連携
+- **HTTPie**（CLI）: 人間に読みやすいHTTPクライアント
+- **requests / httpx**（Python）: Web API用Pythonライブラリ
+- **BeautifulSoup4・lxml**（Python）: HTMLスクレイピング用ライブラリ
+
+#### 市場・金融データ分析
+- **yfinance**（Python）: Yahoo! Finance APIラッパー
+- **pandas_datareader**（Python）: 経済データ取得ライブラリ
+- **qtrn**（npm）: 株価・オプション価格を表示する金融市場CLI
+
+#### レポート・プレゼンテーション生成
+- **Pandoc**（CLI）: マークダウンからPDF/HTML/Slidesへの変換
+- **Landslide**（Python）: MarkdownからHTMLスライド生成
+- **Jinja2**（Python）: Pythonテンプレートエンジン
+
+#### 画像・動画処理
+- **ImageMagick**（CLI）: 画像のリサイズ・変換・フィルタ処理
+- **FFmpeg**（CLI）: 動画・音声の変換・抽出
+- **libwebp**（CLI）: WebPエンコード・デコード
+
+#### 現代的CLIツールと環境補完
+- **git-extras**（CLI）: Git操作支援ツール
+- **tig**（CLI）: Gitリポジトリブラウザ
+- **gh CLI**（CLI）: GitHub公式コマンドラインツール
+- **tmux**（CLI）: ターミナルマルチプレクサ（オプション）
+
 ### 2.2 プリインストール済み AI CLI
 | CLI | 起動コマンド | 主用途 | 備考 |
 | --- | --- | --- | --- |
@@ -101,8 +139,8 @@ bash scripts/health/check-environment.sh --json  # JSON サマリ出力
 
 ## 7. 既知の制約と今後の展望
 - Dockerfile は最新安定版を取得する構成（`@latest`）のため、上流更新で挙動が変わる可能性があります。安定運用が必要な場合はバージョン固定を検討してください
-- 追加の Linux ツールやライブラリ（Step 2 以降のタスク）は未導入。用途に応じて拡張してください
 - Codex / Gemini CLI の MCP API は仕様変更が発生しやすいため、挙動に差異を感じたら `post-create-setup.sh` のコマンドを確認してください
+- v0.2.0 で追加されたライブラリ・ツールは、ビジネス職のデータ分析や市場調査、レポート作成を支援する目的で選定されています。より高度な分析や特殊なツールが必要な場合は、Dockerfileに追記してリビルドしてください
 
 ## 8. 参考
 - `post-create-setup.sh`: MCP 登録ロジックとヘルパー呼び出しの中心
