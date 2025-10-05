@@ -48,3 +48,48 @@ v0.2.0の追加仕様として、Git/GitHub強化、HTTP/ネットワーク疎�
 - [ ] コンテナをリビルドして動作確認
 - [ ] ヘルスチェックスクリプトを実行
 - [ ] 変更をコミット
+
+---
+
+## 追加仕様2: VS Code拡張の追加
+
+### 10. Git/GitHub 運用・レビュー拡張
+- [ ] GitHub.vscode-github-actionsを追加
+- [ ] waderyan.gitblameを追加
+- [ ] mhutchie.git-graph（オプション）の追加を検討
+
+### 11. HTTP / API / OpenAPI拡張
+- [ ] humao.rest-clientを追加
+- [ ] 42Crunch.vscode-openapiを追加
+- [ ] redhat.vscode-yamlを追加
+
+### 12. ログ・データ視覚支援拡張
+- [ ] mechatroner.rainbow-csvを追加
+- [ ] emilast.LogFileHighlighterを追加
+
+### 13. 文章作成・レポーティング拡張
+- [ ] bierner.markdown-mermaidを追加
+- [ ] yzane.markdown-pdf（オプション）の追加を検討
+
+### 14. シェル / コンフィグ編集の品質拡張
+- [ ] timonwong.shellcheckを追加
+- [ ] foxundermoon.shell-formatを追加
+- [ ] tamasfe.even-better-tomlを追加
+- [ ] redhat.vscode-xml（オプション）の追加を検討
+
+### 15. コンテナ・依存の可視化拡張（任意）
+- [ ] ms-azuretools.vscode-docker（オプション）の追加を検討
+- [ ] EditorConfig.EditorConfigを追加
+
+### 16. devcontainer.json settings更新
+- [ ] REST Client設定を追加
+- [ ] YAML設定（GitHub Actions / OpenAPI スキーマ）を追加
+- [ ] Markdown設定を追加
+- [ ] Shell/品質設定を追加
+- [ ] CSV設定を追加
+
+### 17. README更新
+- [ ] 追加した拡張の情報をREADME.mdに追記
+
+### 18. 最終確認とコミット
+- [ ] 変更をコミット
