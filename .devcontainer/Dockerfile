@@ -72,6 +72,35 @@ RUN apt-get update \
     libx11-6 \
     dbus-x11 \
     unzip \
+    # v0.2.0: ログ解析・テキスト解析ツール
+    goaccess \
+    lnav \
+    # v0.2.0: Webデータ取得・API連携ツール
+    httpie \
+    # v0.2.0: レポート・プレゼンテーション生成ツール
+    pandoc \
+    # v0.2.0: 画像・動画処理ツール
+    imagemagick \
+    ffmpeg \
+    webp \
+    # v0.2.0: 現代的CLIツールと環境補完
+    git-extras \
+    tig \
+    tmux \
+    && rm -rf /var/lib/apt/lists/*
+
+# ----------------------------------------------------------------------------
+# v0.2.0: GitHub CLI のインストール
+#
+# GitHub の公式 CLI をインストールします。
+# Issue・PR・リポジトリ管理などをコマンドラインから実行できます。
+RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+    | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
+    && chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+    | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends gh \
     && rm -rf /var/lib/apt/lists/*
 
 # ロケールとタイムゾーンの設定。
@@ -114,7 +143,10 @@ RUN npm install -g \
     @google/gemini-cli@latest \
     @playwright/mcp@latest \
     @modelcontextprotocol/server-filesystem@latest \
-    firecrawl-mcp@latest
+    firecrawl-mcp@latest \
+    # v0.2.0: データ処理・金融分析ツール
+    yq \
+    qtrn
 
 # Playwright のブラウザ本体とシステム依存関係を事前取得して、
 # MCP の初回利用時の待ち時間をなくします。--with-deps フラグは、
@@ -144,6 +176,29 @@ RUN pipx install markitdown-mcp \
     && pipx install imagesorcery-mcp \
     && pipx install mcp-github \
     && imagesorcery-mcp --post-install
+
+# ----------------------------------------------------------------------------
+# v0.2.0: Python ライブラリ（データ分析・Web連携・金融データ・レポート生成）
+#
+# ビジネス向けデータ分析や市場データ取得に必要なライブラリを導入します。
+# これらは標準的なデータサイエンス・金融分析のワークフローで広く利用されています。
+RUN pip3 install --no-cache-dir \
+    # 数値・表データ分析
+    pandas \
+    csvkit \
+    ipython \
+    jupyter \
+    # Webデータ取得・API連携
+    requests \
+    httpx \
+    beautifulsoup4 \
+    lxml \
+    # 市場・金融データ分析
+    yfinance \
+    pandas-datareader \
+    # レポート・プレゼンテーション生成
+    landslide \
+    jinja2
 
 # uv のインストール（Serena MCP が利用）。
 # インストーラは静的バイナリを ~/.local/bin に配置します。
