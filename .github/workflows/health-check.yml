@@ -23,8 +23,8 @@ jobs:
           runCmd: |
             scripts/health/check-environment.sh --json > health-check-result.json
             cat health-check-result.json
-            # Exit with the same code as the health check
-            scripts/health/check-environment.sh --no-color
+            # Run health check and allow warnings (exit code 2)
+            scripts/health/check-environment.sh --no-color || [ $? -eq 2 ]
 
       - name: Upload health check results
         if: always()
