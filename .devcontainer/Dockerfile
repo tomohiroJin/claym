@@ -97,10 +97,10 @@ RUN apt-get update \
 RUN type -p curl >/dev/null || (apt-get update && apt-get install -y curl ca-certificates gnupg) \
     && mkdir -p /etc/apt/keyrings \
     && curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
-       | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg >/dev/null \
+    | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg >/dev/null \
     && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
-       | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+    | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
 
 # ----------------------------------------------------------------------------
 # v0.2.0 追加仕様: ネットワーク/解析/整形ツールの追加
@@ -112,7 +112,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gh \
     git-delta \
     # HTTP/ネットワーク
-    xh \
+    # xh \ # xh は apt に存在しなかったので除外
     iputils-ping \
     bind9-dnsutils \
     traceroute \
