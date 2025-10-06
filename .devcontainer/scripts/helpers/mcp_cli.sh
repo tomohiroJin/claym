@@ -115,6 +115,7 @@ _mcp_register_sse() {
       mkdir -p "$(dirname "${config_path}")"
 
       if python3 - "${config_path}" "${name}" "${url}" <<'PY'
+import re
 import sys
 import tomllib
 from pathlib import Path
@@ -136,6 +137,18 @@ server['transport'] = 'sse'
 server['url'] = url
 mcp_servers[name] = server
 
+_KEY_RE = re.compile(r"^[A-Za-z0-9_-]+$")
+
+def format_key(key: str) -> str:
+    if _KEY_RE.match(key):
+        return key
+    escaped = key.replace('\\', '\\\\').replace('"', '\\"')
+    return f'"{escaped}"'
+
+
+def join_path(keys) -> str:
+    return '.'.join(format_key(str(k)) for k in keys)
+
 
 def format_value(value):
     if isinstance(value, str):
@@ -150,22 +163,72 @@ def format_value(value):
         return f'[{items}]'
     raise TypeError(f'Unsupported type: {type(value)}')
 
-sections = []
-projects = data.get('projects')
-if projects:
-    for project, cfg in projects.items():
-        lines = [f'[projects."{project}"]']
-        for key, value in cfg.items():
-            lines.append(f'{key} = {format_value(value)}')
-        sections.append('\n'.join(lines))
 
-for server_name, cfg in mcp_servers.items():
-    lines = [f'[mcp_servers.{server_name}]']
-    for key, value in cfg.items():
-        lines.append(f'{key} = {format_value(value)}')
-    sections.append('\n'.join(lines))
+def is_array_of_tables(value) -> bool:
+    if not isinstance(value, list) or not value:
+        return False
+    return all(isinstance(item, dict) for item in value)
 
-config_path.write_text('\n\n'.join(sections) + '\n')
+
+def emit_table(path, table, out_lines):
+    out_lines.append(f"[{join_path(path)}]")
+    nested = []
+    array_tables = []
+    for key, value in table.items():
+        if isinstance(value, dict):
+            nested.append((key, value))
+        elif is_array_of_tables(value):
+            array_tables.append((key, value))
+        else:
+            out_lines.append(f"{format_key(str(key))} = {format_value(value)}")
+    for key, value in nested:
+        if out_lines and out_lines[-1] != '':
+            out_lines.append('')
+        emit_table(path + [key], value, out_lines)
+    for key, items in array_tables:
+        for item in items:
+            if out_lines and out_lines[-1] != '':
+                out_lines.append('')
+            emit_array_table(path + [key], item, out_lines)
+
+
+def emit_array_table(path, table, out_lines):
+    out_lines.append(f"[[{join_path(path)}]]")
+    nested = []
+    array_tables = []
+    for key, value in table.items():
+        if isinstance(value, dict):
+            nested.append((key, value))
+        elif is_array_of_tables(value):
+            array_tables.append((key, value))
+        else:
+            out_lines.append(f"{format_key(str(key))} = {format_value(value)}")
+    for key, value in nested:
+        if out_lines and out_lines[-1] != '':
+            out_lines.append('')
+        emit_table(path + [key], value, out_lines)
+    for key, items in array_tables:
+        for item in items:
+            if out_lines and out_lines[-1] != '':
+                out_lines.append('')
+            emit_array_table(path + [key], item, out_lines)
+
+
+lines = []
+for key, value in data.items():
+    if isinstance(value, dict):
+        if lines and lines[-1] != '':
+            lines.append('')
+        emit_table([key], value, lines)
+    elif is_array_of_tables(value):
+        for item in value:
+            if lines and lines[-1] != '':
+                lines.append('')
+            emit_array_table([key], item, lines)
+    else:
+        lines.append(f"{format_key(str(key))} = {format_value(value)}")
+
+config_path.write_text('\n'.join(lines).rstrip() + '\n')
 PY
       then
         info "${label}: '${name}' 登録完了"

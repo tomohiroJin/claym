@@ -61,9 +61,6 @@ Claym プロジェクトでは、AI エージェント（Claude Code / Codex CLI
 - **gh**（CLI）: GitHub CLI（公式APTリポジトリから導入、自動認証対応）
 - **git-delta**（CLI）: git diffを見やすく表示（シンタックスハイライト強化）
 
-#### HTTP/ネットワークツール
-- **xh**（CLI）: Rust製の人間に優しいHTTPクライアント（curl互換風）
-
 #### ネットワーク疎通・診断
 - **iputils-ping**（CLI）: ICMP疎通確認
 - **bind9-dnsutils**（CLI）: dig等のDNSツール
