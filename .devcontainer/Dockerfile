@@ -112,7 +112,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gh \
     git-delta \
     # HTTP/ネットワーク
-    # xh \ # xh は apt に存在しなかったので除外
     iputils-ping \
     bind9-dnsutils \
     traceroute \
@@ -182,32 +181,24 @@ RUN npx playwright install chromium --with-deps
 # ----------------------------------------------------------------------------
 # Python 環境と MCP サーバ
 #
-# pipx の導入（システム共通パスにバイナリを配置）
-# Python 製 MCP サーバを pip で導入します。--no-cache-dir でイメージサイズを削減します。
-# Serena は uv で実行するため、uv は後段で別途導入します。
-# ImageSorcery MCP のインストール後は post-install コマンドを実行して、
-# 物体検出や OCR に用いる機械学習モデルを取得します。
-# これらのモデルはイメージ内にキャッシュされ、初回利用時のダウンロードを防ぎます。
-ENV PIPX_HOME=/opt/pipx \
-    PIPX_BIN_DIR=/usr/local/bin
-RUN apt-get update \
-    && (apt-get install -y --no-install-recommends pipx \
-    || apt-get install -y --no-install-recommends python3-pipx) \
-    && pipx ensurepath
-
-# ----------------------------------------------------------------------------
-# Python 製 MCP サーバ（pipx で安全に導入）
-RUN pipx install markitdown-mcp \
-    && pipx install imagesorcery-mcp \
-    && pipx install mcp-github \
-    && imagesorcery-mcp --post-install
+# 仮想環境（venv）を作成し、Python 製 MCP サーバを隔離して導入します。
+# --no-cache-dir でイメージサイズを削減し、ImageSorcery MCP 用の追加モデルも取得します。
+ENV VIRTUAL_ENV=/opt/mcp-venv
+RUN python3 -m venv "$VIRTUAL_ENV" \
+    && "$VIRTUAL_ENV/bin/pip" install --no-cache-dir --upgrade pip \
+    && "$VIRTUAL_ENV/bin/pip" install --no-cache-dir \
+        markitdown-mcp \
+        imagesorcery-mcp \
+        mcp-github \
+    && "$VIRTUAL_ENV/bin/imagesorcery-mcp" --post-install
+ENV PATH="${VIRTUAL_ENV}/bin:$PATH"
 
 # ----------------------------------------------------------------------------
 # v0.2.0: Python ライブラリ（データ分析・Web連携・金融データ・レポート生成）
 #
 # ビジネス向けデータ分析や市場データ取得に必要なライブラリを導入します。
 # これらは標準的なデータサイエンス・金融分析のワークフローで広く利用されています。
-RUN pip3 install --no-cache-dir \
+RUN "$VIRTUAL_ENV/bin/pip" install --no-cache-dir \
     # 数値・表データ分析
     pandas \
     csvkit \
