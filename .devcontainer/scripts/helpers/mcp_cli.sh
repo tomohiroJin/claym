@@ -106,10 +106,71 @@ _mcp_register_sse() {
       fi
       ;;
     codex)
-      if codex mcp add "$name" "$url" >/dev/null 2>&1; then
+      if ! have python3; then
+        warn "${label}: Python3 が見つからないため '${name}' (SSE) 登録をスキップしました。"
+        return 0
+      fi
+
+      local config_path="${HOME}/.codex/config.toml"
+      mkdir -p "$(dirname "${config_path}")"
+
+      if python3 - "${config_path}" "${name}" "${url}" <<'PY'
+import sys
+import tomllib
+from pathlib import Path
+
+config_path = Path(sys.argv[1])
+name = sys.argv[2]
+url = sys.argv[3]
+
+if config_path.exists():
+    data = tomllib.loads(config_path.read_text())
+else:
+    data = {}
+
+mcp_servers = data.setdefault('mcp_servers', {})
+server = mcp_servers.get(name, {})
+for key in ('command', 'args', 'env'):
+    server.pop(key, None)
+server['transport'] = 'sse'
+server['url'] = url
+mcp_servers[name] = server
+
+
+def format_value(value):
+    if isinstance(value, str):
+        escaped = value.replace('\\', '\\\\').replace('"', '\\"')
+        return f'"{escaped}"'
+    if isinstance(value, bool):
+        return 'true' if value else 'false'
+    if isinstance(value, (int, float)):
+        return str(value)
+    if isinstance(value, list):
+        items = ', '.join(format_value(item) for item in value)
+        return f'[{items}]'
+    raise TypeError(f'Unsupported type: {type(value)}')
+
+sections = []
+projects = data.get('projects')
+if projects:
+    for project, cfg in projects.items():
+        lines = [f'[projects."{project}"]']
+        for key, value in cfg.items():
+            lines.append(f'{key} = {format_value(value)}')
+        sections.append('\n'.join(lines))
+
+for server_name, cfg in mcp_servers.items():
+    lines = [f'[mcp_servers.{server_name}]']
+    for key, value in cfg.items():
+        lines.append(f'{key} = {format_value(value)}')
+    sections.append('\n'.join(lines))
+
+config_path.write_text('\n\n'.join(sections) + '\n')
+PY
+      then
         info "${label}: '${name}' 登録完了"
       else
-        warn "${label}: '${name}' の登録でエラー（既に登録済みの可能性）"
+        warn "${label}: '${name}' の設定ファイル更新でエラーが発生しました"
       fi
       ;;
     *)
