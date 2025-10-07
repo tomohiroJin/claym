@@ -15,6 +15,9 @@ declare -A MCP_CLI_LABELS=(
 # CLI ごとに 1 度だけスキップ警告を出すためのフラグ
 declare -A MCP_CLI_WARNED=()
 
+readonly MCP_HELPERS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly MCP_CODEX_CONFIG_WRITER="${MCP_HELPERS_DIR}/codex_config_writer.py"
+
 _mcp_cli_label() {
   local cli="$1"
   printf '%s' "${MCP_CLI_LABELS[$cli]:-$cli}"
@@ -111,126 +114,15 @@ _mcp_register_sse() {
         return 0
       fi
 
+      if [[ ! -f "${MCP_CODEX_CONFIG_WRITER}" ]]; then
+        warn "${label}: Codex 用設定スクリプトが見つからないため '${name}' (SSE) 登録をスキップしました。"
+        return 0
+      fi
+
       local config_path="${HOME}/.codex/config.toml"
       mkdir -p "$(dirname "${config_path}")"
 
-      if python3 - "${config_path}" "${name}" "${url}" <<'PY'
-import re
-import sys
-import tomllib
-from pathlib import Path
-
-config_path = Path(sys.argv[1])
-name = sys.argv[2]
-url = sys.argv[3]
-
-if config_path.exists():
-    data = tomllib.loads(config_path.read_text())
-else:
-    data = {}
-
-mcp_servers = data.setdefault('mcp_servers', {})
-server = mcp_servers.get(name, {})
-for key in ('command', 'args', 'env'):
-    server.pop(key, None)
-server['transport'] = 'sse'
-server['url'] = url
-mcp_servers[name] = server
-
-_KEY_RE = re.compile(r"^[A-Za-z0-9_-]+$")
-
-def format_key(key: str) -> str:
-    if _KEY_RE.match(key):
-        return key
-    escaped = key.replace('\\', '\\\\').replace('"', '\\"')
-    return f'"{escaped}"'
-
-
-def join_path(keys) -> str:
-    return '.'.join(format_key(str(k)) for k in keys)
-
-
-def format_value(value):
-    if isinstance(value, str):
-        escaped = value.replace('\\', '\\\\').replace('"', '\\"')
-        return f'"{escaped}"'
-    if isinstance(value, bool):
-        return 'true' if value else 'false'
-    if isinstance(value, (int, float)):
-        return str(value)
-    if isinstance(value, list):
-        items = ', '.join(format_value(item) for item in value)
-        return f'[{items}]'
-    raise TypeError(f'Unsupported type: {type(value)}')
-
-
-def is_array_of_tables(value) -> bool:
-    if not isinstance(value, list) or not value:
-        return False
-    return all(isinstance(item, dict) for item in value)
-
-
-def emit_table(path, table, out_lines):
-    out_lines.append(f"[{join_path(path)}]")
-    nested = []
-    array_tables = []
-    for key, value in table.items():
-        if isinstance(value, dict):
-            nested.append((key, value))
-        elif is_array_of_tables(value):
-            array_tables.append((key, value))
-        else:
-            out_lines.append(f"{format_key(str(key))} = {format_value(value)}")
-    for key, value in nested:
-        if out_lines and out_lines[-1] != '':
-            out_lines.append('')
-        emit_table(path + [key], value, out_lines)
-    for key, items in array_tables:
-        for item in items:
-            if out_lines and out_lines[-1] != '':
-                out_lines.append('')
-            emit_array_table(path + [key], item, out_lines)
-
-
-def emit_array_table(path, table, out_lines):
-    out_lines.append(f"[[{join_path(path)}]]")
-    nested = []
-    array_tables = []
-    for key, value in table.items():
-        if isinstance(value, dict):
-            nested.append((key, value))
-        elif is_array_of_tables(value):
-            array_tables.append((key, value))
-        else:
-            out_lines.append(f"{format_key(str(key))} = {format_value(value)}")
-    for key, value in nested:
-        if out_lines and out_lines[-1] != '':
-            out_lines.append('')
-        emit_table(path + [key], value, out_lines)
-    for key, items in array_tables:
-        for item in items:
-            if out_lines and out_lines[-1] != '':
-                out_lines.append('')
-            emit_array_table(path + [key], item, out_lines)
-
-
-lines = []
-for key, value in data.items():
-    if isinstance(value, dict):
-        if lines and lines[-1] != '':
-            lines.append('')
-        emit_table([key], value, lines)
-    elif is_array_of_tables(value):
-        for item in value:
-            if lines and lines[-1] != '':
-                lines.append('')
-            emit_array_table([key], item, lines)
-    else:
-        lines.append(f"{format_key(str(key))} = {format_value(value)}")
-
-config_path.write_text('\n'.join(lines).rstrip() + '\n')
-PY
-      then
+      if python3 "${MCP_CODEX_CONFIG_WRITER}" --config "${config_path}" --name "${name}" --url "${url}"; then
         info "${label}: '${name}' 登録完了"
       else
         warn "${label}: '${name}' の設定ファイル更新でエラーが発生しました"
