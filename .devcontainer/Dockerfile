@@ -24,11 +24,15 @@ WORKDIR /workspace
 # 動かすために多数のシステムライブラリを必要とします。
 # fzf / zoxide / ripgrep / bat / fd-find / eza / tree / tldr などの
 # モダンな CLI ツール群と、快適な端末表示のためのフォントも導入します。
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
+# あわせて GitHub CLI の公式リポジトリ登録とネットワーク系ユーティリティの導入まで
+# 単一レイヤーで完結させ、APT キャッシュの再利用効率を高めます。
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
     build-essential \
     ca-certificates \
     sudo \
+    gnupg \
     git \
     git-lfs \
     curl \
@@ -86,28 +90,15 @@ RUN apt-get update \
     # v0.2.0: 現代的CLIツールと環境補完
     git-extras \
     tig \
-    tmux \
-    && rm -rf /var/lib/apt/lists/*
-
-# ----------------------------------------------------------------------------
-# v0.2.0: GitHub CLI 公式APTリポジトリ追加
-#
-# GitHub の公式 CLI をインストールします。
-# Issue・PR・リポジトリ管理などをコマンドラインから実行できます。
-RUN type -p curl >/dev/null || (apt-get update && apt-get install -y curl ca-certificates gnupg) \
-    && mkdir -p /etc/apt/keyrings \
-    && curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
-    | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg >/dev/null \
-    && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
-    | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-
-# ----------------------------------------------------------------------------
-# v0.2.0 追加仕様: ネットワーク/解析/整形ツールの追加
-#
-# Git/GitHub強化、HTTP/ネットワーク疎通、ログ/テキスト加工、SSL/証明書確認のツールを導入します。
-# Ubuntu 24.04のAPTで入るものを優先し、保守性を重視しています。
-RUN apt-get update && apt-get install -y --no-install-recommends \
+    tmux; \
+    mkdir -p /etc/apt/keyrings; \
+    curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+    | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg >/dev/null; \
+    chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg; \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+    | tee /etc/apt/sources.list.d/github-cli.list > /dev/null; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
     # Git/GitHub強化
     gh \
     git-delta \
@@ -124,8 +115,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     miller \
     moreutils \
     # SSL（opensslは既存システムに含まれているが明示的に追加）
-    openssl \
-    && rm -rf /var/lib/apt/lists/*
+    openssl; \
+    rm -rf /var/lib/apt/lists/*
 
 # ロケールとタイムゾーンの設定。
 # VS Code は既定で en_US.UTF-8 を使いますが、必要に応じて ja_JP.UTF-8 などに変更できます。
