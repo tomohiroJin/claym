@@ -15,6 +15,9 @@ declare -A MCP_CLI_LABELS=(
 # CLI ごとに 1 度だけスキップ警告を出すためのフラグ
 declare -A MCP_CLI_WARNED=()
 
+readonly MCP_HELPERS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly MCP_CODEX_CONFIG_WRITER="${MCP_HELPERS_DIR}/codex_config_writer.py"
+
 _mcp_cli_label() {
   local cli="$1"
   printf '%s' "${MCP_CLI_LABELS[$cli]:-$cli}"
@@ -106,10 +109,23 @@ _mcp_register_sse() {
       fi
       ;;
     codex)
-      if codex mcp add "$name" "$url" >/dev/null 2>&1; then
+      if ! have python3; then
+        warn "${label}: Python3 が見つからないため '${name}' (SSE) 登録をスキップしました。"
+        return 0
+      fi
+
+      if [[ ! -f "${MCP_CODEX_CONFIG_WRITER}" ]]; then
+        warn "${label}: Codex 用設定スクリプトが見つからないため '${name}' (SSE) 登録をスキップしました。"
+        return 0
+      fi
+
+      local config_path="${HOME}/.codex/config.toml"
+      mkdir -p "$(dirname "${config_path}")"
+
+      if python3 "${MCP_CODEX_CONFIG_WRITER}" --config "${config_path}" --name "${name}" --url "${url}"; then
         info "${label}: '${name}' 登録完了"
       else
-        warn "${label}: '${name}' の登録でエラー（既に登録済みの可能性）"
+        warn "${label}: '${name}' の設定ファイル更新でエラーが発生しました"
       fi
       ;;
     *)

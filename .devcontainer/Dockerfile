@@ -24,11 +24,15 @@ WORKDIR /workspace
 # 動かすために多数のシステムライブラリを必要とします。
 # fzf / zoxide / ripgrep / bat / fd-find / eza / tree / tldr などの
 # モダンな CLI ツール群と、快適な端末表示のためのフォントも導入します。
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
+# あわせて GitHub CLI の公式リポジトリ登録とネットワーク系ユーティリティの導入まで
+# 単一レイヤーで完結させ、APT キャッシュの再利用効率を高めます。
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
     build-essential \
     ca-certificates \
     sudo \
+    gnupg \
     git \
     git-lfs \
     curl \
@@ -72,7 +76,47 @@ RUN apt-get update \
     libx11-6 \
     dbus-x11 \
     unzip \
-    && rm -rf /var/lib/apt/lists/*
+    # v0.2.0: ログ解析・テキスト解析ツール
+    goaccess \
+    lnav \
+    # v0.2.0: Webデータ取得・API連携ツール
+    httpie \
+    # v0.2.0: レポート・プレゼンテーション生成ツール
+    pandoc \
+    # v0.2.0: 画像・動画処理ツール
+    imagemagick \
+    ffmpeg \
+    webp \
+    # v0.2.0: 現代的CLIツールと環境補完
+    git-extras \
+    tig \
+    tmux; \
+    mkdir -p /etc/apt/keyrings; \
+    curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+    | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg >/dev/null; \
+    chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg; \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+    | tee /etc/apt/sources.list.d/github-cli.list > /dev/null; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+    # Git/GitHub強化
+    gh \
+    git-delta \
+    # HTTP/ネットワーク
+    iputils-ping \
+    bind9-dnsutils \
+    traceroute \
+    mtr-tiny \
+    netcat-openbsd \
+    socat \
+    lsof \
+    whois \
+    # 構造化データ/整形（yqはnpm版を使用するためここでは除外）
+    miller \
+    moreutils \
+    # SSL（opensslは既存システムに含まれているが明示的に追加）
+    openssl; \
+    rm -rf /var/lib/apt/lists/*
 
 # ロケールとタイムゾーンの設定。
 # VS Code は既定で en_US.UTF-8 を使いますが、必要に応じて ja_JP.UTF-8 などに変更できます。
@@ -114,7 +158,10 @@ RUN npm install -g \
     @google/gemini-cli@latest \
     @playwright/mcp@latest \
     @modelcontextprotocol/server-filesystem@latest \
-    firecrawl-mcp@latest
+    firecrawl-mcp@latest \
+    # v0.2.0: データ処理・金融分析ツール
+    yq \
+    qtrn
 
 # Playwright のブラウザ本体とシステム依存関係を事前取得して、
 # MCP の初回利用時の待ち時間をなくします。--with-deps フラグは、
@@ -125,25 +172,40 @@ RUN npx playwright install chromium --with-deps
 # ----------------------------------------------------------------------------
 # Python 環境と MCP サーバ
 #
-# pipx の導入（システム共通パスにバイナリを配置）
-# Python 製 MCP サーバを pip で導入します。--no-cache-dir でイメージサイズを削減します。
-# Serena は uv で実行するため、uv は後段で別途導入します。
-# ImageSorcery MCP のインストール後は post-install コマンドを実行して、
-# 物体検出や OCR に用いる機械学習モデルを取得します。
-# これらのモデルはイメージ内にキャッシュされ、初回利用時のダウンロードを防ぎます。
-ENV PIPX_HOME=/opt/pipx \
-    PIPX_BIN_DIR=/usr/local/bin
-RUN apt-get update \
-    && (apt-get install -y --no-install-recommends pipx \
-    || apt-get install -y --no-install-recommends python3-pipx) \
-    && pipx ensurepath
+# 仮想環境（venv）を作成し、Python 製 MCP サーバを隔離して導入します。
+# --no-cache-dir でイメージサイズを削減し、ImageSorcery MCP 用の追加モデルも取得します。
+ENV VIRTUAL_ENV=/opt/mcp-venv
+RUN python3 -m venv "$VIRTUAL_ENV" \
+    && "$VIRTUAL_ENV/bin/pip" install --no-cache-dir --upgrade pip \
+    && "$VIRTUAL_ENV/bin/pip" install --no-cache-dir \
+        markitdown-mcp \
+        imagesorcery-mcp \
+        mcp-github \
+    && "$VIRTUAL_ENV/bin/imagesorcery-mcp" --post-install
+ENV PATH="${VIRTUAL_ENV}/bin:$PATH"
 
 # ----------------------------------------------------------------------------
-# Python 製 MCP サーバ（pipx で安全に導入）
-RUN pipx install markitdown-mcp \
-    && pipx install imagesorcery-mcp \
-    && pipx install mcp-github \
-    && imagesorcery-mcp --post-install
+# v0.2.0: Python ライブラリ（データ分析・Web連携・金融データ・レポート生成）
+#
+# ビジネス向けデータ分析や市場データ取得に必要なライブラリを導入します。
+# これらは標準的なデータサイエンス・金融分析のワークフローで広く利用されています。
+RUN "$VIRTUAL_ENV/bin/pip" install --no-cache-dir \
+    # 数値・表データ分析
+    pandas \
+    csvkit \
+    ipython \
+    jupyter \
+    # Webデータ取得・API連携
+    requests \
+    httpx \
+    beautifulsoup4 \
+    lxml \
+    # 市場・金融データ分析
+    yfinance \
+    pandas-datareader \
+    # レポート・プレゼンテーション生成
+    landslide \
+    jinja2
 
 # uv のインストール（Serena MCP が利用）。
 # インストーラは静的バイナリを ~/.local/bin に配置します。

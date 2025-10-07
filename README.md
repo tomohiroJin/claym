@@ -17,26 +17,21 @@ Claym プロジェクトでは、AI エージェント（Claude Code / Codex CLI
 - モダン CLI: ripgrep, fd, bat, fzf, zoxide, eza, tldr, tree
 - フォントと X 関連ライブラリを追加し、Playwright/Chromium と ImageSorcery に対応
 
+### 2.1.1 インストール済みツールの概要
+コンテナにはデータ分析・ログ解析・ネットワーク診断など、業務でよく使う CLI とライブラリがまとまって導入されています。詳細な一覧は [docs/container-tooling.md](docs/container-tooling.md) にカテゴリ別の表としてまとめています。ここでは代表的なカテゴリのみ挙げます。
+
+- データ分析: pandas / csvkit / Jupyter
+- ログ解析: GoAccess / lnav / yq
+- Web・API 連携: HTTPie / requests / BeautifulSoup4
+- 画像・動画処理: ImageMagick / FFmpeg / libwebp
+- ネットワーク診断: ping / dig / traceroute / mtr
+- Git/GitHub 補助: gh / git-extras / tig
+
 ### 2.2 プリインストール済み AI CLI
-| CLI | 起動コマンド | 主用途 | 備考 |
-| --- | --- | --- | --- |
-| Claude Code | `claude` | Anthropic の CLI クライアント | `claude` で対話開始 |
-| Codex CLI | `codex` | OpenAI ベースの CLI | `codex` 単体で chat 開始 |
-| Gemini CLI | `gemini` | Google Gemini 用 CLI | `gemini` で対話 |
+Claude Code / Codex CLI / Gemini CLI の 3 種類を最初から利用できます。詳細な説明と代表コマンドは [docs/container-tooling.md](docs/container-tooling.md#プリインストール済み-ai-cli) を参照してください。
 
 ### 2.3 バンドル済み MCP サーバー
-`post-create-setup.sh` が利用可能な CLI すべてに対して MCP を冪等登録します。
-
-| MCP 名 | 追加方法 | 登録対象 | 備考 |
-| --- | --- | --- | --- |
-| serena | `uv run --directory /opt/serena serena start-mcp-server --context ide-assistant --project $PWD` | Claude / Codex / Gemini | `/opt/serena` を git clone 済み |
-| playwright | `npx @playwright/mcp@latest` | 同上 | Chromium を `npx playwright install` で事前取得 |
-| markitdown | `markitdown-mcp` | 同上 | Markdown <-> HTML/URL 変換 |
-| imagesorcery | `imagesorcery-mcp` | 同上 | 画像処理。`--post-install` 済み |
-| filesystem | `npx -y @modelcontextprotocol/server-filesystem $PWD` | 同上 | ワークスペース限定アクセス |
-| context7 (SSE) | `https://mcp.context7.com/sse` | Claude / Codex | SSE ベースの外部 MCP |
-| mcp-github | `uvx mcp-github` | 同上 | `GITHUB_TOKEN` が必要 |
-| firecrawl | `npx -y firecrawl-mcp` | 同上 | `FIRECRAWL_API_KEY` が必要 |
+Serena・Playwright・markitdown など主要な MCP サーバーを `post-create-setup.sh` で自動登録します。対応 CLI や起動例は [docs/container-tooling.md](docs/container-tooling.md#バンドル済み-mcp-サーバー) にまとめています。
 
 > `GITHUB_TOKEN` / `FIRECRAWL_API_KEY` が未設定の場合は登録をスキップし、警告だけ表示します。
 
@@ -46,7 +41,7 @@ Claym プロジェクトでは、AI エージェント（Claude Code / Codex CLI
 - `remoteEnv`: ホスト側の `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` / `GEMINI_API_KEY` / `GITHUB_TOKEN` / `FIRECRAWL_API_KEY` をコンテナへ伝搬
 - `postCreateCommand`: ワークスペースを `git safe.directory` に登録した後、`/usr/local/bin/post-create-setup.sh` を実行して MCP を登録
 - `postStartCommand`: ワークスペースと ImageSorcery ログの権限調整、Serena ディレクトリの所有者変更を実施
-- VS Code 拡張: Claude Code, OpenAI, GitLens, Markdown ツール、Python LSP/formatter、Playwright 拡張などを自動導入
+- VS Code 拡張: 必要な開発支援ツールを一括導入（一覧は [docs/vscode-extensions.md](docs/vscode-extensions.md) を参照）
 
 ## 4. セットアップと利用手順
 ### 4.1 前提条件
@@ -72,6 +67,7 @@ claude mcp list
 - ホスト側で `export ANTHROPIC_API_KEY=...` のように環境変数を設定してからコンテナを再接続
 - フォールバックとして VS Code Secrets でも設定可能
 - `devcontainer.local.json` で Mount や `remoteEnv` を追加するとホスト固有設定を安全に共有できます（ `.gitignore` 済み）
+- **GitHub CLI 認証**: `GITHUB_TOKEN` が環境変数に設定されている場合、コンテナ作成時に自動的に `gh auth login` が実行されます。トークンが無い場合でもコンテナは正常に起動します。
 
 ### 4.5 環境ヘルスチェック
 コンテナ起動直後やトラブルシューティング時は、ヘルスチェックを実施すると前提条件の崩れを素早く検知できます。
@@ -92,8 +88,27 @@ bash scripts/health/check-environment.sh --json  # JSON サマリ出力
 - `devcontainer.local.json` の `mounts` に SSH や Git 設定を追加して認証情報を共有
 - 追加ツールが必要な場合は `Dockerfile` に追記し、Dev Container の Rebuild を実行
 
+### 5.1 v0.2.0 追加仕様2の運用Tips
+
+#### REST Clientの活用
+- `.http` ファイルを作成して HTTP リクエストを記述
+- `{{baseUrl}}` 変数を使用すると `devcontainer.json` の設定値が反映されます
+- 例：`GET {{baseUrl}}/api/users`
+
+#### OpenAPIの活用
+- `openapi.yaml` を配置すると自動的にスキーマ検証が効きます
+- REST Client でテスト → Pandoc/Markdown でレポート作成の流れがスムーズ
+
+#### CSVログの一次確認
+- Rainbow CSV でカラム色分け → `jq`/`miller` で整形 → レポートへ
+- CSV ファイルを開くと自動的に色分けされます
+
+#### GitHub Actions YAML
+- `.github/workflows/` 配下のファイルで自動補完・検証が効きます
+- スキーマエラーがあればエディタ上で即座に確認できます
+
 ## 6. トラブルシューティング
-- **CLI が見つからない**: `npm list -g --depth=0` や `pipx list` でインストール状況を確認。必要なら `npm install -g @anthropic-ai/claude-code` などを再実行
+- **CLI が見つからない**: `npm list -g --depth=0` や `${VIRTUAL_ENV:-/opt/mcp-venv}/bin/pip list` でインストール状況を確認。必要なら `npm install -g @anthropic-ai/claude-code` や `${VIRTUAL_ENV:-/opt/mcp-venv}/bin/pip install markitdown-mcp` などを再実行
 - **Playwright の起動失敗**: `npx playwright install chromium --with-deps` を再度実行し、コンテナ起動パラメータ（`--shm-size` など）を確認
 - **Serena が起動しない**: `uv --version` / `/opt/serena` の存在を確認し、`uv run --directory /opt/serena serena start-mcp-server --project $PWD` を手動実行
 - **GitHub / Firecrawl MCP が見当たらない**: 対応する API キーを環境変数に設定した後、`post-create-setup.sh` を再実行
@@ -101,8 +116,9 @@ bash scripts/health/check-environment.sh --json  # JSON サマリ出力
 
 ## 7. 既知の制約と今後の展望
 - Dockerfile は最新安定版を取得する構成（`@latest`）のため、上流更新で挙動が変わる可能性があります。安定運用が必要な場合はバージョン固定を検討してください
-- 追加の Linux ツールやライブラリ（Step 2 以降のタスク）は未導入。用途に応じて拡張してください
 - Codex / Gemini CLI の MCP API は仕様変更が発生しやすいため、挙動に差異を感じたら `post-create-setup.sh` のコマンドを確認してください
+- v0.2.0 で追加されたライブラリ・ツールは、ビジネス職のデータ分析や市場調査、レポート作成を支援する目的で選定されています。より高度な分析や特殊なツールが必要な場合は、Dockerfileに追記してリビルドしてください
+- v0.2.0 追加仕様では、Ubuntu 24.04のAPTで入るものを優先し、保守性を重視しています。CLI×AI前提のワークフローを想定し、GitHub業務のCLI完結、Web/ログ解析の初動高速化、ネットワーク調査のCLI完結を実現します
 
 ## 8. 参考
 - `post-create-setup.sh`: MCP 登録ロジックとヘルパー呼び出しの中心
