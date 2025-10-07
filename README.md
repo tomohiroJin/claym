@@ -108,7 +108,7 @@ bash scripts/health/check-environment.sh --json  # JSON サマリ出力
 - スキーマエラーがあればエディタ上で即座に確認できます
 
 ## 6. トラブルシューティング
-- **CLI が見つからない**: `npm list -g --depth=0` や `pipx list` でインストール状況を確認。必要なら `npm install -g @anthropic-ai/claude-code` などを再実行
+- **CLI が見つからない**: `npm list -g --depth=0` や `${VIRTUAL_ENV:-/opt/mcp-venv}/bin/pip list` でインストール状況を確認。必要なら `npm install -g @anthropic-ai/claude-code` や `${VIRTUAL_ENV:-/opt/mcp-venv}/bin/pip install markitdown-mcp` などを再実行
 - **Playwright の起動失敗**: `npx playwright install chromium --with-deps` を再度実行し、コンテナ起動パラメータ（`--shm-size` など）を確認
 - **Serena が起動しない**: `uv --version` / `/opt/serena` の存在を確認し、`uv run --directory /opt/serena serena start-mcp-server --project $PWD` を手動実行
 - **GitHub / Firecrawl MCP が見当たらない**: 対応する API キーを環境変数に設定した後、`post-create-setup.sh` を再実行

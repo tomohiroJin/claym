@@ -10,10 +10,10 @@
 
 - Ubuntu 24.04 ベースとタイムゾーン設定の確認
 - ワークスペースおよび ImageSorcery ログディレクトリが `vscode` ユーザー所有であることの確認
-- 主要 CLI (`claude`, `codex`, `gemini`, `uv`, `npx`, `pipx`, `rg` など) の存在チェック
+- 主要 CLI (`claude`, `codex`, `gemini`, `uv`, `npx`, `npm`, `rg` など) と Python MCP コマンド (`markitdown-mcp`, `imagesorcery-mcp`, `mcp-github`) の存在チェック
 - CLI バージョン取得によるドリフト検知
 - Claude / Codex / Gemini に対する既定 MCP 登録の有無確認
-- Serena・Playwright・pipx 管理の MCP 資産のスポットチェック
+- Serena・Playwright・Python 仮想環境で管理される MCP 資産のスポットチェック
 - コンテナにエクスポートされている API キー一覧の表示
 - `safe.directory` 設定と ImageSorcery ログの参照可否の確認
 

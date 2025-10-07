@@ -2,7 +2,7 @@
 # ツールチェーン関連のチェック
 
 check_cli_paths() {
-  local required=(claude codex gemini uv npx npm pipx rg)
+  local required=(claude codex gemini uv npx npm rg markitdown-mcp imagesorcery-mcp mcp-github)
   local missing=()
   local cmd
   declare -A seen=()
@@ -27,7 +27,6 @@ check_cli_versions() {
     "gemini --version"
     "uv --version"
     "npm --version"
-    "pipx --version"
   )
   local outputs=()
   local cmd
@@ -56,29 +55,58 @@ check_cli_versions() {
   fi
 }
 
-check_pipx_packages() {
-  if ! have pipx; then
-    set_result "WARN" "pipx not available" "Ensure pipx is installed"
-    return
-  fi
-  local expected=(markitdown-mcp imagesorcery-mcp mcp-github)
-  local list
-  if ! list=$(pipx list 2>/dev/null); then
-    set_result "WARN" "Failed to read pipx environments" "Review pipx installation"
-    return
-  fi
-  local missing=()
-  local pkg
-  for pkg in "${expected[@]}"; do
-    if ! grep -q "$pkg" <<<"$list"; then
-      missing+=("$pkg")
+check_mcp_python_environment() {
+  local expected_cmds=(markitdown-mcp imagesorcery-mcp mcp-github)
+  local missing_cmds=()
+  local cmd
+  for cmd in "${expected_cmds[@]}"; do
+    if ! have "$cmd"; then
+      missing_cmds+=("$cmd")
     fi
   done
-  if ((${#missing[@]})); then
-    set_result "WARN" "pipx packages missing: ${missing[*]}" "Re-run Docker image build or install via pipx"
+
+  local venv="${VIRTUAL_ENV:-/opt/mcp-venv}"
+  local python_cmd=""
+  if [[ -n "$venv" && -x "$venv/bin/python" ]]; then
+    python_cmd="$venv/bin/python"
+  elif have python3; then
+    python_cmd="python3"
+  fi
+
+  local -a import_failures=()
+  if [[ -n "$python_cmd" ]]; then
+    local target module label
+    local -a import_targets=(
+      "markitdown_mcp:markitdown-mcp"
+      "imagesorcery_mcp:imagesorcery-mcp"
+      "mcp_github:mcp-github"
+    )
+    for target in "${import_targets[@]}"; do
+      IFS=':' read -r module label <<<"$target"
+      if ! "$python_cmd" -c "import ${module}" >/dev/null 2>&1; then
+        import_failures+=("$label")
+      fi
+    done
+  else
+    import_failures+=("Python runtime not found (${venv}/bin/python or python3)")
+  fi
+
+  if ((${#missing_cmds[@]})) || ((${#import_failures[@]})); then
+    local -a parts=()
+    if ((${#missing_cmds[@]})); then
+      parts+=("commands: ${missing_cmds[*]}")
+    fi
+    if ((${#import_failures[@]})); then
+      parts+=("imports: ${import_failures[*]}")
+    fi
+    local message
+    message=$(IFS='; '; echo "${parts[*]}")
+    local remedy="Rebuild the devcontainer or reinstall MCP packages in ${venv}"
+    set_result "FAIL" "Python MCP environment issues — ${message}" "$remedy"
     return
   fi
-  set_result "PASS" "pipx packages installed" ""
+
+  set_result "PASS" "Python MCP CLI commands and imports are healthy" ""
 }
 
 check_api_keys() {
@@ -117,6 +145,6 @@ check_git_safe_directory() {
 
 register_check "cli-paths" "CLI availability" true true check_cli_paths
 register_check "cli-versions" "CLI versions" false false check_cli_versions
-register_check "pipx-packages" "pipx packages" false false check_pipx_packages
+register_check "mcp-python-env" "Python MCP environment" false false check_mcp_python_environment
 register_check "api-keys" "API keys" false true check_api_keys
 register_check "git-safe-directory" "Git safe.directory" false false check_git_safe_directory

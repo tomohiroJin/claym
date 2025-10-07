@@ -46,6 +46,12 @@
         "@modelcontextprotocol/server-filesystem",
         "/workspaces/claym"
       ]
+    },
+    "github": {
+      "command": "uvx",
+      "args": [
+        "mcp-github"
+      ]
     }
   }
 }
