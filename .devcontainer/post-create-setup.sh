@@ -136,7 +136,11 @@ register_filesystem() {
 }
 
 register_context7() {
-  mcp_register_sse_all "context7" "https://mcp.context7.com/sse"
+  local cmd=(npx -y @upstash/context7-mcp)
+  if [[ -n "${CONTEXT7_API_KEY:-}" ]]; then
+    cmd+=(--api-key "${CONTEXT7_API_KEY}")
+  fi
+  mcp_register_command_all "context7" "${cmd[@]}"
 }
 
 register_github() {
