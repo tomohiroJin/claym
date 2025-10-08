@@ -180,8 +180,14 @@ RUN python3 -m venv "$VIRTUAL_ENV" \
     && "$VIRTUAL_ENV/bin/pip" install --no-cache-dir \
         markitdown-mcp \
         imagesorcery-mcp \
-        mcp-github \
-    && "$VIRTUAL_ENV/bin/imagesorcery-mcp" --post-install
+        mcp-github
+# fastmcp 2.3.4 ships a ServerSettings.dependencies field that defines both
+# default and default_factory, which pydantic>=2.11 rejects on import. Patch the
+# installed module so the Docker build can succeed until the upstream package
+# is fixed.
+COPY .devcontainer/scripts/patch-fastmcp.py /tmp/patch-fastmcp.py
+RUN "$VIRTUAL_ENV/bin/python" /tmp/patch-fastmcp.py && rm /tmp/patch-fastmcp.py
+RUN "$VIRTUAL_ENV/bin/imagesorcery-mcp" --post-install
 ENV PATH="${VIRTUAL_ENV}/bin:$PATH"
 
 # ----------------------------------------------------------------------------
@@ -249,7 +255,7 @@ RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/inst
 # devcontainer.json はコンテナ作成後にこのスクリプトを実行します。
 # 登録対象やコマンドをカスタマイズしたい場合は、このスクリプトを編集してください。
 
-COPY post-create-setup.sh /usr/local/bin/post-create-setup.sh
+COPY .devcontainer/post-create-setup.sh /usr/local/bin/post-create-setup.sh
 RUN chmod +x /usr/local/bin/post-create-setup.sh
 
 # 対話シェルの既定ユーザーを非 root（vscode）にします。
