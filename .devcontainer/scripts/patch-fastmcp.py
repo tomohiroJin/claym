@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """
-fastmcp 2.3.4 ships a ServerSettings.dependencies field that defines both
-default and default_factory, which pydantic>=2.11 rejects on import. Patch the
-installed module so the Docker build can succeed until the upstream package
-is fixed.
+fastmcp 2.3.4 では ServerSettings.dependencies に default と default_factory が同時定義されており、
+pydantic>=2.11 環境では import 時に例外が発生します。上流の修正が取り込まれるまでの暫定対応として、
+インストール済みモジュールへパッチを適用し、Docker ビルドを継続できるようにします。
 """
 from __future__ import annotations
 import sysconfig
@@ -14,6 +13,6 @@ text = settings_path.read_text()
 needle = "    ] = []"
 if needle in text:
     settings_path.write_text(text.replace(needle, "    ]", 1))
-    print("fastmcp settings patched successfully")
+    print("fastmcp の設定ファイルをパッチしました")
 else:
-    print("Skipping fastmcp settings patch; snippet already updated.")
+    print("fastmcp の設定パッチをスキップしました（既に修正済みです）")

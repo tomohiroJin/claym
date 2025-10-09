@@ -181,10 +181,9 @@ RUN python3 -m venv "$VIRTUAL_ENV" \
         markitdown-mcp \
         imagesorcery-mcp \
         mcp-github
-# fastmcp 2.3.4 ships a ServerSettings.dependencies field that defines both
-# default and default_factory, which pydantic>=2.11 rejects on import. Patch the
-# installed module so the Docker build can succeed until the upstream package
-# is fixed.
+# fastmcp 2.3.4 では ServerSettings.dependencies に default と default_factory が
+# 同時定義されており、pydantic>=2.11 では読み込み時にエラーになります。
+# 上流で修正されるまでの暫定措置として、インストール済みモジュールへパッチを適用します。
 COPY .devcontainer/scripts/patch-fastmcp.py /tmp/patch-fastmcp.py
 RUN "$VIRTUAL_ENV/bin/python" /tmp/patch-fastmcp.py && rm /tmp/patch-fastmcp.py
 RUN "$VIRTUAL_ENV/bin/imagesorcery-mcp" --post-install
