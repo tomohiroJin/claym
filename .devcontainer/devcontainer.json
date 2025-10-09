@@ -3,7 +3,10 @@
   "name": "Claym AI Dev Environment",
 
   // コンテナビルド
-  "dockerFile": "Dockerfile",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
 
   // ポート転送
   "forwardPorts": [24282, 9323, 1455],

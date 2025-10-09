@@ -110,7 +110,7 @@ Claym 開発コンテナには、AI エージェント運用を支えるラン�
 | markitdown | Markdown ↔ HTML/URL 変換 MCP | `markitdown-mcp --help` |
 | imagesorcery | 画像処理 MCP (モデル取得済み) | `imagesorcery-mcp --list-tools` |
 | filesystem | ワークスペースアクセス MCP | `npx -y @modelcontextprotocol/server-filesystem --help` |
-| context7 (SSE) | 外部 SSE MCP エンドポイント | `curl https://mcp.context7.com/sse` |
+| context7 (CLI) | ドキュメント検索 MCP（npx 経由で起動） | `npx -y @upstash/context7-mcp --help` |
 | mcp-github | GitHub 操作用 MCP | `uvx mcp-github --help` |
 | firecrawl | Web クローリング MCP | `npx -y firecrawl-mcp --help` |
 
