@@ -9,7 +9,7 @@
 # 注意：
 #  - Codex CLI / Gemini CLI への MCP 自動登録は、現状の CLI 仕様が変わりやすいため
 #    必要に応じて本スクリプトを調整してください。
-#  - 何度実行しても致命的なエラーにならないよう best-effort で進みます。
+#  - 何度実行しても致命的なエラーにならないようベストエフォートで進みます。
 
 set -Eeuo pipefail
 
@@ -136,6 +136,7 @@ register_filesystem() {
 }
 
 register_context7() {
+  # context7 を CLI 版 MCP として登録し、必要に応じて API キーを付与
   local cmd=(npx -y @upstash/context7-mcp)
   if [[ -n "${CONTEXT7_API_KEY:-}" ]]; then
     cmd+=(--api-key "${CONTEXT7_API_KEY}")
