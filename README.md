@@ -88,6 +88,27 @@ bash scripts/health/check-environment.sh --json  # JSON サマリ出力
 - `devcontainer.local.json` の `mounts` に SSH や Git 設定を追加して認証情報を共有
 - 追加ツールが必要な場合は `Dockerfile` に追記し、Dev Container の Rebuild を実行
 
+### 5.0 local ディレクトリの活用
+`local/` ディレクトリは、個人的な開発環境や実験的なコンテンツを保存するための専用スペースです。このディレクトリはメインリポジトリから除外されており、別の Git リポジトリとして独立して管理できます。
+
+#### 用途
+- 個人的な設定ファイルやスクリプト
+- 実験的なコード・プロトタイプ
+- プロジェクト固有のメモやドキュメント
+- ローカル環境でのみ必要なツールやユーティリティ
+
+#### セットアップ
+```bash
+cd local
+git init
+git remote add origin <your-remote-url>
+git add .
+git commit -m "Initial commit for local development"
+git push -u origin main
+```
+
+詳細な使用方法については `local/README.md` を参照してください。
+
 ### 5.1 v0.2.0 追加仕様2の運用Tips
 
 #### REST Clientの活用
