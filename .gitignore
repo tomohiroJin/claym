@@ -111,3 +111,7 @@ docker-compose.override.yml
 
 # serena
 .serena
+
+# Local directory (managed separately)
+local/
+!local/.gitkeep
