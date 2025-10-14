@@ -2,17 +2,17 @@
 
 各項目は振る舞いベースの確認観点です。作業に着手したら RED → GREEN → REFACTOR の順で進め、完了後チェックを入れてください。
 
-- [ ] **環境変数リセット**
-  - GIVEN: `tsumugi-report` 直下で新しいシェルを開く
-  - WHEN: シェル初期化処理が実行される
-  - THEN: `echo $VIRTUAL_ENV` が空になっている
+- [x] **Poetry ラッパースクリプトの作成**
+  - GIVEN: Python CLI が `/opt/mcp-venv` を指している
+  - WHEN: `./scripts/run_poetry.sh <command>` を実行
+  - THEN: `VIRTUAL_ENV` が解除された状態で Poetry が `.venv` を利用する
 
-- [ ] **Poetry 再初期化**
-  - GIVEN: `VIRTUAL_ENV` を解除した状態
-  - WHEN: `poetry env use /usr/bin/python3 && poetry install`
-  - THEN: `.venv` 配下に Poetry 仮想環境が作成され、依存インストールが成功する
+- [x] **Poetry 再初期化**
+  - GIVEN: ラッパースクリプト経由で実行
+  - WHEN: `./scripts/run_poetry.sh env use /usr/bin/python3 && ./scripts/run_poetry.sh install --no-root`
+  - THEN: `.venv` 配下に Poetry 仮想環境が作成され、必要な依存をインストールできる（ネットワーク制約がある場合は `poetry install` が失敗する旨を README に記載）
 
-- [ ] **Poetry 実行確認**
+- [x] **Poetry 実行確認**
   - GIVEN: `.venv` が有効な状態
   - WHEN: `poetry run pytest`
   - THEN: 既存のユニットテスト（11件）がすべて PASS する
@@ -27,7 +27,7 @@
   - WHEN: MCP Python 環境のチェックが走る
   - THEN: `VIRTUAL_ENV` を解除していても `PASS` または既存と同等のステータスになる
 
-- [ ] **類似環境変数の確認**
+- [x] **類似環境変数の確認**
   - GIVEN: Workspace 全体を検索
   - WHEN: `rg "VIRTUAL_ENV"` を実行
   - THEN: `/opt/mcp-venv` 以外に同等の仕組みが存在しないことを確認

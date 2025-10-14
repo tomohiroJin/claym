@@ -24,10 +24,10 @@
 - `poetry.lock` の維持と `pyproject.toml` の整合性。
 
 ## 4. 対応方針
-1. **シェル起動時に `VIRTUAL_ENV` を無効化**
-   - `~/.zshrc` にプロジェクトパス判定を追加し、`tsumugi-report` 配下でシェルを開く場合は `unset VIRTUAL_ENV` を実行。
-   - shell 起動後にディレクトリを移動したケースにも対応するため、`chpwd` フックまたは `precmd` でフックする helper を作成。（例: `local/scripts/zsh/tsumugi-poetry.zsh` を作り `.zshrc` で source）
-   - 環境変数解除後、必要なら `export PATH="$HOME/.local/bin:$PATH"` を再設定。
+1. **Poetry 実行時に `VIRTUAL_ENV` を解除するラッパーを提供**
+   - 権限の都合で `~/.zshrc` を直接編集できないため、プロジェクト内に `scripts/run_poetry.sh` を用意し、Poetry コマンド実行前に `unset VIRTUAL_ENV` と PATH 調整を行う。
+   - ユーザーは `./scripts/run_poetry.sh env use /usr/bin/python3` や `./scripts/run_poetry.sh run pytest` のように利用し、常に `.venv` が使用される。
+   - 追加で `.zshrc` へ反映したい場合は README に手動追記手順を記載しておく。
 
 2. **Poetry への切り替え手順を復活**
    - README に `.venv` 作成→`poetry env use /usr/bin/python3`→`poetry install` の手順を記載。
@@ -39,9 +39,9 @@
    - `scripts/test.sh` などは `.venv` を前提に実行できるか確認。必要なら `poetry run` を併記。
 
 4. **検証手順の明確化**
-   - `unset VIRTUAL_ENV`→`poetry env use python3`→`poetry install`→`poetry run pytest` の確認。
-   - `.venv/bin/poetry` が `/opt/mcp-venv` を参照しないことを `poetry env info` で確認。
-   - VS Code 統合ターミナルでも `.venv` を利用できるか確認（`settings.json` に `terminal.integrated.cwd` 指定の有無と併せて検証）。
+   - `./scripts/run_poetry.sh env use /usr/bin/python3` → `./scripts/run_poetry.sh install --no-root` → `./scripts/run_poetry.sh run pytest` の確認。
+   - `./scripts/run_poetry.sh env info --path` が `.venv` を指すことを確認。
+   - VS Code 統合ターミナルでもラッパースクリプト経由で `.venv` が利用できるか確認。
 
 ## 5. 非対応範囲（Out of Scope）
 - Dockerfile の ENV 定義を削除・変更すること（システム MCP 用のため）。
