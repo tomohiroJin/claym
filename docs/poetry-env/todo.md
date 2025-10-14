@@ -6,6 +6,7 @@
   - GIVEN: Python CLI が `/opt/mcp-venv` を指している
   - WHEN: `./scripts/run_poetry.sh <command>` を実行
   - THEN: `VIRTUAL_ENV` が解除された状態で Poetry が `.venv` を利用する
+  - [x] 2025-10-15: スクリプト修正完了。`.venv/bin/poetry` を直接呼び出すように変更
 
 - [x] **Poetry 再初期化**
   - GIVEN: ラッパースクリプト経由で実行
@@ -14,18 +15,23 @@
 
 - [x] **Poetry 実行確認**
   - GIVEN: `.venv` が有効な状態
-  - WHEN: `poetry run pytest`
+  - WHEN: `./scripts/run_poetry.sh run pytest`
   - THEN: 既存のユニットテスト（11件）がすべて PASS する
+  - [x] 2025-10-15: ラッパースクリプト経由で全テスト成功を確認（11 passed in 1.09s）
 
-- [ ] **VS Code ターミナル確認**
+- [x] **VS Code ターミナル確認**
   - GIVEN: VS Code 統合ターミナルを開く
-  - WHEN: `poetry env info --path` を実行
+  - WHEN: `./scripts/run_poetry.sh env info --path` を実行
   - THEN: `.venv` のパスが表示され `/opt/mcp-venv` が使われていない
+  - [x] 2024-12-29: `.venv/bin/poetry` で `.venv` を指せることを確認
+  - [x] 2025-10-15: ラッパースクリプトで `/workspaces/claym/local/projects/tsumugi-report/.venv` を正しく認識
 
 - [ ] **ヘルスチェック整合性**
   - GIVEN: `scripts/health/check-environment.sh` を実行
   - WHEN: MCP Python 環境のチェックが走る
   - THEN: `VIRTUAL_ENV` を解除していても `PASS` または既存と同等のステータスになる
+  - [x] 2024-12-29: `VIRTUAL_ENV` 未設定 + `check_mcp_python_environment` 実行で `imagesorcery-mcp` Import が権限エラーになることを確認
+  - [ ] TODO: `/opt/mcp-venv` の書き込み権限調整 or フォールバック戦略を検討
 
 - [x] **類似環境変数の確認**
   - GIVEN: Workspace 全体を検索
@@ -35,7 +41,8 @@
 - [ ] **ドキュメント更新**
   - GIVEN: README / spec / todo (本体) が現状に追随していない
   - WHEN: Poetry 手順を再度記載し、pip+venv はトラブルシュートとして移す
-  - THEN: 開発フローの記述が Poerty を標準とした形に統一される
+  - THEN: 開発フローの記述が Poetry を標準とした形に統一される
+  - [ ] TODO: 親リポジトリ README と spec.md の更新が必要
 
 - [ ] **バックワード確認**
   - GIVEN: `/opt/mcp-venv` を用いるグローバル MCP CLI

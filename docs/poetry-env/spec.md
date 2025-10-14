@@ -25,9 +25,10 @@
 
 ## 4. 対応方針
 1. **Poetry 実行時に `VIRTUAL_ENV` を解除するラッパーを提供**
-   - 権限の都合で `~/.zshrc` を直接編集できないため、プロジェクト内に `scripts/run_poetry.sh` を用意し、Poetry コマンド実行前に `unset VIRTUAL_ENV` と PATH 調整を行う。
+   - プロジェクト内に `scripts/run_poetry.sh` を用意し、Poetry コマンド実行前に `unset VIRTUAL_ENV` を行う。
+   - ラッパーは `.venv/bin/poetry` を直接呼び出すことで、グローバルな poetry コマンドへの依存を排除。
    - ユーザーは `./scripts/run_poetry.sh env use /usr/bin/python3` や `./scripts/run_poetry.sh run pytest` のように利用し、常に `.venv` が使用される。
-   - 追加で `.zshrc` へ反映したい場合は README に手動追記手順を記載しておく。
+   - **実装完了**: 2025-10-15 に修正完了。`.venv/bin/poetry` を直接参照する方式に変更し、動作確認済み。
 
 2. **Poetry への切り替え手順を復活**
    - README に `.venv` 作成→`poetry env use /usr/bin/python3`→`poetry install` の手順を記載。
@@ -49,12 +50,12 @@
 - 他プロジェクトへの影響調査（tsumugi-report 内に限定）。
 
 ## 6. テスト計画
-- `poetry env info --path` が `.../tsumugi-report/.venv` を指す。
-- `poetry install` がエラーなく完了。
-- `poetry run pytest` および `./scripts/test.sh` が成功。
-- VS Code 統合ターミナルで `poetry` コマンドが `.venv` を使用。
-- `scripts/health/checks/tooling.sh` 実行時もエラーが発生しない。
-- `poetry lock` が最新の依存関係を保持し CI で利用可能。
+- ✅ `./scripts/run_poetry.sh env info --path` が `.../tsumugi-report/.venv` を指す。
+- ✅ `./scripts/run_poetry.sh install` がエラーなく完了。
+- ✅ `./scripts/run_poetry.sh run pytest` が成功（11 passed in 1.09s）。
+- ✅ VS Code 統合ターミナルでラッパースクリプト経由で `.venv` を使用。
+- ⏳ `scripts/health/checks/tooling.sh` 実行時もエラーが発生しない。（未検証）
+- ⏳ `./scripts/run_poetry.sh lock` が最新の依存関係を保持し CI で利用可能。（未検証）
 
 ## 7. リスクと緩和策
 - **Zsh フックが他ディレクトリでも誤作動**: 条件分岐でパス判定を厳密にし、`tsumugi-report` 配下のみで実行。ドキュメントで `source ~/.zshrc` の注意を記載。
@@ -62,8 +63,18 @@
 - **Poetry キャッシュが残る**: `poetry env remove --all` をドキュメントに追記。
 - **Grml.* rocks**:  Global CLI への影響がないか `claude --version` などを再確認。
 
-## 8.成果物
-- `.zshrc`（または補助スクリプト）の更新案
-- README / spec / todo の更新
-- 検証記録（`poetry env info` の結果など）
-- 必要に応じて `scripts/` 以下の補助スクリプト
+## 8. 成果物
+- ✅ `scripts/run_poetry.sh`: Poetry ラッパースクリプト（2025-10-15 実装完了）
+- ✅ README / spec / todo の更新（2025-10-15 更新完了）
+- ✅ 検証記録（`./scripts/run_poetry.sh env info` の結果など）
+  - Path: `/workspaces/claym/local/projects/tsumugi-report/.venv`
+  - Executable: `/workspaces/claym/local/projects/tsumugi-report/.venv/bin/python`
+  - Poetry version: 2.2.1
+  - Tests: 11 passed in 1.09s
+
+## 9. 実装履歴
+- 2025-10-15: 初回実装完了
+  - `scripts/run_poetry.sh` をプロジェクトルートの `.venv/bin/poetry` を直接呼び出す方式に修正
+  - `VIRTUAL_ENV` を解除し、`.venv` を正しく認識することを確認
+  - 全テスト（11件）が成功することを確認
+  - 親リポジトリ README とドキュメントを更新

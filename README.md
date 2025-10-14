@@ -130,14 +130,23 @@ git push -u origin main
 
 ## 6. トラブルシューティング
 - **CLI が見つからない**: `npm list -g --depth=0` や `${VIRTUAL_ENV:-/opt/mcp-venv}/bin/pip list` でインストール状況を確認。必要なら `npm install -g @anthropic-ai/claude-code` や `${VIRTUAL_ENV:-/opt/mcp-venv}/bin/pip install markitdown-mcp` などを再実行
-- **Poetry を使いたい**: `/opt/mcp-venv` の強制が有効なため、そのままでは権限エラーになります。`tsumugi-report` プロジェクトでは以下のラッパースクリプトを利用してください。
+- **Poetry を使いたい**: コンテナの `/opt/mcp-venv` が環境変数 `VIRTUAL_ENV` で強制されているため、そのままでは Poetry が権限エラーになります。`tsumugi-report` プロジェクトでは以下のラッパースクリプトを利用してください。
   ```bash
   cd /workspaces/claym/local/projects/tsumugi-report
+
+  # Poetry 環境の初期化（初回のみ）
   ./scripts/run_poetry.sh env use /usr/bin/python3
   ./scripts/run_poetry.sh install --no-root
+
+  # テストの実行
   ./scripts/run_poetry.sh run pytest
+
+  # 環境情報の確認
+  ./scripts/run_poetry.sh env info --path
+  # => /workspaces/claym/local/projects/tsumugi-report/.venv が表示されれば成功
   ```
-  うまくいかない場合は `docs/poetry-env/spec.md` を参照し、`VIRTUAL_ENV` が解除されているか確認してください。
+
+  このラッパースクリプトは、実行時に `VIRTUAL_ENV` を解除し、プロジェクト固有の `.venv` を使用するように Poetry を起動します。詳細は `docs/poetry-env/spec.md` を参照してください。
 - **Playwright の起動失敗**: `npx playwright install chromium --with-deps` を再度実行し、コンテナ起動パラメータ（`--shm-size` など）を確認
 - **Serena が起動しない**: `uv --version` / `/opt/serena` の存在を確認し、`uv run --directory /opt/serena serena start-mcp-server --project $PWD` を手動実行
 - **GitHub / Firecrawl MCP が見当たらない**: 対応する API キーを環境変数に設定した後、`post-create-setup.sh` を再実行
