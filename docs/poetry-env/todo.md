@@ -38,18 +38,21 @@
   - WHEN: `rg "VIRTUAL_ENV"` を実行
   - THEN: `/opt/mcp-venv` 以外に同等の仕組みが存在しないことを確認
 
-- [ ] **ドキュメント更新**
+- [x] **ドキュメント更新**
   - GIVEN: README / spec / todo (本体) が現状に追随していない
   - WHEN: Poetry 手順を再度記載し、pip+venv はトラブルシュートとして移す
   - THEN: 開発フローの記述が Poetry を標準とした形に統一される
-  - [ ] TODO: 親リポジトリ README と spec.md の更新が必要
+  - [x] 2024-12-29: ルート README / `local/projects/tsumugi-report/README.md` / spec.md を更新し、PATH 整備と既知の課題を追記
 
-- [ ] **バックワード確認**
+- [x] **バックワード確認**
   - GIVEN: `/opt/mcp-venv` を用いるグローバル MCP CLI
   - WHEN: `claude --version` などを実行
   - THEN: 既存 CLI が影響を受けず動作する
+  - [x] 2024-12-29: `claude --version` / `codex --version` / `gemini --version` を確認（いずれも成功）
 
 - [ ] **コミット & PR 準備**
   - GIVEN: 上記の動作確認が完了
   - WHEN: Git で差分を確認しテストログを添付
   - THEN: `feature/poetry-env` ブランチへコミットし、レビュー用の PR が準備できている
+  - [x] 2024-12-29: コミット完了
+  - [ ] TODO: GitHub CLI の認証が未設定のため PR 作成待ち

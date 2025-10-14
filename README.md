@@ -130,7 +130,7 @@ git push -u origin main
 
 ## 6. トラブルシューティング
 - **CLI が見つからない**: `npm list -g --depth=0` や `${VIRTUAL_ENV:-/opt/mcp-venv}/bin/pip list` でインストール状況を確認。必要なら `npm install -g @anthropic-ai/claude-code` や `${VIRTUAL_ENV:-/opt/mcp-venv}/bin/pip install markitdown-mcp` などを再実行
-- **Poetry を使いたい**: コンテナの `/opt/mcp-venv` が環境変数 `VIRTUAL_ENV` で強制されているため、そのままでは Poetry が権限エラーになります。`tsumugi-report` プロジェクトでは以下のラッパースクリプトを利用してください。
+- **Poetry を使いたい**: コンテナの `/opt/mcp-venv` が環境変数 `VIRTUAL_ENV` で強制されているため、そのままでは Poetry が権限エラーになります。`curl -sSL https://install.python-poetry.org | python3 -` でユーザー環境に Poetry を導入し、`export PATH="$HOME/.local/bin:$PATH"` を `~/.zshrc` 等に追記してください。そのうえで `tsumugi-report` プロジェクトでは以下のラッパースクリプトを利用し、Poetry 実行前に `VIRTUAL_ENV` を解除します。
   ```bash
   cd /workspaces/claym/local/projects/tsumugi-report
 
