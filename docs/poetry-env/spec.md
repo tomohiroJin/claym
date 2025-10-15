@@ -26,9 +26,9 @@
 ## 4. 対応方針
 1. **Poetry 実行時に `VIRTUAL_ENV` を解除するラッパーを提供**
    - プロジェクト内に `scripts/run_poetry.sh` を用意し、Poetry コマンド実行前に `unset VIRTUAL_ENV` を行う。
-   - 現状のラッパーは `exec poetry "$@"` でグローバル `poetry` に依存しており、VS Code ターミナル環境では `poetry: not found` になる。
-   - **TODO**: `.venv/bin/poetry` が存在する場合はそれを優先的に呼び出すフォールバックを実装し、グローバル導入がなくても利用できるようにする。
-   - 暫定対応として README へ `curl -sSL https://install.python-poetry.org | python3 -` を案内し、`~/.local/bin` を PATH に追加する手順を記載する。
+   - ラッパーは `.venv/bin/poetry` を直接呼び出すことで、グローバルな poetry コマンドへの依存を排除。
+   - ユーザーは `./scripts/run_poetry.sh env use /usr/bin/python3` や `./scripts/run_poetry.sh run pytest` のように利用し、常に `.venv` が使用される。
+   - ✅ **実装完了** (2025-10-15): `.venv/bin/poetry` を直接参照する方式で実装完了。動作確認済み。
 
 2. **Poetry への切り替え手順を復活**
    - README に `.venv` 作成→`poetry env use /usr/bin/python3`→`poetry install` の手順を記載。
@@ -40,9 +40,9 @@
    - `scripts/test.sh` などは `.venv` を前提に実行できるか確認。必要なら `poetry run` を併記。
 
 4. **検証手順の明確化**
-   - `./scripts/run_poetry.sh env use /usr/bin/python3` → `./scripts/run_poetry.sh install --no-root` → `./scripts/run_poetry.sh run pytest` の確認（ラッパー改修後に再実施する）。
-   - ラッパーが失敗した場合でも `.venv/bin/poetry env info --path` で `.venv` を指すことを確認。
-   - VS Code 統合ターミナルで `poetry` が見つからない場合は PATH の整備手順を案内し、改善後の再確認を行う。
+   - ✅ `./scripts/run_poetry.sh env use /usr/bin/python3` → `./scripts/run_poetry.sh install --no-root` → `./scripts/run_poetry.sh run pytest` の確認完了。
+   - ✅ `.venv/bin/poetry env info --path` で `.venv` を指すことを確認済み。
+   - ✅ VS Code 統合ターミナルでラッパースクリプト経由で `.venv` が正常に動作。
 
 ## 5. 非対応範囲（Out of Scope）
 - Dockerfile の ENV 定義を削除・変更すること（システム MCP 用のため）。
@@ -50,12 +50,13 @@
 - 他プロジェクトへの影響調査（tsumugi-report 内に限定）。
 
 ## 6. テスト計画
-- [ ] `./scripts/run_poetry.sh env info --path` が `.../tsumugi-report/.venv` を指すことを確認する（2024-12-29 時点: `poetry: not found` で失敗）。
-- [ ] `./scripts/run_poetry.sh install --no-root` と `./scripts/run_poetry.sh run pytest` が成功することを確認する（ラッパー未改修のため未実施）。
-- [x] `.venv/bin/poetry env info --path` を直接実行した場合に `.venv` が指されることを確認済み。
-- [ ] VS Code 統合ターミナルでラッパースクリプト経由で `.venv` を使用できることを確認する（PATH 整備後に再検証）。
-- [ ] `scripts/health/checks/tooling.sh` の `check_mcp_python_environment` で `/opt/mcp-venv` への書き込み権限不足が改善されていることを確認する（PermissionError を解消する必要あり）。
-- [ ] `./scripts/run_poetry.sh lock` が最新の依存関係を保持し CI で利用可能であることを確認する。
+- ✅ `./scripts/run_poetry.sh env info --path` が `.../tsumugi-report/.venv` を指すことを確認済み。
+- ✅ `./scripts/run_poetry.sh install --no-root` が成功することを確認済み。
+- ✅ `./scripts/run_poetry.sh run pytest` が成功することを確認済み（11 passed in 1.09s）。
+- ✅ `.venv/bin/poetry env info --path` を直接実行した場合に `.venv` が指されることを確認済み。
+- ✅ VS Code 統合ターミナルでラッパースクリプト経由で `.venv` を使用できることを確認済み。
+- ⏳ `scripts/health/checks/tooling.sh` の `check_mcp_python_environment` で `/opt/mcp-venv` への書き込み権限不足の影響（別タスクとして対応予定）。
+- ⏳ `./scripts/run_poetry.sh lock` が最新の依存関係を保持し CI で利用可能であることの確認（必要に応じて実施）。
 
 ## 7. リスクと緩和策
 - **Zsh フックが他ディレクトリでも誤作動**: 条件分岐でパス判定を厳密にし、`tsumugi-report` 配下のみで実行。ドキュメントで `source ~/.zshrc` の注意を記載。
@@ -64,13 +65,25 @@
 - **Grml.* rocks**:  Global CLI への影響がないか `claude --version` などを再確認。
 
 ## 8. 成果物
-- scripts/run_poetry.sh: `VIRTUAL_ENV` を解除するラッパー（2024-12-29 時点ではグローバル `poetry` 依存あり）。
-- README / spec / todo: Poetry 再導入手順と既知の制約を反映（本更新で PATH 整備手順とヘルスチェック上の注意を追記）。
-- 検証記録:
-  - `.venv/bin/poetry env info --path` → `/workspaces/claym/local/projects/tsumugi-report/.venv`
-  - Poetry version: 2.2.1（`.venv` 内）
-  - `scripts/health/checks/tooling.sh` → PermissionError（`imagesorcery_mcp` のログ作成権限不足）
+- ✅ `scripts/run_poetry.sh`: Poetry ラッパースクリプト（2025-10-15 実装完了）
+  - `.venv/bin/poetry` を直接呼び出す方式
+  - `VIRTUAL_ENV` を自動解除
+  - プロジェクトルート自動検出
+  - エラーハンドリング実装
+- ✅ README / spec / todo の更新（2025-10-15 更新完了）
+  - トラブルシューティングセクションに詳細な使用方法を記載
+  - 実装状況を反映
+- ✅ 検証記録
+  - Path: `/workspaces/claym/local/projects/tsumugi-report/.venv`
+  - Executable: `/workspaces/claym/local/projects/tsumugi-report/.venv/bin/python`
+  - Poetry version: 2.2.1
+  - Tests: 11 passed in 1.09s
 
 ## 9. 実装履歴
-- 2024-12-29: 現地調査でラッパースクリプトがグローバル `poetry` に依存していることを確認。`.venv/bin/poetry` の存在と PATH 課題をドキュメント化。
-- 次回タスク: ラッパースクリプトのフォールバック実装とヘルスチェックの権限問題解消。
+- 2024-12-29: 初回調査。ラッパースクリプトがグローバル `poetry` に依存していることを確認。課題をドキュメント化。
+- 2025-10-15: **実装完了**
+  - `scripts/run_poetry.sh` を `.venv/bin/poetry` を直接呼び出す方式に修正
+  - `VIRTUAL_ENV` を解除し、`.venv` を正しく認識することを確認
+  - 全テスト（11件）が成功することを確認
+  - 親リポジトリ README とドキュメントを更新
+  - 両リポジトリでコミット完了
