@@ -16,9 +16,9 @@ Claym 開発コンテナには、AI エージェント運用を支えるラン�
 | fd-find (fd) | 使いやすい `find` 代替 | `fd "*.py" scripts/` |
 | bat | シンタックスハイライト付き cat 互換 | `bat README.md` |
 | fzf | インタラクティブなファジー検索 | `ls | fzf` |
-| zoxide | 賢いディレクトリジャンプ (z + keyword) | `z repo` |
-| eza | モダンな `ls` 代替 | `eza -lah` |
-| tldr / tree | コマンド早見表とディレクトリ構造表示 | `tldr tar`, `tree -L 2` |
+| tree | ディレクトリ構造表示 | `tree -L 2` |
+
+> Debian ベースへの移行に伴い、以前含まれていた zoxide / eza / tldr は標準インストール対象外になりました。必要に応じて apt（backports）や cargo など任意の方法で追加インストールしてください。
 
 ## データ分析・ノートブック
 
@@ -80,11 +80,10 @@ Claym 開発コンテナには、AI エージェント運用を支えるラン�
 | --- | --- | --- |
 | gh CLI | GitHub 公式 CLI | `gh repo view` |
 | git-extras | Git 補助コマンド集 | `git changelog` |
-| git-delta | Git diff を見やすく彩色するビューア | `git diff | delta` |
 | tig | 対話型 Git ビューア | `tig status` |
 | tmux | 端末マルチプレクサ | `tmux new -s claym` |
 | iputils-ping | ICMP 疎通確認 | `ping -c 3 example.com` |
-| bind9-dnsutils (dig) | DNS 解析ツール | `dig claym.dev` |
+| dnsutils (dig) | DNS 解析ツール | `dig claym.dev` |
 | traceroute | 経路追跡 | `traceroute example.com` |
 | mtr-tiny | ping + traceroute の連続計測 | `mtr example.com` |
 | netcat-openbsd (nc) | ポート疎通・簡易サーバー | `nc -v example.com 80` |
@@ -92,6 +91,8 @@ Claym 開発コンテナには、AI エージェント運用を支えるラン�
 | lsof | プロセスが開くファイル/ポートを調査 | `lsof -i :3000` |
 | whois | ドメイン情報照会 | `whois example.com` |
 | openssl | SSL/TLS の検証 | `openssl s_client -connect example.com:443` |
+
+> git-delta は Debian ベースのイメージでは同梱していません。差分ビューアが必要な場合は `cargo install git-delta` など任意の手段で追加インストールしてください。
 
 ## プリインストール済み AI CLI
 

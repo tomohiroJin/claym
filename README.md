@@ -1,10 +1,10 @@
 # Claym 開発コンテナ README
 
-Claym プロジェクトでは、AI エージェント（Claude Code / Codex CLI / Gemini CLI）をすぐに利用できる VS Code Dev Container を提供しています。Ubuntu 24.04 をベースに、主要な MCP サーバーとモダンな CLI ツールをあらかじめセットアップ済みです。本書では現在のコンテナが備える機能と使い方をまとめます。
+Claym プロジェクトでは、AI エージェント（Claude Code / Codex CLI / Gemini CLI）をすぐに利用できる VS Code Dev Container を提供しています。Debian 12 (bookworm) をベースに、主要な MCP サーバーとモダンな CLI ツールをあらかじめセットアップ済みです。本書では現在のコンテナが備える機能と使い方をまとめます。
 
 ## 1. コンテナ概要
-- ベース OS: Ubuntu 24.04 LTS（作業ディレクトリは `/workspaces/claym`）
-- 既定ユーザー: `vscode`（sudo 権限あり） / シェル: Oh My Zsh
+- ベース OS: Debian 12 (bookworm)（作業ディレクトリは `/workspaces/claym`）
+- 既定ユーザー: `root`（sudo 権限あり） / シェル: Oh My Zsh
 - 目的: AI 向け CLI と MCP サーバーを事前導入し、チャット開始までの初期設定を数分で完了させる
 - 利用想定: VS Code Dev Containers 拡張での再現性ある開発、エージェント動作検証、MCP ベースの自動化
 
@@ -14,7 +14,7 @@ Claym プロジェクトでは、AI エージェント（Claude Code / Codex CLI
 - Python 3 系（pip / venv / dev ヘッダ）
 - uv（Python プロジェクトの高速ランタイム）
 - Git / Git LFS / curl / wget / jq など基本ツール
-- モダン CLI: ripgrep, fd, bat, fzf, zoxide, eza, tldr, tree
+- モダン CLI: ripgrep, fd, bat, fzf, tree（Debian ベース移行に伴い zoxide / eza / tldr は除外済み）
 - フォントと X 関連ライブラリを追加し、Playwright/Chromium と ImageSorcery に対応
 
 ### 2.1.1 インストール済みツールの概要
@@ -130,23 +130,6 @@ git push -u origin main
 
 ## 6. トラブルシューティング
 - **CLI が見つからない**: `npm list -g --depth=0` や `${VIRTUAL_ENV:-/opt/mcp-venv}/bin/pip list` でインストール状況を確認。必要なら `npm install -g @anthropic-ai/claude-code` や `${VIRTUAL_ENV:-/opt/mcp-venv}/bin/pip install markitdown-mcp` などを再実行
-- **Poetry を使いたい**: コンテナの `/opt/mcp-venv` が環境変数 `VIRTUAL_ENV` で強制されているため、そのままでは Poetry が権限エラーになります。`curl -sSL https://install.python-poetry.org | python3 -` でユーザー環境に Poetry を導入し、`export PATH="$HOME/.local/bin:$PATH"` を `~/.zshrc` 等に追記してください。そのうえで `tsumugi-report` プロジェクトでは以下のラッパースクリプトを利用し、Poetry 実行前に `VIRTUAL_ENV` を解除します。
-  ```bash
-  cd /workspaces/claym/local/projects/tsumugi-report
-
-  # Poetry 環境の初期化（初回のみ）
-  ./scripts/run_poetry.sh env use /usr/bin/python3
-  ./scripts/run_poetry.sh install --no-root
-
-  # テストの実行
-  ./scripts/run_poetry.sh run pytest
-
-  # 環境情報の確認
-  ./scripts/run_poetry.sh env info --path
-  # => /workspaces/claym/local/projects/tsumugi-report/.venv が表示されれば成功
-  ```
-
-  このラッパースクリプトは、実行時に `VIRTUAL_ENV` を解除し、プロジェクト固有の `.venv` を使用するように Poetry を起動します。詳細は `docs/poetry-env/spec.md` を参照してください。
 - **Playwright の起動失敗**: `npx playwright install chromium --with-deps` を再度実行し、コンテナ起動パラメータ（`--shm-size` など）を確認
 - **Serena が起動しない**: `uv --version` / `/opt/serena` の存在を確認し、`uv run --directory /opt/serena serena start-mcp-server --project $PWD` を手動実行
 - **GitHub / Firecrawl MCP が見当たらない**: 対応する API キーを環境変数に設定した後、`post-create-setup.sh` を再実行
@@ -156,7 +139,7 @@ git push -u origin main
 - Dockerfile は最新安定版を取得する構成（`@latest`）のため、上流更新で挙動が変わる可能性があります。安定運用が必要な場合はバージョン固定を検討してください
 - Codex / Gemini CLI の MCP API は仕様変更が発生しやすいため、挙動に差異を感じたら `post-create-setup.sh` のコマンドを確認してください
 - v0.2.0 で追加されたライブラリ・ツールは、ビジネス職のデータ分析や市場調査、レポート作成を支援する目的で選定されています。より高度な分析や特殊なツールが必要な場合は、Dockerfileに追記してリビルドしてください
-- v0.2.0 追加仕様では、Ubuntu 24.04のAPTで入るものを優先し、保守性を重視しています。CLI×AI前提のワークフローを想定し、GitHub業務のCLI完結、Web/ログ解析の初動高速化、ネットワーク調査のCLI完結を実現します
+- v0.2.0 追加仕様では、Debian bookworm の APT で入るものを優先し、保守性を重視しています。CLI×AI 前提のワークフローを想定しつつ、zoxide / eza / tldr / git-delta など Ubuntu 版で提供していた一部 CLI はサイズ削減のため同梱していません
 
 ## 8. 参考
 - `post-create-setup.sh`: MCP 登録ロジックとヘルパー呼び出しの中心
