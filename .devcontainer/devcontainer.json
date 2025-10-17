@@ -114,7 +114,7 @@
   },
 
   // コンテナ内ユーザー
-  "remoteUser": "vscode",
+  "remoteUser": "root",
 
   // Git 等のホスト依存設定は devcontainer.local.json で指定
   "mounts": [],
