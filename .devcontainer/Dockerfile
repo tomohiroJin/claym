@@ -73,6 +73,7 @@ RUN set -eux; \
     libx11-6 \
     dbus-x11 \
     unzip \
+    xz-utils \
     # v0.2.0: ログ解析・テキスト解析ツール
     goaccess \
     lnav \
@@ -87,7 +88,12 @@ RUN set -eux; \
     # v0.2.0: 現代的CLIツールと環境補完
     git-extras \
     tig \
-    tmux; \
+    tmux \
+    # CLI: apt 由来に統一（Rust製代替）
+    btop \
+    hyperfine \
+    ncdu \
+    cloc; \
     mkdir -p /etc/apt/keyrings; \
     curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
     | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg >/dev/null; \
@@ -157,7 +163,9 @@ RUN npm install -g \
     firecrawl-mcp@latest \
     # v0.2.0: データ処理・金融分析ツール
     yq \
-    qtrn
+    qtrn \
+    # モダン CLI ツール
+    tldr
 
 # Playwright のブラウザ本体とシステム依存関係を事前取得して、
 # MCP の初回利用時の待ち時間をなくします。--with-deps フラグは、
@@ -174,9 +182,9 @@ ENV VIRTUAL_ENV=/opt/mcp-venv
 RUN python3 -m venv "$VIRTUAL_ENV" \
     && "$VIRTUAL_ENV/bin/pip" install --no-cache-dir --upgrade pip \
     && "$VIRTUAL_ENV/bin/pip" install --no-cache-dir \
-        markitdown-mcp \
-        imagesorcery-mcp \
-        mcp-github
+    markitdown-mcp \
+    imagesorcery-mcp \
+    mcp-github
 # fastmcp 2.3.4 では ServerSettings.dependencies に default と default_factory が
 # 同時定義されており、pydantic>=2.11 では読み込み時にエラーになります。
 # 上流で修正されるまでの暫定措置として、インストール済みモジュールへパッチを適用します。
@@ -225,13 +233,38 @@ RUN git clone https://github.com/oraios/serena.git /opt/serena
 ENV PATH="/root/.local/bin:$PATH"
 
 # ----------------------------------------------------------------------------
+# モダン CLI ツールのインストール
+#
+# 開発体験を向上させるモダンな CLI ツールを導入します。
+# - バイナリダウンロード: zoxide, eza, git-delta (GitHub Releases から)
+# - Rust ツール: procs, bottom, dust, hyperfine, sd, tokei（プリビルドバイナリ取得）
+
+# バイナリダウンロード (GitHub Releases)
+RUN set -eux; \
+    ARCH=$(dpkg --print-architecture); \
+    # zoxide v0.9.4
+    curl -sLO "https://github.com/ajeetdsouza/zoxide/releases/download/v0.9.4/zoxide-0.9.4-x86_64-unknown-linux-musl.tar.gz"; \
+    tar -xzf zoxide-*.tar.gz -C /usr/local/bin; \
+    rm zoxide-*.tar.gz; \
+    # eza v0.18.0
+    curl -sLO "https://github.com/eza-community/eza/releases/download/v0.18.0/eza_x86_64-unknown-linux-musl.tar.gz"; \
+    tar -xzf eza_*.tar.gz -C /usr/local/bin; \
+    rm eza_*.tar.gz; \
+    # git-delta v0.17.0
+    curl -sLO "https://github.com/dandavison/delta/releases/download/0.17.0/delta-0.17.0-x86_64-unknown-linux-musl.tar.gz"; \
+    tar -xzf delta-*.tar.gz --strip-components=1 -C /usr/local/bin delta-0.17.0-x86_64-unknown-linux-musl/delta; \
+    rm delta-*.tar.gz
+
+# Rust 製 CLI ツール（APT に統一）: btop/hyperfine/ncdu/cloc は上の apt ブロックで導入済み
+
+# ----------------------------------------------------------------------------
 # Oh My Zsh とユーザー設定
 #
 # root ユーザーに Oh My Zsh を導入します。VS Code がコマンドを実行できるよう、
 # パスワード不要 sudo 権限を持つ "vscode" ユーザーを作成します。
 # Oh My Zsh の設定を root から vscode ユーザーへコピーし、
-# いくつかのエイリアスと zoxide の初期化を追加します。
-# Ubuntu の実体名に合わせて bat / fd のエイリアス（batcat / fdfind）も設定します。
+# モダン CLI ツールのエイリアスと zoxide の初期化を追加します。
+# Debian の実体名に合わせて bat / fd のエイリアス（batcat / fdfind）も設定します。
 
 RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended \
     && useradd -m -s /bin/zsh vscode \
@@ -240,8 +273,23 @@ RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/inst
     && cp /root/.zshrc /home/vscode/.zshrc \
     && echo 'alias bat="batcat"' >> /home/vscode/.zshrc \
     && echo 'alias fd="fdfind"' >> /home/vscode/.zshrc \
+    && echo 'alias ll="eza -la --git"' >> /home/vscode/.zshrc \
+    && echo 'alias ls="eza"' >> /home/vscode/.zshrc \
+    && echo 'alias cat="batcat"' >> /home/vscode/.zshrc \
+    && echo 'alias find="fdfind"' >> /home/vscode/.zshrc \
+    && echo 'alias top="btop"' >> /home/vscode/.zshrc \
     && echo 'eval "$(zoxide init zsh)"' >> /home/vscode/.zshrc \
+    && echo 'alias cd="z"' >> /home/vscode/.zshrc \
     && chown -R vscode:vscode /home/vscode
+
+# Git delta の設定
+# git diff や git log の出力を delta で見やすく表示します。
+RUN git config --global core.pager "delta" \
+    && git config --global interactive.diffFilter "delta --color-only" \
+    && git config --global delta.navigate true \
+    && git config --global delta.light false \
+    && git config --global merge.conflictstyle diff3 \
+    && git config --global diff.colorMoved default
 
 # ----------------------------------------------------------------------------
 # 補助スクリプトの配置
