@@ -8,7 +8,7 @@
 
 ルート README で説明している前提条件を低コストで検証します。
 
-- Ubuntu 24.04 ベースとタイムゾーン設定の確認
+- Debian 12 (bookworm) ベースとタイムゾーン設定の確認
 - ワークスペースおよび ImageSorcery ログディレクトリが `vscode` ユーザー所有であることの確認
 - 主要 CLI (`claude`, `codex`, `gemini`, `uv`, `npx`, `npm`, `rg` など) と Python MCP コマンド (`markitdown-mcp`, `imagesorcery-mcp`, `mcp-github`) の存在チェック
 - CLI バージョン取得によるドリフト検知

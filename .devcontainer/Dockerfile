@@ -8,7 +8,7 @@
 # Oh My Zsh も含めています。使い方の詳細は README または devcontainer.json を参照してください。
 ##############################
 
-FROM ubuntu:24.04
+FROM debian:bookworm-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 # 既定の作業ディレクトリとして /workspace を使用します。
@@ -40,12 +40,9 @@ RUN set -eux; \
     jq \
     tree \
     fzf \
-    zoxide \
     ripgrep \
     bat \
     fd-find \
-    eza \
-    tldr \
     zsh \
     locales \
     fonts-powerline \
@@ -68,7 +65,7 @@ RUN set -eux; \
     libgbm1 \
     libpango-1.0-0 \
     libpangocairo-1.0-0 \
-    libasound2t64 \
+    libasound2 \
     libx11-xcb1 \
     libxss1 \
     libxkbcommon0 \
@@ -101,10 +98,9 @@ RUN set -eux; \
     apt-get install -y --no-install-recommends \
     # Git/GitHub強化
     gh \
-    git-delta \
     # HTTP/ネットワーク
     iputils-ping \
-    bind9-dnsutils \
+    dnsutils \
     traceroute \
     mtr-tiny \
     netcat-openbsd \
@@ -120,8 +116,8 @@ RUN set -eux; \
 
 # ロケールとタイムゾーンの設定。
 # VS Code は既定で en_US.UTF-8 を使いますが、必要に応じて ja_JP.UTF-8 などに変更できます。
-RUN locale-gen en_US.UTF-8 \
-    && update-locale LANG=en_US.UTF-8 \
+RUN sed -i 's/^# *en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
+    && locale-gen \
     && ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime \
     && echo "Asia/Tokyo" > /etc/timezone
 
@@ -260,6 +256,6 @@ RUN chmod +x /usr/local/bin/post-create-setup.sh
 # 対話シェルの既定ユーザーを非 root（vscode）にします。
 # VS Code Dev Containers は remoteUser が設定されていればそれを優先しますが、
 # この USER 指定はグローバルに適用されるため、ここでは明示的に設定します。
-USER vscode
+USER root
 
 CMD ["/bin/zsh"]
