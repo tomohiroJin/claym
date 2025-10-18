@@ -115,3 +115,7 @@ docker-compose.override.yml
 # Local directory (managed separately)
 local/
 !local/.gitkeep
+# AI拡張機能のローカル設定
+.claude/settings.local.json
+.claude/custom-instructions.md
+
