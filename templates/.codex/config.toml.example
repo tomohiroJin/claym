@@ -1,0 +1,94 @@
+# Codex CLI 設定テンプレート
+# このファイルをコピーして ~/.codex/config.toml として使用してください
+#
+# 使用方法:
+#   cp templates/.codex/config.toml.example ~/.codex/config.toml
+#
+# 注意: このファイルは .gitignore に追加してバージョン管理対象外にしてください
+#
+# 参考: https://github.com/openai/codex/blob/main/docs/config.md
+
+# === モデルプロバイダー設定 ===
+[model_providers.openai]
+name = "OpenAI"
+base_url = "https://api.openai.com/v1"
+wire_api = "responses"  # または "chat"
+query_params = {}
+http_headers = { version = "0.0.0" }
+env_http_headers = { "OpenAI-Organization" = "OPENAI_ORGANIZATION", "OpenAI-Project" = "OPENAI_PROJECT" }
+request_max_retries = 4
+stream_max_retries = 5
+stream_idle_timeout_ms = 300000
+requires_openai_auth = true
+
+# === デフォルトモデル設定 ===
+# 使用するモデルを指定（例: "gpt-4", "gpt-4-turbo", "o3" など）
+# model = "gpt-4-turbo"
+
+# === MCP サーバー設定 ===
+# Model Context Protocol サーバーの設定
+# CLI と VSCode 拡張で共有されます
+
+# Serena: コードベース解析・編集
+[mcp_servers.serena]
+command = "uv"
+args = [
+  "run",
+  "--directory",
+  "/opt/serena",
+  "serena",
+  "start-mcp-server",
+  "--context",
+  "ide-assistant",
+  "--project",
+  "/workspaces/YOUR_PROJECT_NAME"  # プロジェクトパスを変更してください
+]
+
+# Filesystem: ファイル操作
+[mcp_servers.filesystem]
+command = "npx"
+args = [
+  "-y",
+  "@modelcontextprotocol/server-filesystem",
+  "/workspaces/YOUR_PROJECT_NAME"  # プロジェクトパスを変更してください
+]
+
+# GitHub: GitHub API統合
+[mcp_servers.github]
+command = "uvx"
+args = ["mcp-github"]
+
+# Playwright: ブラウザ自動化
+[mcp_servers.playwright]
+command = "npx"
+args = ["@playwright/mcp@latest"]
+
+# Context7: ドキュメント検索
+[mcp_servers.context7]
+command = "npx"
+args = ["-y", "@upstash/context7-mcp"]
+
+# SSE (Server-Sent Events) トランスポート設定例
+# [mcp_servers.remote_server]
+# transport = "sse"
+# url = "http://localhost:8080/sse"
+
+# === プロファイル設定 ===
+# 複数のプロファイルを定義して切り替え可能
+# 使用方法: codex --profile development
+
+# [profiles.development]
+# model = "gpt-4"
+# approval_policy = "prompt"
+
+# [profiles.production]
+# model = "gpt-4-turbo"
+# approval_policy = "strict"
+
+# === 承認ポリシー設定 ===
+# approval_policy = "prompt"  # "prompt", "auto", "strict"
+
+# === サンドボックス設定 ===
+# [sandbox]
+# enabled = true
+# docker_image = "python:3.11"
