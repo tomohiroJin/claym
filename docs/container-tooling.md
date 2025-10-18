@@ -18,7 +18,50 @@ Claym 開発コンテナには、AI エージェント運用を支えるラン�
 | fzf | インタラクティブなファジー検索 | `ls | fzf` |
 | tree | ディレクトリ構造表示 | `tree -L 2` |
 
-> Debian ベースへの移行に伴い、以前含まれていた zoxide / eza / tldr は標準インストール対象外になりました。必要に応じて apt（backports）や cargo など任意の方法で追加インストールしてください。
+## モダン CLI ツール
+
+開発体験を向上させる最新の CLI ツール群がインストールされています。多くのツールは従来のコマンドの強化版として、エイリアス経由でシームレスに利用できます。
+
+| 名前 | 概要 | 代表的なコマンド例 |
+| --- | --- | --- |
+| zoxide (z) | スマートなディレクトリ移動 (cd 強化版) | `z docs` (頻繁にアクセスするディレクトリに素早く移動) |
+| eza | ls の代替 (色付き、アイコン、Git 統合) | `eza -la --git` または `ll` (エイリアス) |
+| tldr | コマンドのクイックリファレンス | `tldr tar` (実用的な使用例を表示) |
+| git-delta | Git 差分の美しい表示 | `git diff` (自動的に delta が適用される) |
+| procs | ps の代替 (カラフル、ツリー表示) | `procs` または `ps` (エイリアス) |
+| bottom (btm) | htop の代替 (システムモニタ) | `btm` または `top` (エイリアス) |
+| dust | du の代替 (ディスク使用量の視覚化) | `dust` または `du` (エイリアス) |
+| hyperfine | コマンドのベンチマーク | `hyperfine 'command1' 'command2'` |
+| sd | sed の代替 (シンプルな構文) | `sd 'before' 'after' file.txt` |
+| tokei | コード行数カウンタ (cloc 代替) | `tokei .` |
+
+### エイリアス一覧
+
+以下のエイリアスが `.zshrc` に設定されており、コンテナ起動時から利用可能です:
+
+- `ll` → `eza -la --git` (詳細リスト表示)
+- `ls` → `eza` (カラフルな ls)
+- `cat` → `batcat` (シンタックスハイライト)
+- `find` → `fdfind` (高速ファイル検索)
+- `ps` → `procs` (見やすいプロセス一覧)
+- `du` → `dust` (視覚的なディスク使用量)
+- `top` → `btm` (モダンなシステムモニタ)
+- `cd` → `z` (スマートディレクトリ移動)
+
+### Git delta の設定
+
+Git は自動的に delta を使用するよう設定されています:
+
+```bash
+git config --global core.pager "delta"
+git config --global interactive.diffFilter "delta --color-only"
+git config --global delta.navigate true
+git config --global delta.light false
+git config --global merge.conflictstyle diff3
+git config --global diff.colorMoved default
+```
+
+`git diff` や `git log` の出力が自動的に見やすく表示されます。
 
 ## データ分析・ノートブック
 
@@ -91,8 +134,6 @@ Claym 開発コンテナには、AI エージェント運用を支えるラン�
 | lsof | プロセスが開くファイル/ポートを調査 | `lsof -i :3000` |
 | whois | ドメイン情報照会 | `whois example.com` |
 | openssl | SSL/TLS の検証 | `openssl s_client -connect example.com:443` |
-
-> git-delta は Debian ベースのイメージでは同梱していません。差分ビューアが必要な場合は `cargo install git-delta` など任意の手段で追加インストールしてください。
 
 ## プリインストール済み AI CLI
 

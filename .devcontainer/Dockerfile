@@ -157,7 +157,9 @@ RUN npm install -g \
     firecrawl-mcp@latest \
     # v0.2.0: データ処理・金融分析ツール
     yq \
-    qtrn
+    qtrn \
+    # モダン CLI ツール
+    tldr
 
 # Playwright のブラウザ本体とシステム依存関係を事前取得して、
 # MCP の初回利用時の待ち時間をなくします。--with-deps フラグは、
@@ -225,13 +227,48 @@ RUN git clone https://github.com/oraios/serena.git /opt/serena
 ENV PATH="/root/.local/bin:$PATH"
 
 # ----------------------------------------------------------------------------
+# モダン CLI ツールのインストール
+#
+# 開発体験を向上させるモダンな CLI ツールを導入します。
+# - バイナリダウンロード: zoxide, eza, git-delta (GitHub Releases から)
+# - Rust ツール: procs, bottom, dust, hyperfine, sd, tokei (cargo 経由)
+# Rust ツールチェーンはビルド後にアンインストールしてイメージサイズを削減します。
+
+# Rust ツールチェーンのインストール (minimal プロファイル)
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
+    sh -s -- -y --profile minimal --default-toolchain stable
+ENV PATH="/root/.cargo/bin:$PATH"
+
+# バイナリダウンロード (GitHub Releases)
+RUN set -eux; \
+    ARCH=$(dpkg --print-architecture); \
+    # zoxide v0.9.4
+    curl -sLO "https://github.com/ajeetdsouza/zoxide/releases/download/v0.9.4/zoxide-0.9.4-x86_64-unknown-linux-musl.tar.gz"; \
+    tar -xzf zoxide-*.tar.gz -C /usr/local/bin; \
+    rm zoxide-*.tar.gz; \
+    # eza v0.18.0
+    curl -sLO "https://github.com/eza-community/eza/releases/download/v0.18.0/eza_x86_64-unknown-linux-musl.tar.gz"; \
+    tar -xzf eza_*.tar.gz -C /usr/local/bin; \
+    rm eza_*.tar.gz; \
+    # git-delta v0.17.0
+    curl -sLO "https://github.com/dandavison/delta/releases/download/0.17.0/delta-0.17.0-x86_64-unknown-linux-musl.tar.gz"; \
+    tar -xzf delta-*.tar.gz --strip-components=1 -C /usr/local/bin delta-0.17.0-x86_64-unknown-linux-musl/delta; \
+    rm delta-*.tar.gz
+
+# Rust ツールのインストール
+RUN cargo install --locked procs bottom dust hyperfine sd tokei
+
+# Rust ツールチェーンのアンインストール (イメージサイズ削減)
+RUN rustup self uninstall -y
+
+# ----------------------------------------------------------------------------
 # Oh My Zsh とユーザー設定
 #
 # root ユーザーに Oh My Zsh を導入します。VS Code がコマンドを実行できるよう、
 # パスワード不要 sudo 権限を持つ "vscode" ユーザーを作成します。
 # Oh My Zsh の設定を root から vscode ユーザーへコピーし、
-# いくつかのエイリアスと zoxide の初期化を追加します。
-# Ubuntu の実体名に合わせて bat / fd のエイリアス（batcat / fdfind）も設定します。
+# モダン CLI ツールのエイリアスと zoxide の初期化を追加します。
+# Debian の実体名に合わせて bat / fd のエイリアス（batcat / fdfind）も設定します。
 
 RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended \
     && useradd -m -s /bin/zsh vscode \
@@ -240,8 +277,25 @@ RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/inst
     && cp /root/.zshrc /home/vscode/.zshrc \
     && echo 'alias bat="batcat"' >> /home/vscode/.zshrc \
     && echo 'alias fd="fdfind"' >> /home/vscode/.zshrc \
+    && echo 'alias ll="eza -la --git"' >> /home/vscode/.zshrc \
+    && echo 'alias ls="eza"' >> /home/vscode/.zshrc \
+    && echo 'alias cat="batcat"' >> /home/vscode/.zshrc \
+    && echo 'alias find="fdfind"' >> /home/vscode/.zshrc \
+    && echo 'alias ps="procs"' >> /home/vscode/.zshrc \
+    && echo 'alias du="dust"' >> /home/vscode/.zshrc \
+    && echo 'alias top="btm"' >> /home/vscode/.zshrc \
     && echo 'eval "$(zoxide init zsh)"' >> /home/vscode/.zshrc \
+    && echo 'alias cd="z"' >> /home/vscode/.zshrc \
     && chown -R vscode:vscode /home/vscode
+
+# Git delta の設定
+# git diff や git log の出力を delta で見やすく表示します。
+RUN git config --global core.pager "delta" \
+    && git config --global interactive.diffFilter "delta --color-only" \
+    && git config --global delta.navigate true \
+    && git config --global delta.light false \
+    && git config --global merge.conflictstyle diff3 \
+    && git config --global diff.colorMoved default
 
 # ----------------------------------------------------------------------------
 # 補助スクリプトの配置
