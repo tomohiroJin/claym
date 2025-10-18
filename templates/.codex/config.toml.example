@@ -85,10 +85,67 @@ args = ["-y", "@upstash/context7-mcp"]
 # model = "gpt-4-turbo"
 # approval_policy = "strict"
 
+# === 言語設定 ===
+# 日本語を基本言語として使用
+language = "ja"
+
 # === 承認ポリシー設定 ===
-# approval_policy = "prompt"  # "prompt", "auto", "strict"
+# 使用環境を緩和するため、基本的に自動承認
+approval_policy = "auto"  # "prompt", "auto", "strict"
+
+# === 使用環境緩和設定（デファクトスタンダード） ===
+
+# ツール実行の自動承認（開発環境向け）
+[tool_approval]
+# 読み取り系のツールは自動承認
+read_operations = "auto"
+# 書き込み系のツールは確認（安全のため）
+write_operations = "prompt"
+# Git操作は自動承認（コミット・プッシュ以外）
+git_operations = "auto"
+
+# タイムアウト設定（長時間実行を許可）
+[timeouts]
+# コマンド実行のタイムアウト（ミリ秒）
+command_timeout_ms = 300000  # 5分
+# ストリームのタイムアウト（ミリ秒）
+stream_timeout_ms = 600000  # 10分
+
+# 出力制限の緩和
+[output_limits]
+# 最大出力サイズ（バイト）
+max_output_bytes = 1048576  # 1MB
+# 最大行数
+max_output_lines = 10000
+
+# コンテキストウィンドウ設定
+[context]
+# 最大トークン数
+max_tokens = 128000
+# 会話履歴の保持数
+max_history = 100
 
 # === サンドボックス設定 ===
-# [sandbox]
-# enabled = true
+# コンテナ環境では無効化（既にコンテナ内のため）
+[sandbox]
+enabled = false
 # docker_image = "python:3.11"
+
+# === カスタムプロンプト設定 ===
+# システムプロンプトのカスタマイズ
+[prompts]
+# 日本語での応答を指示
+system_prompt = """
+あなたは日本語を主言語とするコーディングアシスタントです。
+
+## 基本ルール
+- すべての応答は日本語で行ってください
+- コード内のコメントは日本語で記述してください
+- 技術的な説明も日本語で行ってください
+- 変数名・関数名は英語でも構いません
+
+## コミュニケーション
+- 丁寧語（です・ます調）を使用してください
+- 不明点は必ず質問してください
+- 段階的に説明し、理解を確認しながら進めてください
+"""

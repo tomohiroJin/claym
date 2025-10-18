@@ -8,11 +8,10 @@
 ```
 templates/
 ├── .claude/
-│   └── settings.local.json.example    # Claude Code 設定テンプレート
+│   ├── settings.local.json.example    # Claude Code 設定テンプレート
+│   └── custom-instructions.md         # Claude Code カスタム指示（日本語設定）
 ├── .codex/
-│   └── config.toml.example            # Codex CLI 設定テンプレート
-├── .gemini/
-│   └── settings.json.example          # GEMINI 設定テンプレート
+│   └── config.toml.example            # Codex CLI 設定テンプレート（使用環境緩和設定含む）
 ├── docs/
 │   └── prompts/
 │       ├── system.md                  # システムプロンプトテンプレート
@@ -22,34 +21,61 @@ templates/
 │           ├── refactor.md            # リファクタリングプロンプト
 │           └── review.md              # コードレビュープロンプト
 └── README.md                          # このファイル
+
+scripts/
+└── setup/
+    └── init-ai-configs.sh              # 自動セットアップスクリプト
+
+注: GEMINI設定は既に .gemini/settings.json に存在するため、テンプレートは不要です。
 ```
 
 ## 🚀 クイックスタート
 
-### 新規プロジェクトでのセットアップ
+### 自動セットアップ（推奨）
+
+**コンテナ起動時に自動で実行されます！**
+
+devcontainer のビルド・起動時に `scripts/setup/init-ai-configs.sh` が自動実行され、
+以下が自動的に設定されます：
+
+- Claude Code 設定ファイルとカスタム指示の作成
+- Codex CLI 設定ファイルの作成（プロジェクトパス自動設定）
+- GEMINI 設定の確認
+- プロンプトテンプレートのコピー
+- .gitignore の更新
+
+### 手動セットアップ（既存プロジェクト向け）
+
+既存のプロジェクトに適用する場合：
+
+```bash
+# セットアップスクリプトを実行
+bash scripts/setup/init-ai-configs.sh
+```
+
+または、個別にセットアップする場合：
 
 ```bash
 # プロジェクトルートで実行
 cd /path/to/your/project
 
 # 設定ディレクトリを作成
-mkdir -p .claude .codex .gemini docs/prompts/tasks
+mkdir -p .claude docs/prompts/tasks
 
 # テンプレートをコピー
-cp /path/to/templates/.claude/settings.local.json.example .claude/settings.local.json
-cp /path/to/templates/.gemini/settings.json.example .gemini/settings.json
-cp /path/to/templates/.codex/config.toml.example ~/.codex/config.toml
+cp templates/.claude/settings.local.json.example .claude/settings.local.json
+cp templates/.claude/custom-instructions.md .claude/custom-instructions.md
+cp templates/.codex/config.toml.example ~/.codex/config.toml
 
 # プロンプトテンプレートをコピー
-cp -r /path/to/templates/docs/prompts/* docs/prompts/
+cp -r templates/docs/prompts/* docs/prompts/
 
 # .gitignore に追加
 cat >> .gitignore <<EOF
 
 # AI拡張機能のローカル設定
 .claude/settings.local.json
-.codex/config.toml
-.gemini/settings.json
+.claude/custom-instructions.md
 EOF
 ```
 
@@ -67,17 +93,17 @@ nano .claude/settings.local.json
 - `permissions.ask`: 確認が必要な操作を設定
 - プロジェクトパスの更新
 
-#### 2. GEMINI (.gemini/settings.json)
+#### 2. Claude Code カスタム指示 (.claude/custom-instructions.md)
 
 ```bash
 # ファイルを編集
-nano .gemini/settings.json
+nano .claude/custom-instructions.md
 ```
 
-**カスタマイズポイント**:
-- `mcpServers.*.args`: プロジェクトパスを実際のパスに変更
-- 不要なMCPサーバーをコメントアウト
-- UIテーマ・エディタ設定を調整
+**日本語でのやり取りを基本とする設定が含まれています**:
+- すべての応答を日本語で行う
+- コメント・ドキュメントは日本語
+- 丁寧語（です・ます調）の使用
 
 #### 3. Codex CLI (~/.codex/config.toml)
 
@@ -86,10 +112,19 @@ nano .gemini/settings.json
 nano ~/.codex/config.toml
 ```
 
-**カスタマイズポイント**:
-- `mcp_servers.*.args`: プロジェクトパスを実際のパスに変更
-- `model`: 使用するモデルを指定
+**すでに使用環境緩和設定が含まれています**:
+- `approval_policy = "auto"`: 基本的に自動承認
+- `language = "ja"`: 日本語を基本言語として使用
+- タイムアウト設定の緩和（5分〜10分）
+- 出力制限の緩和（1MB、10000行）
+- サンドボックス無効化（コンテナ内のため）
+- カスタムシステムプロンプト（日本語設定）
+
+**追加カスタマイズポイント**:
+- `model`: 使用するモデルを指定（例: "gpt-4-turbo"）
 - プロファイル設定を追加（development, production など）
+
+注: プロジェクトパスは自動セットアップで設定済みです。
 
 #### 4. システムプロンプト (docs/prompts/system.md)
 
