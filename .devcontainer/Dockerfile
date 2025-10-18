@@ -73,6 +73,7 @@ RUN set -eux; \
     libx11-6 \
     dbus-x11 \
     unzip \
+    xz-utils \
     # v0.2.0: ログ解析・テキスト解析ツール
     goaccess \
     lnav \
@@ -87,7 +88,12 @@ RUN set -eux; \
     # v0.2.0: 現代的CLIツールと環境補完
     git-extras \
     tig \
-    tmux; \
+    tmux \
+    # CLI: apt 由来に統一（Rust製代替）
+    btop \
+    hyperfine \
+    ncdu \
+    cloc; \
     mkdir -p /etc/apt/keyrings; \
     curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
     | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg >/dev/null; \
@@ -176,9 +182,9 @@ ENV VIRTUAL_ENV=/opt/mcp-venv
 RUN python3 -m venv "$VIRTUAL_ENV" \
     && "$VIRTUAL_ENV/bin/pip" install --no-cache-dir --upgrade pip \
     && "$VIRTUAL_ENV/bin/pip" install --no-cache-dir \
-        markitdown-mcp \
-        imagesorcery-mcp \
-        mcp-github
+    markitdown-mcp \
+    imagesorcery-mcp \
+    mcp-github
 # fastmcp 2.3.4 では ServerSettings.dependencies に default と default_factory が
 # 同時定義されており、pydantic>=2.11 では読み込み時にエラーになります。
 # 上流で修正されるまでの暫定措置として、インストール済みモジュールへパッチを適用します。
@@ -231,13 +237,7 @@ ENV PATH="/root/.local/bin:$PATH"
 #
 # 開発体験を向上させるモダンな CLI ツールを導入します。
 # - バイナリダウンロード: zoxide, eza, git-delta (GitHub Releases から)
-# - Rust ツール: procs, bottom, dust, hyperfine, sd, tokei (cargo 経由)
-# Rust ツールチェーンはビルド後にアンインストールしてイメージサイズを削減します。
-
-# Rust ツールチェーンのインストール (minimal プロファイル)
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
-    sh -s -- -y --profile minimal --default-toolchain stable
-ENV PATH="/root/.cargo/bin:$PATH"
+# - Rust ツール: procs, bottom, dust, hyperfine, sd, tokei（プリビルドバイナリ取得）
 
 # バイナリダウンロード (GitHub Releases)
 RUN set -eux; \
@@ -255,11 +255,7 @@ RUN set -eux; \
     tar -xzf delta-*.tar.gz --strip-components=1 -C /usr/local/bin delta-0.17.0-x86_64-unknown-linux-musl/delta; \
     rm delta-*.tar.gz
 
-# Rust ツールのインストール
-RUN cargo install --locked procs bottom dust hyperfine sd tokei
-
-# Rust ツールチェーンのアンインストール (イメージサイズ削減)
-RUN rustup self uninstall -y
+# Rust 製 CLI ツール（APT に統一）: btop/hyperfine/ncdu/cloc は上の apt ブロックで導入済み
 
 # ----------------------------------------------------------------------------
 # Oh My Zsh とユーザー設定
@@ -281,9 +277,7 @@ RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/inst
     && echo 'alias ls="eza"' >> /home/vscode/.zshrc \
     && echo 'alias cat="batcat"' >> /home/vscode/.zshrc \
     && echo 'alias find="fdfind"' >> /home/vscode/.zshrc \
-    && echo 'alias ps="procs"' >> /home/vscode/.zshrc \
-    && echo 'alias du="dust"' >> /home/vscode/.zshrc \
-    && echo 'alias top="btm"' >> /home/vscode/.zshrc \
+    && echo 'alias top="btop"' >> /home/vscode/.zshrc \
     && echo 'eval "$(zoxide init zsh)"' >> /home/vscode/.zshrc \
     && echo 'alias cd="z"' >> /home/vscode/.zshrc \
     && chown -R vscode:vscode /home/vscode

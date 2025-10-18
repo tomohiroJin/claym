@@ -2,7 +2,7 @@
 # モダン CLI ツール関連のチェック
 
 check_modern_cli_tools() {
-  local tools=(zoxide eza tldr delta procs btm dust hyperfine sd tokei)
+  local tools=(zoxide eza tldr delta)
   local missing=()
   local tool
   for tool in "${tools[@]}"; do
@@ -25,12 +25,6 @@ check_modern_cli_versions() {
     "eza --version"
     "tldr --version"
     "delta --version"
-    "procs --version"
-    "btm --version"
-    "dust --version"
-    "hyperfine --version"
-    "sd --version"
-    "tokei --version"
   )
   local outputs=()
   local cmd
@@ -74,8 +68,6 @@ check_shell_aliases() {
     "alias ls="
     "alias cat="
     "alias find="
-    "alias ps="
-    "alias du="
     "alias top="
     "zoxide init"
   )

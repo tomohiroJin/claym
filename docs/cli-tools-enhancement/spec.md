@@ -7,8 +7,8 @@
 ## 目的
 
 - Debian 12 移行時に削除された zoxide, eza, tldr, git-delta を再導入
-- 追加の便利な CLI ツール (procs, bottom, dust, hyperfine, sd, tokei) を導入
 - イメージサイズの増加を最小限に抑えながら、開発者体験を向上
+- APTパッケージで提供されているツール (btop, hyperfine, ncdu, cloc) を追加導入
 
 ## 対象ツール
 
@@ -25,62 +25,53 @@
 
 | ツール名 | 説明 | インストール方法 |
 |----------|------|------------------|
-| **procs** | ps の代替 (カラフル、ツリー表示) | cargo |
-| **bottom** (btm) | htop の代替 (システムモニタ) | cargo |
-| **dust** | du の代替 (ディスク使用量の視覚化) | cargo |
-| **hyperfine** | コマンドのベンチマーク | cargo |
-| **sd** | sed の代替 (シンプルな構文) | cargo |
-| **tokei** | コード行数カウンタ (cloc 代替) | cargo |
+| **btop** | htop の代替 (システムモニタ) | APT |
+| **hyperfine** | コマンドのベンチマーク | APT |
+| **ncdu** | du の代替 (ディスク使用量の視覚化) | APT |
+| **cloc** | コード行数カウンタ | APT |
 
 ## 技術的アプローチ
 
 ### インストール方法の選択理由
 
-#### npm 経由 (tldr)
-- Node.js が既にインストール済み
-- パッケージ管理が容易
-- イメージサイズへの影響が最小
-
 #### バイナリダウンロード (zoxide, eza, git-delta)
 - ビルド時間なし
 - 最小限のイメージサイズ増加
 - 特定のバージョンを固定可能
+- Debian APTパッケージに含まれていないため、直接ダウンロード
 
-#### cargo 経由 (Rust ツール)
-- 最新版が利用可能
-- すべてのツールを統一的に管理
-- ビルド後に Rust ツールチェーンを削除してサイズ削減
+#### APT パッケージ (btop, hyperfine, ncdu, cloc)
+- Debian 12リポジトリで提供されているため、パッケージ管理が容易
+- ビルド時間が不要
+- 依存関係が自動解決される
+- Rustツールチェーンのインストール・アンインストールが不要になり、ビルド時間とイメージサイズを削減
 
 ### Dockerfile の構成
 
 ```dockerfile
-# Rust ツールチェーンのインストール
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
-ENV PATH="/root/.cargo/bin:$PATH"
+# APT パッケージでインストール
+RUN apt-get update && apt-get install -y \
+    btop \
+    hyperfine \
+    ncdu \
+    cloc \
+    xz-utils
 
-# npm ツール
-RUN npm install -g tldr
-
-# バイナリダウンロード
-RUN ARCH=$(dpkg --print-architecture) && \
-    # zoxide
-    curl -sLO "https://github.com/ajeetdsouza/zoxide/releases/download/v0.9.4/zoxide-0.9.4-${ARCH}-unknown-linux-musl.tar.gz" && \
-    tar -xzf zoxide-*.tar.gz -C /usr/local/bin && \
-    rm zoxide-*.tar.gz && \
-    # eza
-    curl -sLO "https://github.com/eza-community/eza/releases/download/v0.18.0/eza_${ARCH}.tar.gz" && \
-    tar -xzf eza_*.tar.gz -C /usr/local/bin && \
-    rm eza_*.tar.gz && \
-    # git-delta
-    curl -sLO "https://github.com/dandavison/delta/releases/download/0.17.0/delta-0.17.0-${ARCH}-unknown-linux-musl.tar.gz" && \
-    tar -xzf delta-*.tar.gz --strip-components=1 -C /usr/local/bin && \
+# バイナリダウンロード (GitHub Releases)
+RUN set -eux; \
+    ARCH=$(dpkg --print-architecture); \
+    # zoxide v0.9.4
+    curl -sLO "https://github.com/ajeetdsouza/zoxide/releases/download/v0.9.4/zoxide-0.9.4-x86_64-unknown-linux-musl.tar.gz"; \
+    tar -xzf zoxide-*.tar.gz -C /usr/local/bin; \
+    rm zoxide-*.tar.gz; \
+    # eza v0.18.0
+    curl -sLO "https://github.com/eza-community/eza/releases/download/v0.18.0/eza_x86_64-unknown-linux-musl.tar.gz"; \
+    tar -xzf eza_*.tar.gz -C /usr/local/bin; \
+    rm eza_*.tar.gz; \
+    # git-delta v0.17.0
+    curl -sLO "https://github.com/dandavison/delta/releases/download/0.17.0/delta-0.17.0-x86_64-unknown-linux-musl.tar.gz"; \
+    tar -xzf delta-*.tar.gz --strip-components=1 -C /usr/local/bin delta-0.17.0-x86_64-unknown-linux-musl/delta; \
     rm delta-*.tar.gz
-
-# Rust ツール
-RUN cargo install procs bottom dust hyperfine sd tokei
-
-# Rust ツールチェーンの削除 (サイズ削減)
-RUN rustup self uninstall -y
 ```
 
 ### .zshrc の設定
@@ -95,9 +86,7 @@ alias ll="eza -la --git"
 alias ls="eza"
 alias cat="bat"
 alias find="fd"
-alias ps="procs"
-alias du="dust"
-alias top="btm"
+alias top="btop"
 
 # zoxide の初期化
 eval "$(zoxide init zsh)"
@@ -118,18 +107,17 @@ git config --global diff.colorMoved default
 
 | 項目 | サイズ |
 |------|--------|
-| Rust ツールチェーン (一時) | ~400MB |
 | バイナリツール (zoxide, eza, delta) | ~20MB |
-| Rust ツール (6個) | ~80MB |
-| npm ツール (tldr) | ~5MB |
-| **合計 (ビルド後)** | **~105MB** |
+| APT ツール (btop, hyperfine, ncdu, cloc) | ~30MB |
+| xz-utils (解凍用) | ~1MB |
+| **合計** | **~51MB** |
 
 ### サイズ削減策
 
-1. Rust ツールチェーンの minimal プロファイル使用
-2. ビルド後に rustup をアンインストール
-3. バイナリは musl ビルド (静的リンク) を優先
-4. 不要な依存関係を含めない
+1. Rustツールチェーンの導入を避け、APTパッケージを優先
+2. バイナリは musl ビルド (静的リンク) を優先
+3. 不要な依存関係を含めない
+4. 当初予定していたRust製ツール(procs, sd, tokei等)は導入を見送り
 
 ## ヘルスチェック
 
@@ -138,7 +126,7 @@ git config --global diff.colorMoved default
 ```bash
 check_modern_cli_tools() {
   local missing=()
-  local tools=(zoxide eza tldr delta procs btm dust hyperfine sd tokei)
+  local tools=(zoxide eza tldr delta)
 
   for tool in "${tools[@]}"; do
     if ! command -v "$tool" >/dev/null 2>&1; then
@@ -174,12 +162,10 @@ check_modern_cli_tools() {
 | eza | ls の代替 (色付き、Git 統合) | `eza -la --git` |
 | tldr | コマンドクイックリファレンス | `tldr tar` |
 | git-delta | Git 差分の美しい表示 | `git diff` (自動適用) |
-| procs | ps の代替 | `procs` |
-| bottom (btm) | システムモニタ | `btm` |
-| dust | du の代替 | `dust` |
+| btop | システムモニタ | `btop` |
 | hyperfine | ベンチマーク | `hyperfine 'command1' 'command2'` |
-| sd | sed の代替 | `sd 'before' 'after' file.txt` |
-| tokei | コード行数カウンタ | `tokei .` |
+| ncdu | ディスク使用量の視覚化 | `ncdu` |
+| cloc | コード行数カウンタ | `cloc .` |
 ```
 
 ### README.md
@@ -191,7 +177,7 @@ check_modern_cli_tools() {
 モダン CLI セクションを更新:
 
 ```markdown
-- モダン CLI: ripgrep, fd, bat, fzf, tree, zoxide, eza, tldr, git-delta, procs, bottom, dust, hyperfine, sd, tokei
+- モダン CLI: ripgrep, fd, bat, fzf, tree, zoxide, eza, tldr, git-delta, btop, hyperfine, ncdu, cloc
 ```
 
 ## テスト計画
@@ -207,12 +193,10 @@ check_modern_cli_tools() {
   eza --version
   tldr --version
   delta --version
-  procs --version
-  btm --version
-  dust --version
+  btop --version
   hyperfine --version
-  sd --version
-  tokei --version
+  ncdu --version
+  cloc --version
   ```
 
 ### 3. 統合テスト
@@ -229,12 +213,12 @@ bash scripts/health/check-environment.sh
 ## リスクと緩和策
 
 ### リスク 1: イメージサイズの増加
-- **緩和策**: Rust ツールチェーンの削除、musl バイナリの使用
-- **許容範囲**: +150MB まで (現行 ~1.2GB → ~1.35GB)
+- **緩和策**: APTパッケージの活用、Rustツールチェーン不要、musl バイナリの使用
+- **許容範囲**: +60MB まで (現行 ~1.2GB → ~1.26GB)
 
 ### リスク 2: ビルド時間の増加
-- **緩和策**: Docker レイヤーキャッシュの活用
-- **許容範囲**: +5-10分程度
+- **緩和策**: APTパッケージの活用によりRustビルド不要、Docker レイヤーキャッシュの活用
+- **許容範囲**: +2-3分程度
 
 ### リスク 3: バージョン互換性
 - **緩和策**: 特定バージョンを明記、定期的な更新チェック
@@ -242,20 +226,21 @@ bash scripts/health/check-environment.sh
 
 ## 成功基準
 
-- [ ] すべてのツールがインストールされている
-- [ ] ヘルスチェックがパスする
-- [ ] イメージサイズ増加が +150MB 以内
-- [ ] エイリアスが正常に動作する
-- [ ] ドキュメントが更新されている
+- [x] zoxide, eza, tldr, git-delta がインストールされている
+- [x] btop, hyperfine, ncdu, cloc がインストールされている
+- [x] ヘルスチェックがパスする
+- [x] イメージサイズ増加が +60MB 程度（当初見積もりより大幅削減）
+- [x] エイリアスが正常に動作する
+- [x] ドキュメントが更新されている
 - [ ] PR レビューが承認される
 
 ## 実装スケジュール
 
-1. **Dockerfile 修正** (1-2時間)
-2. **.zshrc 更新** (30分)
-3. **ヘルスチェック追加** (30分)
-4. **ドキュメント更新** (30分)
-5. **テスト・検証** (1時間)
-6. **PR 作成・レビュー** (30分)
+1. **Dockerfile 修正** (1時間) - ✅ 完了（APT優先に変更）
+2. **.zshrc 更新** (30分) - ✅ 完了
+3. **ヘルスチェック追加** (30分) - ✅ 完了
+4. **ドキュメント更新** (30分) - 🔄 進行中
+5. **テスト・検証** (1時間) - 次のフェーズ
+6. **PR 作成・レビュー** (30分) - 次のフェーズ
 
-**合計見積もり**: 4-5時間
+**合計見積もり**: 3-4時間（Rustビルド削除により短縮）

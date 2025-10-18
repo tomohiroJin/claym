@@ -14,7 +14,7 @@ Claym プロジェクトでは、AI エージェント（Claude Code / Codex CLI
 - Python 3 系（pip / venv / dev ヘッダ）
 - uv（Python プロジェクトの高速ランタイム）
 - Git / Git LFS / curl / wget / jq など基本ツール
-- モダン CLI: ripgrep, fd, bat, fzf, tree, zoxide, eza, tldr, git-delta, procs, bottom, dust, hyperfine, sd, tokei
+- モダン CLI: ripgrep, fd, bat, fzf, tree, zoxide, eza, tldr, git-delta, btop, hyperfine, ncdu, cloc
 - フォントと X 関連ライブラリを追加し、Playwright/Chromium と ImageSorcery に対応
 
 ### 2.1.1 インストール済みツールの概要

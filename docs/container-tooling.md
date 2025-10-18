@@ -28,12 +28,10 @@ Claym 開発コンテナには、AI エージェント運用を支えるラン�
 | eza | ls の代替 (色付き、アイコン、Git 統合) | `eza -la --git` または `ll` (エイリアス) |
 | tldr | コマンドのクイックリファレンス | `tldr tar` (実用的な使用例を表示) |
 | git-delta | Git 差分の美しい表示 | `git diff` (自動的に delta が適用される) |
-| procs | ps の代替 (カラフル、ツリー表示) | `procs` または `ps` (エイリアス) |
-| bottom (btm) | htop の代替 (システムモニタ) | `btm` または `top` (エイリアス) |
-| dust | du の代替 (ディスク使用量の視覚化) | `dust` または `du` (エイリアス) |
+| btop | htop の代替 (システムモニタ) | `btop` または `top` (エイリアス) |
 | hyperfine | コマンドのベンチマーク | `hyperfine 'command1' 'command2'` |
-| sd | sed の代替 (シンプルな構文) | `sd 'before' 'after' file.txt` |
-| tokei | コード行数カウンタ (cloc 代替) | `tokei .` |
+| ncdu | du の代替 (ディスク使用量の視覚化) | `ncdu` |
+| cloc | コード行数カウンタ | `cloc .` |
 
 ### エイリアス一覧
 
@@ -43,9 +41,7 @@ Claym 開発コンテナには、AI エージェント運用を支えるラン�
 - `ls` → `eza` (カラフルな ls)
 - `cat` → `batcat` (シンタックスハイライト)
 - `find` → `fdfind` (高速ファイル検索)
-- `ps` → `procs` (見やすいプロセス一覧)
-- `du` → `dust` (視覚的なディスク使用量)
-- `top` → `btm` (モダンなシステムモニタ)
+- `top` → `btop` (モダンなシステムモニタ)
 - `cd` → `z` (スマートディレクトリ移動)
 
 ### Git delta の設定
