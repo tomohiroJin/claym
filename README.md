@@ -28,6 +28,7 @@ Claym プロジェクトでは、AI エージェント（Claude Code / Codex CLI
 - Python 3 系（pip / venv / dev ヘッダ）
 - uv（Python プロジェクトの高速ランタイム）
 - Git / Git LFS / curl / wget / jq など基本ツール
+- **ベーシック CLI**: vim, less, nano, bash-completion, man-db, manpages, iproute2, net-tools, procps, psmisc, rsync, zip, openssh-client など
 - **モダン CLI**: ripgrep, fd, bat, fzf, tree, zoxide, eza, tldr, git-delta, btop, hyperfine, ncdu, cloc
 - フォントと X 関連ライブラリを追加し、Playwright/Chromium と ImageSorcery に対応
 
