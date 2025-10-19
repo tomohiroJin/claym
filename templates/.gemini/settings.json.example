@@ -22,7 +22,15 @@
         "--context",
         "ide-assistant",
         "--project",
-        "/workspaces/claym"
+        "${workspaceFolder}"
+      ]
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "${workspaceFolder}"
       ]
     },
     "playwright": {
@@ -39,14 +47,6 @@
       "command": "imagesorcery-mcp",
       "args": []
     },
-    "filesystem": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-filesystem",
-        "/workspaces/claym"
-      ]
-    },
     "github": {
       "command": "uvx",
       "args": [
@@ -58,6 +58,12 @@
       "args": [
         "-y",
         "@upstash/context7-mcp"
+      ]
+    },
+    "fetch": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-fetch"
       ]
     }
   }

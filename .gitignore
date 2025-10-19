@@ -1,9 +1,6 @@
 # DevContainer local settings
 devcontainer.local.json
 
-# Claude Code local settings
-.claude/settings.local.json
-
 # History
 .history
 
@@ -115,3 +112,20 @@ docker-compose.override.yml
 # Local directory (managed separately)
 local/
 !local/.gitkeep
+
+# CLAUDE 設定（全体を個人設定として管理）
+.claude/
+!templates/.claude/
+
+# GEMINI 設定（全体を個人設定として管理）
+.gemini/
+!templates/.gemini/
+
+# AI プロンプトテンプレート（個人設定として管理）
+docs/prompts/
+!templates/docs/prompts/
+
+# AI拡張機能のローカル設定
+.claude/settings.local.json
+.claude/custom-instructions.md
+

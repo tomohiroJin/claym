@@ -89,6 +89,23 @@ RUN set -eux; \
     git-extras \
     tig \
     tmux \
+    # ベーシックなエディタ・ページャ
+    vim \
+    less \
+    nano \
+    # ベーシックなシステムユーティリティ
+    bash-completion \
+    file \
+    iproute2 \
+    man-db \
+    manpages \
+    manpages-dev \
+    net-tools \
+    openssh-client \
+    procps \
+    psmisc \
+    rsync \
+    zip \
     # CLI: apt 由来に統一（Rust製代替）
     btop \
     hyperfine \

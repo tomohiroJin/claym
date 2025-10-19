@@ -119,8 +119,8 @@
   // Git 等のホスト依存設定は devcontainer.local.json で指定
   "mounts": [],
 
-  // 初回：safe.directory 登録 → gh auth login（トークンがある場合）→ MCP 自動登録
-  "postCreateCommand": "set -e; if [ -n \"$GITHUB_TOKEN\" ]; then echo \"$GITHUB_TOKEN\" | gh auth login --with-token || true; fi; sudo git config --system --add safe.directory ${containerWorkspaceFolder} || true; bash /usr/local/bin/post-create-setup.sh || true",
+  // 初回：safe.directory 登録 → gh auth login（トークンがある場合）→ MCP 自動登録 → AI設定初期化（CLAUDE.md等）
+  "postCreateCommand": "set -e; if [ -n \"$GITHUB_TOKEN\" ]; then echo \"$GITHUB_TOKEN\" | gh auth login --with-token || true; fi; sudo git config --system --add safe.directory ${containerWorkspaceFolder} || true; bash /usr/local/bin/post-create-setup.sh || true; bash ${containerWorkspaceFolder}/scripts/setup/init-ai-configs.sh || true",
 
   // 起動毎：ワークスペースや imagesorcery ログの権限設定、Serena 用ディレクトリ調整、start-serena.sh が存在する場合のみ起動
   "postStartCommand": "bash .devcontainer/post-start.sh"
