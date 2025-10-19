@@ -11,7 +11,8 @@ templates/
 │   ├── settings.local.json.example    # Claude Code 設定テンプレート
 │   └── CLAUDE.md                       # Claude Code カスタム指示（日本語設定）
 ├── .codex/
-│   └── config.toml.example            # Codex CLI 設定テンプレート（使用環境緩和設定含む）
+│   ├── config.toml.example            # Codex CLI 設定テンプレート（使用環境緩和設定含む）
+│   └── AGENTS.md                      # Codex CLI エージェント指示（日本語設定）
 ├── .gemini/
 │   ├── settings.json.example          # GEMINI 設定テンプレート
 │   └── GEMINI.md                      # GEMINI カスタム指示（日本語設定）
@@ -40,7 +41,7 @@ devcontainer のビルド・起動時に `scripts/setup/init-ai-configs.sh` が�
 以下が自動的に設定されます：
 
 - Claude Code 設定ファイル (`settings.local.json`, `CLAUDE.md`) の作成
-- Codex CLI 設定ファイル (`config.toml`) の作成（プロジェクトパス自動設定）
+- Codex CLI 設定ファイル (`config.toml`, `AGENTS.md`) の作成（プロジェクトパス自動設定）
 - GEMINI 設定ファイル (`settings.json`, `GEMINI.md`) の作成（プロジェクトパス自動設定）
 - プロンプトテンプレートのコピー
 - .gitignore の更新
@@ -65,8 +66,11 @@ mkdir -p .claude docs/prompts/tasks
 
 # テンプレートをコピー
 cp templates/.claude/settings.local.json.example .claude/settings.local.json
-cp templates/.claude/custom-instructions.md .claude/custom-instructions.md
+cp templates/.claude/CLAUDE.md .claude/CLAUDE.md
 cp templates/.codex/config.toml.example ~/.codex/config.toml
+cp templates/.codex/AGENTS.md AGENTS.md
+cp templates/.gemini/settings.json.example .gemini/settings.json
+cp templates/.gemini/GEMINI.md .gemini/GEMINI.md
 
 # プロンプトテンプレートをコピー
 cp -r templates/docs/prompts/* docs/prompts/
@@ -74,9 +78,13 @@ cp -r templates/docs/prompts/* docs/prompts/
 # .gitignore に追加
 cat >> .gitignore <<EOF
 
-# AI拡張機能のローカル設定
-.claude/settings.local.json
-.claude/custom-instructions.md
+# CLAUDE 設定（全体を個人設定として管理）
+.claude/
+!templates/.claude/
+
+# GEMINI 設定（全体を個人設定として管理）
+.gemini/
+!templates/.gemini/
 EOF
 ```
 
@@ -94,11 +102,11 @@ nano .claude/settings.local.json
 - `permissions.ask`: 確認が必要な操作を設定
 - プロジェクトパスの更新
 
-#### 2. Claude Code カスタム指示 (.claude/custom-instructions.md)
+#### 2. Claude Code カスタム指示 (.claude/CLAUDE.md)
 
 ```bash
 # ファイルを編集
-nano .claude/custom-instructions.md
+nano .claude/CLAUDE.md
 ```
 
 **日本語でのやり取りを基本とする設定が含まれています**:
@@ -127,7 +135,43 @@ nano ~/.codex/config.toml
 
 注: プロジェクトパスは自動セットアップで設定済みです。
 
-#### 4. システムプロンプト (docs/prompts/system.md)
+#### 4. Codex CLI エージェント指示 (AGENTS.md)
+
+```bash
+# ファイルを編集（プロジェクトルート）
+nano AGENTS.md
+```
+
+**AGENTS.md の特徴**:
+- プロジェクトルートに配置（チーム共有）
+- エージェント向けの「README」として機能
+- 階層的に読み込まれる（ホーム → リポジトリ → カレントディレクトリ）
+
+**カスタマイズポイント**:
+- プロジェクト固有のアーキテクチャ情報を追加
+- コーディング規約を詳細化
+- テスト手順を明確化
+- PR ガイドラインを更新
+
+**個人設定** (オプション):
+```bash
+# 個人的なカスタマイズは ~/.codex/AGENTS.md で
+nano ~/.codex/AGENTS.md
+```
+
+#### 5. GEMINI カスタム指示 (.gemini/GEMINI.md)
+
+```bash
+# ファイルを編集
+nano .gemini/GEMINI.md
+```
+
+**GEMINI 固有の機能**:
+- `/memory show`: 現在のコンテキストを確認
+- `/init`: プロジェクト用の GEMINI.md を生成
+- サブディレクトリにも配置可能
+
+#### 6. システムプロンプト (docs/prompts/system.md)
 
 ```bash
 # ファイルを編集
@@ -141,13 +185,6 @@ nano docs/prompts/system.md
 - ディレクトリ構造を更新
 
 ## 📚 ドキュメント
-
-### 仕様書
-
-詳細な仕様とベストプラクティスについては、以下を参照：
-
-- [VSCode拡張機能デファクトスタンダード仕様書](../docs/spec/vscode-extensions-defaults.md)
-- [実装TODO](../docs/todo/vscode-extensions-defaults.md)
 
 ### プロンプトテンプレートの使い方
 

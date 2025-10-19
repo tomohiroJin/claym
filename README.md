@@ -231,6 +231,7 @@ bash scripts/setup/init-ai-configs.sh
 | Claude Code | `settings.local.json` | `.claude/` | 権限設定 |
 | Claude Code | `CLAUDE.md` | `.claude/` | カスタム指示（日本語設定含む） |
 | Codex CLI | `config.toml` | `~/.codex/` | モデル設定・MCP登録 |
+| Codex CLI | `AGENTS.md` | プロジェクトルート | エージェント指示（日本語設定含む、**共有**） |
 | GEMINI | `settings.json` | `.gemini/` | UI設定・MCP登録 |
 | GEMINI | `GEMINI.md` | `.gemini/` | カスタム指示（日本語設定含む） |
 
@@ -240,6 +241,8 @@ bash scripts/setup/init-ai-configs.sh
 - Claude Code の権限調整: `.claude/settings.local.json` を編集
 - Claude Code の日本語対応: `.claude/CLAUDE.md` を編集
 - Codex CLI のモデル選択: `~/.codex/config.toml` を編集
+- Codex CLI のエージェント指示: `AGENTS.md` を編集（プロジェクトルート、チーム共有）
+- Codex CLI の個人設定: `~/.codex/AGENTS.md` を作成（オプション）
 - GEMINI の設定調整: `.gemini/settings.json` を編集
 - GEMINI の日本語対応: `.gemini/GEMINI.md` を編集
 - GEMINI のコンテキスト確認: `/memory show` コマンドを実行

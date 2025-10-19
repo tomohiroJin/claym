@@ -79,6 +79,7 @@ setup_codex_cli() {
 
     local codex_dir="${HOME}/.codex"
     local config_file="${codex_dir}/config.toml"
+    local agents_md="${PROJECT_ROOT}/AGENTS.md"
 
     # ディレクトリ作成
     mkdir -p "${codex_dir}"
@@ -101,6 +102,18 @@ setup_codex_cli() {
         fi
     else
         log_info "Codex CLI 設定ファイルは既に存在します（スキップ）"
+    fi
+
+    # AGENTS.md が存在しない場合のみコピー（プロジェクトルートに配置）
+    if [[ ! -f "${agents_md}" ]]; then
+        if [[ -f "${TEMPLATES_DIR}/.codex/AGENTS.md" ]]; then
+            cp "${TEMPLATES_DIR}/.codex/AGENTS.md" "${agents_md}"
+            log_success "Codex CLI エージェント指示を作成しました: ${agents_md}"
+        else
+            log_warn "AGENTS.md テンプレートが見つかりません"
+        fi
+    else
+        log_info "Codex CLI エージェント指示は既に存在します（スキップ）"
     fi
 }
 
