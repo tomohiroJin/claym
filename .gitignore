@@ -121,6 +121,9 @@ local/
 .gemini/
 !templates/.gemini/
 
+# AI プロンプトテンプレート（個人設定として管理）
+docs/prompts/
+!templates/docs/prompts/
 
 # AI拡張機能のローカル設定
 .claude/settings.local.json
