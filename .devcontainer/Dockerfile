@@ -89,6 +89,8 @@ RUN set -eux; \
     git-extras \
     tig \
     tmux \
+    # シェルスクリプトの品質チェック
+    shellcheck \
     # ベーシックなエディタ・ページャ
     vim \
     less \
