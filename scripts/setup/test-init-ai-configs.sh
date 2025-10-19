@@ -20,13 +20,18 @@ TESTS_PASSED=0
 TESTS_FAILED=0
 
 # スクリプトのパス
-readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly INIT_SCRIPT="${SCRIPT_DIR}/init-ai-configs.sh"
-readonly PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly SCRIPT_DIR
+INIT_SCRIPT="${SCRIPT_DIR}/init-ai-configs.sh"
+readonly INIT_SCRIPT
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+readonly PROJECT_ROOT
 
 # テスト用一時ディレクトリ
-readonly TEST_TMPDIR="$(mktemp -d)"
-readonly TEST_PROJECT="${TEST_TMPDIR}/test-project"
+TEST_TMPDIR="$(mktemp -d)"
+readonly TEST_TMPDIR
+TEST_PROJECT="${TEST_TMPDIR}/test-project"
+readonly TEST_PROJECT
 trap 'rm -rf "$TEST_TMPDIR"' EXIT
 
 # ログ関数

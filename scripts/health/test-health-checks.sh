@@ -10,7 +10,6 @@ set -euo pipefail
 # 色付き出力
 readonly RED='\033[0;31m'
 readonly GREEN='\033[0;32m'
-readonly YELLOW='\033[1;33m'
 readonly BLUE='\033[0;34m'
 readonly NC='\033[0m'
 
@@ -20,11 +19,14 @@ TESTS_PASSED=0
 TESTS_FAILED=0
 
 # スクリプトのパス
-readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly CHECK_SCRIPT="${SCRIPT_DIR}/check-environment.sh"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly SCRIPT_DIR
+CHECK_SCRIPT="${SCRIPT_DIR}/check-environment.sh"
+readonly CHECK_SCRIPT
 
 # テスト用一時ディレクトリ
-readonly TEST_TMPDIR="$(mktemp -d)"
+TEST_TMPDIR="$(mktemp -d)"
+readonly TEST_TMPDIR
 trap 'rm -rf "$TEST_TMPDIR"' EXIT
 
 # ログ関数
