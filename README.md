@@ -60,6 +60,7 @@ Serena・Playwright・markitdown など主要な MCP サーバーを `post-creat
 - **Serena**: コードベース解析・編集 (uv経由)
 - **Filesystem**: ファイル操作 (npx経由)
 - **Playwright**: ブラウザ自動化 (npx経由)
+- **Fetch**: Web検索・ページ取得 (uvx経由)
 - **Context7**: ドキュメント検索 (npm global)
 - **markitdown**: ドキュメント変換 (pip経由)
 - **imagesorcery**: 画像処理 (pip経由)

@@ -66,6 +66,9 @@
       // Playwright (ブラウザ自動化)
       "mcp__playwright__*",
 
+      // Fetch (Web検索・ページ取得)
+      "mcp__fetch__*",
+
       // === Web検索 ===
       "WebSearch"
     ],

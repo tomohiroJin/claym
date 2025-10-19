@@ -236,6 +236,7 @@ cat docs/prompts/tasks/review.md
 |-----------|------|--------|
 | serena | コードベース解析・編集 | 必須 |
 | filesystem | ファイル操作 | 必須 |
+| fetch | Web検索・ページ取得 | 推奨 |
 | github | GitHub API 統合 | 推奨 |
 | playwright | ブラウザ自動化 | 推奨 |
 | context7 | ドキュメント検索 | 推奨 |
@@ -247,6 +248,9 @@ cat docs/prompts/tasks/review.md
 ```bash
 # Serena (Python)
 uv tool install serena
+
+# Fetch (Python)
+uvx mcp-server-fetch
 
 # Playwright (Node.js)
 npm install -g @playwright/mcp

@@ -68,6 +68,12 @@ args = ["@playwright/mcp@latest"]
 command = "npx"
 args = ["-y", "@upstash/context7-mcp"]
 
+# Fetch: Web検索・ページ取得
+# Web検索やWebページの内容取得が可能になります
+[mcp_servers.fetch]
+command = "uvx"
+args = ["mcp-server-fetch"]
+
 # SSE (Server-Sent Events) トランスポート設定例
 # [mcp_servers.remote_server]
 # transport = "sse"
@@ -99,10 +105,60 @@ approval_policy = "auto"  # "prompt", "auto", "strict"
 [tool_approval]
 # 読み取り系のツールは自動承認
 read_operations = "auto"
+
 # 書き込み系のツールは確認（安全のため）
 write_operations = "prompt"
+
 # Git操作は自動承認（コミット・プッシュ以外）
 git_operations = "auto"
+
+# Linuxコマンド実行の承認ポリシー
+# 基本的に全てのコマンドを自動承認し、危険なコマンドのみ確認を求めます
+bash_operations = "auto"
+
+# Web検索・フェッチ操作は自動承認
+# 外部サイトへのアクセスが発生しますが、開発効率のため許可します
+web_operations = "auto"
+
+# 危険なコマンドのブロックリスト（確認を求める）
+# これらのコマンドは実行前に必ず確認プロンプトが表示されます
+[tool_approval.dangerous_commands]
+# ファイル削除系（確認必須）
+rm_recursive = "prompt"           # rm -rf, rm -r
+rm_system = "prompt"              # /usr, /etc, /bin などのシステムディレクトリへの rm
+
+# 権限昇格系（確認必須）
+sudo = "prompt"                   # sudo で始まるコマンド
+su = "prompt"                     # su で始まるコマンド
+
+# システム変更系（確認必須）
+chmod_recursive = "prompt"        # chmod -R
+chown_recursive = "prompt"        # chown -R
+dd = "prompt"                     # dd コマンド（ディスク操作）
+mkfs = "prompt"                   # ファイルシステム作成
+fdisk = "prompt"                  # パーティション操作
+
+# ネットワーク系の一部（確認必須）
+# 注: curl, wget は auto で許可（開発で頻繁に使用するため）
+netcat_listen = "prompt"          # nc -l（リスニング）
+iptables = "prompt"               # ファイアウォール設定
+
+# プロセス操作系（確認必須）
+kill_all = "prompt"               # killall, pkill -9
+kill_system = "prompt"            # init, systemd などシステムプロセスへの kill
+
+# パッケージ管理系（確認必須）
+# 注: apt install, npm install などは auto で許可
+apt_remove = "prompt"             # apt remove, apt purge
+apt_autoremove = "prompt"         # apt autoremove
+
+# データベース操作系（確認必須）
+drop_database = "prompt"          # DROP DATABASE
+truncate_table = "prompt"         # TRUNCATE TABLE
+
+# コンテナ操作系（確認必須）
+docker_rm_all = "prompt"          # docker rm -f $(docker ps -aq)
+docker_system_prune = "prompt"    # docker system prune -a
 
 # タイムアウト設定（長時間実行を許可）
 [timeouts]
