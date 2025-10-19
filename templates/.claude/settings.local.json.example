@@ -9,8 +9,84 @@
 
   // === 言語設定 ===
   // 日本語を基本言語として使用
-  // カスタム指示は .claude/custom-instructions.md を参照
+  // カスタム指示は .claude/CLAUDE.md を参照
 
+  // === MCP サーバー設定 ===
+  // Model Context Protocol サーバーの設定
+  "mcpServers": {
+    // Serena: コードベース解析・編集
+    "serena": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "/opt/serena",
+        "serena",
+        "start-mcp-server",
+        "--context",
+        "ide-assistant",
+        "--project",
+        "${workspaceFolder}"
+      ]
+    },
+
+    // Filesystem: ファイル操作
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "${workspaceFolder}"
+      ]
+    },
+
+    // Playwright: ブラウザ自動化
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest"
+      ]
+    },
+
+    // Markitdown: ドキュメント変換
+    "markitdown": {
+      "command": "markitdown-mcp",
+      "args": []
+    },
+
+    // ImageSorcery: 画像処理
+    "imagesorcery": {
+      "command": "imagesorcery-mcp",
+      "args": []
+    },
+
+    // GitHub: GitHub API統合
+    "github": {
+      "command": "uvx",
+      "args": [
+        "mcp-github"
+      ]
+    },
+
+    // Context7: ドキュメント検索
+    "context7": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ]
+    },
+
+    // Fetch: Web検索・ページ取得
+    "fetch": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-fetch"
+      ]
+    }
+  },
+
+  // === 権限設定 ===
   "permissions": {
     // 自動承認する操作（慎重に設定してください）
     "allow": [
