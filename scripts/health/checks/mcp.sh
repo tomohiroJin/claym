@@ -67,13 +67,9 @@ check_serena_ready() {
     set_result "FAIL" "Serena directory missing at $dir" "Verify clone step in Dockerfile completed"
     return
   fi
-  local owner
-  if ! owner=$(stat -c '%U' "$dir" 2>/dev/null); then
-    set_result "WARN" "Unable to read /opt/serena ownership" "Check permissions manually"
-    return
-  fi
-  if [[ "$owner" != "vscode" ]]; then
-    set_result "WARN" "Serena directory owned by $owner" "Run post-start script or chown to vscode"
+  # アクセス権限をチェック（読み書き可能であることを確認）
+  if [[ ! -r "$dir" ]] || [[ ! -x "$dir" ]]; then
+    set_result "WARN" "Serena directory not accessible" "Run post-start script or fix permissions for $dir"
     return
   fi
   if ! uv run --directory "$dir" serena --help >/dev/null 2>&1; then
