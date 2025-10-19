@@ -207,7 +207,7 @@ create_backup() {
                 mkdir -p "${backup_subdir}"
                 cp "${file}" "${backup_path}"
                 echo "${rel_path}" >> "${manifest}"
-                ((backed_up_count++))
+                backed_up_count=$((backed_up_count + 1))
             fi
         else
             log_debug "スキップ（ファイルが存在しない）: ${file}"
@@ -276,7 +276,7 @@ restore_backup() {
             else
                 mkdir -p "${target_dir}"
                 cp "${backup_file}" "${target_file}"
-                ((restored_count++))
+                restored_count=$((restored_count + 1))
             fi
         else
             log_warn "バックアップファイルが見つかりません: ${backup_file}"
