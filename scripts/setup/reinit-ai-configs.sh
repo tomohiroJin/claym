@@ -183,6 +183,11 @@ create_backup() {
         "${PROJECT_ROOT}/.gemini/GEMINI.md"
     )
 
+    # バックアップ対象のディレクトリリスト
+    local -a backup_dir_targets=(
+        "${PROJECT_ROOT}/.claude/commands"
+    )
+
     if [[ "${DRY_RUN}" != "true" ]]; then
         {
             echo "# AI拡張機能 設定バックアップ"
@@ -214,10 +219,32 @@ create_backup() {
         fi
     done
 
+    # ディレクトリのバックアップ
+    for dir in "${backup_dir_targets[@]}"; do
+        if [[ -d "${dir}" ]]; then
+            local rel_path="${dir#${PROJECT_ROOT}/}"
+            local rel_path="${rel_path#${HOME}/}"
+            local backup_path="${BACKUP_DIR}/${rel_path}"
+
+            log_debug "ディレクトリをバックアップ中: ${dir} -> ${backup_path}"
+
+            if [[ "${DRY_RUN}" == "true" ]]; then
+                log_info "[DRY-RUN] ${rel_path}/ (ディレクトリ)"
+            else
+                mkdir -p "$(dirname "${backup_path}")"
+                cp -r "${dir}" "${backup_path}"
+                echo "${rel_path}/" >> "${manifest}"
+                backed_up_count=$((backed_up_count + 1))
+            fi
+        else
+            log_debug "スキップ（ディレクトリが存在しない）: ${dir}"
+        fi
+    done
+
     if [[ "${DRY_RUN}" == "true" ]]; then
-        log_info "[DRY-RUN] ${backed_up_count} 個のファイルをバックアップします"
+        log_info "[DRY-RUN] ${backed_up_count} 個の項目をバックアップします"
     else
-        log_success "${backed_up_count} 個のファイルをバックアップしました"
+        log_success "${backed_up_count} 個の項目をバックアップしました"
         log_info "バックアップ場所: ${BACKUP_DIR}"
     fi
 }
@@ -256,37 +283,70 @@ restore_backup() {
         # コメント行と空行をスキップ
         [[ "${rel_path}" =~ ^#.*$ || -z "${rel_path}" ]] && continue
 
-        local backup_file="${restore_path}/${rel_path}"
-        local target_file=""
+        # ディレクトリかファイルかを判定（末尾の / で判断）
+        if [[ "${rel_path}" == */ ]]; then
+            # ディレクトリの復元
+            local rel_path_clean="${rel_path%/}"  # 末尾の / を削除
+            local backup_dir="${restore_path}/${rel_path_clean}"
+            local target_dir=""
 
-        # パスの復元先を決定
-        if [[ "${rel_path}" == .codex/* ]]; then
-            target_file="${HOME}/${rel_path}"
-        else
-            target_file="${PROJECT_ROOT}/${rel_path}"
-        fi
-
-        if [[ -f "${backup_file}" ]]; then
-            local target_dir="$(dirname "${target_file}")"
-
-            log_debug "復元中: ${rel_path} -> ${target_file}"
-
-            if [[ "${DRY_RUN}" == "true" ]]; then
-                log_info "[DRY-RUN] ${rel_path}"
+            # パスの復元先を決定
+            if [[ "${rel_path_clean}" == .codex/* ]]; then
+                target_dir="${HOME}/${rel_path_clean}"
             else
-                mkdir -p "${target_dir}"
-                cp "${backup_file}" "${target_file}"
-                restored_count=$((restored_count + 1))
+                target_dir="${PROJECT_ROOT}/${rel_path_clean}"
+            fi
+
+            if [[ -d "${backup_dir}" ]]; then
+                log_debug "ディレクトリを復元中: ${rel_path_clean} -> ${target_dir}"
+
+                if [[ "${DRY_RUN}" == "true" ]]; then
+                    log_info "[DRY-RUN] ${rel_path_clean}/ (ディレクトリ)"
+                else
+                    # 既存ディレクトリがあれば削除
+                    [[ -d "${target_dir}" ]] && rm -rf "${target_dir}"
+                    mkdir -p "$(dirname "${target_dir}")"
+                    cp -r "${backup_dir}" "${target_dir}"
+                    restored_count=$((restored_count + 1))
+                fi
+            else
+                log_warn "バックアップディレクトリが見つかりません: ${backup_dir}"
             fi
         else
-            log_warn "バックアップファイルが見つかりません: ${backup_file}"
+            # ファイルの復元
+            local backup_file="${restore_path}/${rel_path}"
+            local target_file=""
+
+            # パスの復元先を決定
+            if [[ "${rel_path}" == .codex/* ]]; then
+                target_file="${HOME}/${rel_path}"
+            else
+                target_file="${PROJECT_ROOT}/${rel_path}"
+            fi
+
+            if [[ -f "${backup_file}" ]]; then
+                local target_dir
+                target_dir="$(dirname "${target_file}")"
+
+                log_debug "復元中: ${rel_path} -> ${target_file}"
+
+                if [[ "${DRY_RUN}" == "true" ]]; then
+                    log_info "[DRY-RUN] ${rel_path}"
+                else
+                    mkdir -p "${target_dir}"
+                    cp "${backup_file}" "${target_file}"
+                    restored_count=$((restored_count + 1))
+                fi
+            else
+                log_warn "バックアップファイルが見つかりません: ${backup_file}"
+            fi
         fi
     done < "${manifest}"
 
     if [[ "${DRY_RUN}" == "true" ]]; then
-        log_info "[DRY-RUN] ${restored_count} 個のファイルを復元します"
+        log_info "[DRY-RUN] ${restored_count} 個の項目を復元します"
     else
-        log_success "${restored_count} 個のファイルを復元しました"
+        log_success "${restored_count} 個の項目を復元しました"
     fi
 }
 
@@ -307,10 +367,18 @@ regenerate_configs() {
         "${PROJECT_ROOT}/.gemini/GEMINI.md"
     )
 
+    # 既存ディレクトリを削除
+    local -a config_dirs=(
+        "${PROJECT_ROOT}/.claude/commands"
+    )
+
     if [[ "${DRY_RUN}" == "true" ]]; then
         log_info "[DRY-RUN] 既存設定ファイルを削除します"
         for file in "${config_files[@]}"; do
             [[ -f "${file}" ]] && log_debug "[DRY-RUN] 削除: ${file}"
+        done
+        for dir in "${config_dirs[@]}"; do
+            [[ -d "${dir}" ]] && log_debug "[DRY-RUN] 削除: ${dir}/"
         done
     else
         log_info "既存の設定ファイルを削除中..."
@@ -318,6 +386,12 @@ regenerate_configs() {
             if [[ -f "${file}" ]]; then
                 log_debug "削除: ${file}"
                 rm -f "${file}"
+            fi
+        done
+        for dir in "${config_dirs[@]}"; do
+            if [[ -d "${dir}" ]]; then
+                log_debug "削除: ${dir}/"
+                rm -rf "${dir}"
             fi
         done
     fi

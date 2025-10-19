@@ -69,6 +69,18 @@ setup_claude_code() {
     else
         log_info "Claude Code カスタム指示は既に存在します（スキップ）"
     fi
+
+    # commands ディレクトリが存在しない場合のみコピー
+    local commands_dir="${claude_dir}/commands"
+    if [[ ! -d "${commands_dir}" ]]; then
+        if [[ -d "${TEMPLATES_DIR}/.claude/commands" ]]; then
+            cp -r "${TEMPLATES_DIR}/.claude/commands" "${commands_dir}"
+            log_success "Claude Code カスタムコマンドを作成しました: ${commands_dir}"
+            log_info "利用可能なコマンド: /code-gen, /review, /docs, /test"
+        fi
+    else
+        log_info "Claude Code カスタムコマンドは既に存在します（スキップ）"
+    fi
 }
 
 # =============================================================================
