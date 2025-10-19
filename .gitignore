@@ -121,3 +121,8 @@ local/
 .gemini/
 !templates/.gemini/
 
+
+# AI拡張機能のローカル設定
+.claude/settings.local.json
+.claude/custom-instructions.md
+
