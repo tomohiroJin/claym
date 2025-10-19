@@ -124,10 +124,21 @@ nano ~/.codex/config.toml
 **すでに使用環境緩和設定が含まれています**:
 - `approval_policy = "auto"`: 基本的に自動承認
 - `language = "ja"`: 日本語を基本言語として使用
+- `bash_operations = "auto"`: Linuxコマンドを基本的に自動承認（危険なコマンドのみ確認）
+- `web_operations = "auto"`: Web検索・フェッチ操作を自動承認
 - タイムアウト設定の緩和（5分〜10分）
 - 出力制限の緩和（1MB、10000行）
 - サンドボックス無効化（コンテナ内のため）
 - カスタムシステムプロンプト（日本語設定）
+
+**危険なコマンドのブロックリスト**（確認が必要）:
+- ファイル削除系: `rm -rf`, システムディレクトリへの `rm`
+- 権限昇格系: `sudo`, `su`
+- システム変更系: `chmod -R`, `chown -R`, `dd`, `mkfs`, `fdisk`
+- ネットワーク系: `nc -l`, `iptables` ※curl/wgetは許可
+- パッケージ管理系: `apt remove`, `apt autoremove` ※installは許可
+- データベース操作系: `DROP DATABASE`, `TRUNCATE TABLE`
+- コンテナ操作系: `docker rm -f` 全削除, `docker system prune -a`
 
 **追加カスタマイズポイント**:
 - `model`: 使用するモデルを指定（例: "gpt-4-turbo"）

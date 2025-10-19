@@ -145,6 +145,7 @@ git config --global diff.colorMoved default
 | --- | --- | --- |
 | serena | IDE アシスタント向けマルチツール MCP | `uv run --directory /opt/serena serena status` |
 | playwright | ブラウザ自動化 MCP | `npx @playwright/mcp@latest --help` |
+| fetch | Web検索・ページ取得 MCP | `uvx mcp-server-fetch --help` |
 | markitdown | Markdown ↔ HTML/URL 変換 MCP | `markitdown-mcp --help` |
 | imagesorcery | 画像処理 MCP (モデル取得済み) | `imagesorcery-mcp --list-tools` |
 | filesystem | ワークスペースアクセス MCP | `npx -y @modelcontextprotocol/server-filesystem --help` |
