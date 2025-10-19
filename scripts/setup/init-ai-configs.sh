@@ -43,7 +43,7 @@ setup_claude_code() {
 
     local claude_dir="${PROJECT_ROOT}/.claude"
     local settings_file="${claude_dir}/settings.local.json"
-    local custom_instructions="${claude_dir}/custom-instructions.md"
+    local custom_instructions="${claude_dir}/CLAUDE.md"
 
     # ディレクトリ作成
     mkdir -p "${claude_dir}"
@@ -60,10 +60,10 @@ setup_claude_code() {
         log_info "Claude Code 設定ファイルは既に存在します（スキップ）"
     fi
 
-    # custom-instructions.md が存在しない場合のみコピー
+    # CLAUDE.md が存在しない場合のみコピー
     if [[ ! -f "${custom_instructions}" ]]; then
-        if [[ -f "${TEMPLATES_DIR}/.claude/custom-instructions.md" ]]; then
-            cp "${TEMPLATES_DIR}/.claude/custom-instructions.md" "${custom_instructions}"
+        if [[ -f "${TEMPLATES_DIR}/.claude/CLAUDE.md" ]]; then
+            cp "${TEMPLATES_DIR}/.claude/CLAUDE.md" "${custom_instructions}"
             log_success "Claude Code カスタム指示を作成しました: ${custom_instructions}"
         fi
     else

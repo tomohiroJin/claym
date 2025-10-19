@@ -229,7 +229,7 @@ bash scripts/setup/init-ai-configs.sh
 | AI CLI | 設定ファイル | 場所 | 説明 |
 |--------|------------|------|------|
 | Claude Code | `settings.local.json` | `.claude/` | 権限設定 |
-| Claude Code | `custom-instructions.md` | `.claude/` | カスタム指示（日本語設定含む） |
+| Claude Code | `CLAUDE.md` | `.claude/` | カスタム指示（日本語設定含む） |
 | Codex CLI | `config.toml` | `~/.codex/` | モデル設定・MCP登録 |
 | GEMINI | `settings.json` | `.gemini/` | UI設定・MCP登録 |
 
@@ -238,7 +238,7 @@ bash scripts/setup/init-ai-configs.sh
 **カスタマイズ方法**:
 - Claude Code の権限調整: `.claude/settings.local.json` を編集
 - Codex CLI のモデル選択: `~/.codex/config.toml` を編集
-- 日本語対応の調整: `.claude/custom-instructions.md` を編集
+- 日本語対応の調整: `.claude/CLAUDE.md` を編集
 
 **テンプレートの確認**:
 設定テンプレートは `templates/` ディレクトリに格納されています。詳細は `templates/README.md` を参照してください。
