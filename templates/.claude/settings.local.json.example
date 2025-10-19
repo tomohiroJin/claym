@@ -1,20 +1,5 @@
 {
-  // Claude Code ローカル設定テンプレート
-  // このファイルをコピーして .claude/settings.local.json として使用してください
-  //
-  // 使用方法:
-  //   cp templates/.claude/settings.local.json.example .claude/settings.local.json
-  //
-  // 注意: このファイルは .gitignore に追加してバージョン管理対象外にしてください
-
-  // === 言語設定 ===
-  // 日本語を基本言語として使用
-  // カスタム指示は .claude/CLAUDE.md を参照
-
-  // === MCP サーバー設定 ===
-  // Model Context Protocol サーバーの設定
   "mcpServers": {
-    // Serena: コードベース解析・編集
     "serena": {
       "command": "uv",
       "args": [
@@ -29,8 +14,6 @@
         "${workspaceFolder}"
       ]
     },
-
-    // Filesystem: ファイル操作
     "filesystem": {
       "command": "npx",
       "args": [
@@ -39,36 +22,26 @@
         "${workspaceFolder}"
       ]
     },
-
-    // Playwright: ブラウザ自動化
     "playwright": {
       "command": "npx",
       "args": [
         "@playwright/mcp@latest"
       ]
     },
-
-    // Markitdown: ドキュメント変換
     "markitdown": {
       "command": "markitdown-mcp",
       "args": []
     },
-
-    // ImageSorcery: 画像処理
     "imagesorcery": {
       "command": "imagesorcery-mcp",
       "args": []
     },
-
-    // GitHub: GitHub API統合
     "github": {
       "command": "uvx",
       "args": [
         "mcp-github"
       ]
     },
-
-    // Context7: ドキュメント検索
     "context7": {
       "command": "npx",
       "args": [
@@ -76,8 +49,6 @@
         "@upstash/context7-mcp"
       ]
     },
-
-    // Fetch: Web検索・ページ取得
     "fetch": {
       "command": "uvx",
       "args": [
@@ -85,17 +56,9 @@
       ]
     }
   },
-
-  // === 権限設定 ===
   "permissions": {
-    // 自動承認する操作（慎重に設定してください）
     "allow": [
-      // === ファイル読み取り ===
-      // プロジェクトディレクトリ配下の全ファイルを読み取り許可
       "Read(//home/vscode/**)",
-
-      // === 基本的なシェルコマンド ===
-      // 情報表示系コマンド（安全）
       "Bash(echo:*)",
       "Bash(ls:*)",
       "Bash(cat:*)",
@@ -103,9 +66,6 @@
       "Bash(head:*)",
       "Bash(grep:*)",
       "Bash(find:*)",
-
-      // === Git操作 ===
-      // 一般的なGitコマンド
       "Bash(git status:*)",
       "Bash(git diff:*)",
       "Bash(git log:*)",
@@ -113,64 +73,33 @@
       "Bash(git commit:*)",
       "Bash(git checkout:*)",
       "Bash(git pull:*)",
-
-      // GitHub CLI
       "Bash(gh pr:*)",
       "Bash(gh auth:*)",
-
-      // === Python開発 ===
       "Bash(python3:*)",
       "Bash(poetry:*)",
       "Bash(.venv/bin/python:*)",
       "Bash(.venv/bin/pytest:*)",
-
-      // === MCP サーバー ===
-      // Serena (コードベース解析)
       "mcp__serena__get_symbols_overview",
       "mcp__serena__find_symbol",
       "mcp__serena__search_for_pattern",
       "mcp__serena__list_dir",
-
-      // ファイルシステム操作
       "mcp__filesystem__list_directory",
       "mcp__filesystem__directory_tree",
       "mcp__filesystem__read_text_file",
-
-      // GitHub統合
       "mcp__github__*",
-
-      // Playwright (ブラウザ自動化)
       "mcp__playwright__*",
-
-      // Fetch (Web検索・ページ取得)
       "mcp__fetch__*",
-
-      // === Web検索 ===
       "WebSearch"
     ],
-
-    // 明示的に拒否する操作
-    "deny": [
-      // 危険な操作は deny に追加
-      // 例: "Bash(rm -rf:*)"
-    ],
-
-    // 実行前に確認を求める操作
+    "deny": [],
     "ask": [
-      // 破壊的な操作
       "Bash(rm:*)",
       "Bash(sudo rm:*)",
-
-      // システム変更
       "Bash(sudo:*)",
       "Bash(chmod:*)",
       "Bash(chown:*)",
-
-      // Git の破壊的操作
       "Bash(git push --force:*)",
       "Bash(git reset --hard:*)",
-
-      // パッケージインストール
       "Bash(apt:*)",
       "Bash(apt-get:*)",
       "Bash(pip install:*)"
