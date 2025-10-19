@@ -108,22 +108,41 @@ setup_codex_cli() {
 # GEMINI 設定
 # =============================================================================
 setup_gemini() {
-    log_info "GEMINI 設定を確認中..."
+    log_info "GEMINI 設定をセットアップ中..."
 
     local gemini_dir="${PROJECT_ROOT}/.gemini"
     local settings_file="${gemini_dir}/settings.json"
+    local gemini_md="${gemini_dir}/GEMINI.md"
 
-    # .gemini ディレクトリが存在しない場合のみ作成
-    if [[ ! -d "${gemini_dir}" ]]; then
-        mkdir -p "${gemini_dir}"
+    # ディレクトリ作成
+    mkdir -p "${gemini_dir}"
+
+    # settings.json が存在しない場合のみコピーして置換
+    if [[ ! -f "${settings_file}" ]]; then
+        if [[ -f "${TEMPLATES_DIR}/.gemini/settings.json.example" ]]; then
+            cp "${TEMPLATES_DIR}/.gemini/settings.json.example" "${settings_file}"
+
+            # ${workspaceFolder} をプロジェクトルートに置換
+            sed -i "s|\${workspaceFolder}|${PROJECT_ROOT}|g" "${settings_file}"
+
+            log_success "GEMINI 設定ファイルを作成しました: ${settings_file}"
+        else
+            log_warn "GEMINI settings.json テンプレートが見つかりません"
+        fi
+    else
+        log_info "GEMINI 設定ファイルは既に存在します（スキップ）"
     fi
 
-    # settings.json が存在する場合は確認メッセージのみ
-    if [[ -f "${settings_file}" ]]; then
-        log_success "GEMINI 設定ファイルは既に存在します: ${settings_file}"
+    # GEMINI.md が存在しない場合のみコピー
+    if [[ ! -f "${gemini_md}" ]]; then
+        if [[ -f "${TEMPLATES_DIR}/.gemini/GEMINI.md" ]]; then
+            cp "${TEMPLATES_DIR}/.gemini/GEMINI.md" "${gemini_md}"
+            log_success "GEMINI カスタム指示を作成しました: ${gemini_md}"
+        else
+            log_warn "GEMINI.md テンプレートが見つかりません"
+        fi
     else
-        log_warn "GEMINI 設定ファイルが見つかりません"
-        log_info "GEMINI 設定は手動で作成するか、GEMINIの初回起動時に自動生成されます"
+        log_info "GEMINI カスタム指示は既に存在します（スキップ）"
     fi
 }
 

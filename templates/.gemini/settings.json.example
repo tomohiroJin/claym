@@ -1,0 +1,64 @@
+{
+  "general": {
+    "preferredEditor": "vscode"
+  },
+  "security": {
+    "auth": {
+      "selectedType": "oauth-personal"
+    }
+  },
+  "ui": {
+    "theme": "Default"
+  },
+  "mcpServers": {
+    "serena": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "/opt/serena",
+        "serena",
+        "start-mcp-server",
+        "--context",
+        "ide-assistant",
+        "--project",
+        "${workspaceFolder}"
+      ]
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "${workspaceFolder}"
+      ]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest"
+      ]
+    },
+    "markitdown": {
+      "command": "markitdown-mcp",
+      "args": []
+    },
+    "imagesorcery": {
+      "command": "imagesorcery-mcp",
+      "args": []
+    },
+    "github": {
+      "command": "uvx",
+      "args": [
+        "mcp-github"
+      ]
+    },
+    "context7": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ]
+    }
+  }
+}

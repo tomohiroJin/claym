@@ -119,3 +119,7 @@ local/
 .claude/settings.local.json
 .claude/CLAUDE.md
 
+# GEMINI 設定（全体を個人設定として管理）
+.gemini/
+!templates/.gemini/
+

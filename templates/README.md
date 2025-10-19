@@ -9,9 +9,12 @@
 templates/
 ├── .claude/
 │   ├── settings.local.json.example    # Claude Code 設定テンプレート
-│   └── custom-instructions.md         # Claude Code カスタム指示（日本語設定）
+│   └── CLAUDE.md                       # Claude Code カスタム指示（日本語設定）
 ├── .codex/
 │   └── config.toml.example            # Codex CLI 設定テンプレート（使用環境緩和設定含む）
+├── .gemini/
+│   ├── settings.json.example          # GEMINI 設定テンプレート
+│   └── GEMINI.md                      # GEMINI カスタム指示（日本語設定）
 ├── docs/
 │   └── prompts/
 │       ├── system.md                  # システムプロンプトテンプレート
@@ -25,8 +28,6 @@ templates/
 scripts/
 └── setup/
     └── init-ai-configs.sh              # 自動セットアップスクリプト
-
-注: GEMINI設定は既に .gemini/settings.json に存在するため、テンプレートは不要です。
 ```
 
 ## 🚀 クイックスタート
@@ -38,9 +39,9 @@ scripts/
 devcontainer のビルド・起動時に `scripts/setup/init-ai-configs.sh` が自動実行され、
 以下が自動的に設定されます：
 
-- Claude Code 設定ファイルとカスタム指示の作成
-- Codex CLI 設定ファイルの作成（プロジェクトパス自動設定）
-- GEMINI 設定の確認
+- Claude Code 設定ファイル (`settings.local.json`, `CLAUDE.md`) の作成
+- Codex CLI 設定ファイル (`config.toml`) の作成（プロジェクトパス自動設定）
+- GEMINI 設定ファイル (`settings.json`, `GEMINI.md`) の作成（プロジェクトパス自動設定）
 - プロンプトテンプレートのコピー
 - .gitignore の更新
 
