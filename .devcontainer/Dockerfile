@@ -91,6 +91,8 @@ RUN set -eux; \
     tmux \
     # シェルスクリプトの品質チェック
     shellcheck \
+    # Bash テストフレームワークの依存パッケージ
+    parallel \
     # ベーシックなエディタ・ページャ
     vim \
     less \
@@ -309,6 +311,23 @@ RUN git config --global core.pager "delta" \
     && git config --global delta.light false \
     && git config --global merge.conflictstyle diff3 \
     && git config --global diff.colorMoved default
+
+# ----------------------------------------------------------------------------
+# Bash テストフレームワーク (bats-core) のインストール
+# ----------------------------------------------------------------------------
+
+# bats-core 本体
+RUN set -eux; \
+    git clone --depth 1 https://github.com/bats-core/bats-core.git /tmp/bats-core && \
+    cd /tmp/bats-core && \
+    ./install.sh /usr/local && \
+    rm -rf /tmp/bats-core
+
+# bats ヘルパーライブラリ
+RUN set -eux; \
+    git clone --depth 1 https://github.com/bats-core/bats-support.git /usr/local/lib/bats-support && \
+    git clone --depth 1 https://github.com/bats-core/bats-assert.git /usr/local/lib/bats-assert && \
+    git clone --depth 1 https://github.com/bats-core/bats-file.git /usr/local/lib/bats-file
 
 # ----------------------------------------------------------------------------
 # 補助スクリプトの配置

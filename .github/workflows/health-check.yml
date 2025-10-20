@@ -17,6 +17,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Run setup scripts tests in dev container
+        uses: devcontainers/ci@v0.3
+        with:
+          runCmd: |
+            # セットアップスクリプトのテストを実行
+            bash scripts/test/run-setup-tests.sh all
+
       - name: Run health check in dev container
         uses: devcontainers/ci@v0.3
         with:
