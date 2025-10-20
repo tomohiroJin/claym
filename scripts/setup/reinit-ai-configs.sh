@@ -200,7 +200,7 @@ create_backup() {
     for file in "${backup_targets[@]}"; do
         if [[ -f "${file}" ]]; then
             local rel_path="${file#${PROJECT_ROOT}/}"
-            local rel_path="${rel_path#${HOME}/}"
+            rel_path="${rel_path#${HOME}/}"
             local backup_path="${BACKUP_DIR}/${rel_path}"
             local backup_subdir="$(dirname "${backup_path}")"
 
@@ -223,7 +223,7 @@ create_backup() {
     for dir in "${backup_dir_targets[@]}"; do
         if [[ -d "${dir}" ]]; then
             local rel_path="${dir#${PROJECT_ROOT}/}"
-            local rel_path="${rel_path#${HOME}/}"
+            rel_path="${rel_path#${HOME}/}"
             local backup_path="${BACKUP_DIR}/${rel_path}"
 
             log_debug "ディレクトリをバックアップ中: ${dir} -> ${backup_path}"
