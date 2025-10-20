@@ -129,3 +129,6 @@ docs/prompts/
 .claude/settings.local.json
 .claude/custom-instructions.md
 
+# ユーザー独自テンプレート（gitignore対象）
+templates-local/
+

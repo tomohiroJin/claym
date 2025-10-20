@@ -382,6 +382,69 @@ API クライアントコードを生成してください：
 4. エラーハンドリングを含める
 ```
 
+## ユーザー独自テンプレートの使用
+
+### 概要
+
+`templates-local/` ディレクトリを使用することで、公式テンプレートを変更せずに独自のカスタマイズを保持できます。
+
+### ディレクトリ構造
+
+```
+templates-local/
+└── .claude/
+    ├── commands/
+    │   ├── my-custom.md      # 独自コマンド
+    │   └── review.md         # 公式の review.md を上書き
+    └── CLAUDE.md              # 公式の CLAUDE.md を上書き
+```
+
+### 使い方
+
+#### 1. 公式テンプレートをローカルにコピー
+
+```bash
+# 特定のコマンドをコピー
+bash scripts/setup/copy-template-to-local.sh command review.md
+
+# すべてのコマンドをコピー
+bash scripts/setup/copy-template-to-local.sh command
+
+# CLAUDE.md をコピー
+bash scripts/setup/copy-template-to-local.sh claude-md
+
+# すべてをコピー
+bash scripts/setup/copy-template-to-local.sh all
+```
+
+#### 2. ローカルテンプレートをカスタマイズ
+
+```bash
+vim templates-local/.claude/commands/review.md
+```
+
+#### 3. 設定を再生成
+
+```bash
+bash scripts/setup/reinit-ai-configs.sh
+```
+
+### 動作
+
+- `reinit-ai-configs.sh` 実行時、公式テンプレートが先にコピーされ、その後ローカルテンプレートで上書きされます
+- 同名のファイルはローカルが優先されます
+- ローカルにしかないファイルは追加されます
+
+### バックアップ
+
+`templates-local/` もバックアップ対象に含まれるため、`reinit-ai-configs.sh` で安全に復元できます。
+
+### 詳細
+
+詳細は [templates-local/README.md](../../../templates-local/README.md) を参照してください。
+
+---
+
 ## コントリビューション
 
 コマンドの改善案やバグ報告は、Issue または Pull Request でお願いします。

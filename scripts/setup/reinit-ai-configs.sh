@@ -186,6 +186,7 @@ create_backup() {
     # バックアップ対象のディレクトリリスト
     local -a backup_dir_targets=(
         "${PROJECT_ROOT}/.claude/commands"
+        "${PROJECT_ROOT}/templates-local"
     )
 
     if [[ "${DRY_RUN}" != "true" ]]; then

@@ -31,9 +31,39 @@ log_error() {
 # プロジェクトルートを取得
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 TEMPLATES_DIR="${PROJECT_ROOT}/templates"
+TEMPLATES_LOCAL_DIR="${PROJECT_ROOT}/templates-local"
 
 log_info "AI拡張機能の設定を初期化します..."
 log_info "プロジェクトルート: ${PROJECT_ROOT}"
+
+# =============================================================================
+# テンプレートのマージ処理
+# =============================================================================
+
+# 公式テンプレートとローカルテンプレートをマージする関数
+# 引数:
+#   $1: マージ対象のディレクトリ（例: .claude/commands）
+merge_templates() {
+    local target_subdir="$1"
+    local official_template="${TEMPLATES_DIR}/${target_subdir}"
+    local local_template="${TEMPLATES_LOCAL_DIR}/${target_subdir}"
+    local destination="${PROJECT_ROOT}/${target_subdir}"
+
+    log_info "テンプレートをマージ中: ${target_subdir}"
+
+    # 1. 公式テンプレートをコピー
+    if [[ -d "${official_template}" ]]; then
+        mkdir -p "${destination}"
+        cp -r "${official_template}/"* "${destination}/" 2>/dev/null || true
+        log_info "公式テンプレートをコピーしました: ${official_template}"
+    fi
+
+    # 2. ローカルテンプレートで上書き（存在する場合）
+    if [[ -d "${local_template}" ]]; then
+        cp -r "${local_template}/"* "${destination}/" 2>/dev/null || true
+        log_success "ローカルテンプレートを適用しました: ${local_template}"
+    fi
+}
 
 # =============================================================================
 # Claude Code 設定
@@ -70,13 +100,17 @@ setup_claude_code() {
         log_info "Claude Code カスタム指示は既に存在します（スキップ）"
     fi
 
-    # commands ディレクトリが存在しない場合のみコピー
+    # commands ディレクトリのマージ処理
     local commands_dir="${claude_dir}/commands"
     if [[ ! -d "${commands_dir}" ]]; then
-        if [[ -d "${TEMPLATES_DIR}/.claude/commands" ]]; then
-            cp -r "${TEMPLATES_DIR}/.claude/commands" "${commands_dir}"
-            log_success "Claude Code カスタムコマンドを作成しました: ${commands_dir}"
-            log_info "利用可能なコマンド: /code-gen, /review, /docs, /test"
+        merge_templates ".claude/commands"
+        log_success "Claude Code カスタムコマンドを作成しました: ${commands_dir}"
+
+        # 利用可能なコマンドをリストアップ
+        local cmd_count=0
+        if [[ -d "${commands_dir}" ]]; then
+            cmd_count=$(find "${commands_dir}" -name "*.md" -type f | wc -l)
+            log_info "利用可能なコマンド: ${cmd_count} 個"
         fi
     else
         log_info "Claude Code カスタムコマンドは既に存在します（スキップ）"
