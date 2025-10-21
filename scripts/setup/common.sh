@@ -111,8 +111,7 @@ log_step() {
 #   $3: (オプション) 説明メッセージ
 #
 # 戻り値:
-#   0: コピー成功または既に存在
-#   1: コピー元が存在しない
+#   0: 常に成功（警告のみで処理を継続）
 #
 copy_file_if_not_exists() {
     local src="$1"
@@ -124,15 +123,15 @@ copy_file_if_not_exists() {
             mkdir -p "$(dirname "${dst}")"
             cp "${src}" "${dst}"
             log_success "${description}を作成しました: ${dst}"
-            return 0
         else
             log_warn "${description}のテンプレートが見つかりません: ${src}"
-            return 1
         fi
     else
         log_info "${description}は既に存在します（スキップ）: ${dst}"
-        return 0
     fi
+
+    # 警告のみでスクリプトは継続（テンプレート欠損でセットアップ失敗を避ける）
+    return 0
 }
 
 # 安全にディレクトリをコピー（dotglob対応）
@@ -216,8 +215,7 @@ merge_template_directories() {
 #   $@: 確認する環境変数名のリスト
 #
 # 戻り値:
-#   0: すべて設定済み
-#   1: 一部または全部が未設定
+#   0: 常に成功（警告のみで処理を継続）
 #
 check_api_keys() {
     local missing_vars=()
@@ -234,11 +232,12 @@ check_api_keys() {
             log_warn "  - ${var}"
         done
         log_info "必要に応じて .env ファイルに設定してください"
-        return 1
     else
         log_success "必要な環境変数が設定されています"
-        return 0
     fi
+
+    # 警告のみでスクリプトは継続（初期セットアップ時はAPIキー未設定が普通）
+    return 0
 }
 
 # =============================================================================
