@@ -1,233 +1,113 @@
 #!/usr/bin/env bats
-
 # init-ai-configs.sh のテスト
 #
 # テスト対象:
 # - merge_templates() 関数
 # - Claude Code コマンドのセットアップ
 # - テンプレートのマージ動作
+#
+# リファクタリング適用パターン:
+# - Extract Function: 共通ロジックをヘルパー関数に抽出
+# - Extract Variable: マジックリテラルを定数化
+# - Test Data Builder: テストデータ構築を分離
 
+# ==============================================================================
 # テストヘルパーのロード
+# ==============================================================================
+
 load '/usr/local/lib/bats-support/load'
 load '/usr/local/lib/bats-assert/load'
 load '/usr/local/lib/bats-file/load'
+load 'test_helper'
+
+# ==============================================================================
+# セットアップ/ティアダウン
+# ==============================================================================
 
 # セットアップ: 各テストの前に実行
 setup() {
-    # テスト用の一時ディレクトリを作成
-    export TEST_DIR="$(mktemp -d)"
-    export PROJECT_ROOT="${TEST_DIR}/project"
-    export TEMPLATES_DIR="${PROJECT_ROOT}/templates"
-    export TEMPLATES_LOCAL_DIR="${PROJECT_ROOT}/templates-local"
-
-    # プロジェクト構造を作成
-    mkdir -p "${PROJECT_ROOT}"
-    mkdir -p "${TEMPLATES_DIR}/.claude/commands"
-    mkdir -p "${TEMPLATES_LOCAL_DIR}/.claude/commands"
-
-    # テスト用のテンプレートファイルを作成
-    cat > "${TEMPLATES_DIR}/.claude/commands/test1.md" << 'EOF'
-# Test Command 1
-Official template content
-EOF
-
-    cat > "${TEMPLATES_DIR}/.claude/commands/test2.md" << 'EOF'
-# Test Command 2
-Official template content
-EOF
+    create_standard_test_directories
+    create_official_template_files
 }
 
 # ティアダウン: 各テストの後に実行
 teardown() {
-    # 一時ディレクトリを削除
-    rm -rf "${TEST_DIR}"
+    cleanup_test_directory
 }
 
-# ----------------------------------------------------------------------------
+# ==============================================================================
 # merge_templates() 関数のテスト
-# ----------------------------------------------------------------------------
+# ==============================================================================
 
 @test "merge_templates: 公式テンプレートのみの場合、正しくコピーされる" {
-    # merge_templates 関数を定義（init-ai-configs.sh から抽出）
-    merge_templates() {
-        local target_subdir="$1"
-        local official_template="${TEMPLATES_DIR}/${target_subdir}"
-        local local_template="${TEMPLATES_LOCAL_DIR}/${target_subdir}"
-        local destination="${PROJECT_ROOT}/${target_subdir}"
+    # Arrange (準備)
+    define_merge_templates_function
 
-        # 1. 公式テンプレートをコピー
-        if [[ -d "${official_template}" ]]; then
-            mkdir -p "${destination}"
-            cp -r "${official_template}/"* "${destination}/" 2>/dev/null || true
-        fi
-
-        # 2. ローカルテンプレートで上書き（存在する場合）
-        if [[ -d "${local_template}" ]]; then
-            cp -r "${local_template}/"* "${destination}/" 2>/dev/null || true
-        fi
-    }
-
-    # テスト実行
+    # Act (実行)
     run merge_templates ".claude/commands"
 
-    # 検証
+    # Assert (検証)
     assert_success
-    assert_file_exist "${PROJECT_ROOT}/.claude/commands/test1.md"
-    assert_file_exist "${PROJECT_ROOT}/.claude/commands/test2.md"
-
-    # ファイル内容の検証
-    run cat "${PROJECT_ROOT}/.claude/commands/test1.md"
-    assert_output --partial "Official template content"
+    assert_official_template_files_exist
+    assert_official_template_content "${PROJECT_ROOT}/.claude/commands/test1.md"
 }
 
 @test "merge_templates: ローカルテンプレートで上書きされる" {
-    # ローカルテンプレートを作成（公式と同名で内容が異なる）
-    cat > "${TEMPLATES_LOCAL_DIR}/.claude/commands/test1.md" << 'EOF'
-# Test Command 1
-Local template content (overridden)
-EOF
+    # Arrange
+    create_local_override_template
+    define_merge_templates_function
 
-    # merge_templates 関数を定義
-    merge_templates() {
-        local target_subdir="$1"
-        local official_template="${TEMPLATES_DIR}/${target_subdir}"
-        local local_template="${TEMPLATES_LOCAL_DIR}/${target_subdir}"
-        local destination="${PROJECT_ROOT}/${target_subdir}"
-
-        # 1. 公式テンプレートをコピー
-        if [[ -d "${official_template}" ]]; then
-            mkdir -p "${destination}"
-            cp -r "${official_template}/"* "${destination}/" 2>/dev/null || true
-        fi
-
-        # 2. ローカルテンプレートで上書き（存在する場合）
-        if [[ -d "${local_template}" ]]; then
-            cp -r "${local_template}/"* "${destination}/" 2>/dev/null || true
-        fi
-    }
-
-    # テスト実行
+    # Act
     run merge_templates ".claude/commands"
 
-    # 検証
+    # Assert
     assert_success
-
-    # test1.md がローカルテンプレートの内容になっていることを確認
-    run cat "${PROJECT_ROOT}/.claude/commands/test1.md"
-    assert_output --partial "Local template content (overridden)"
-    refute_output --partial "Official template content"
-
-    # test2.md は公式テンプレートのまま
-    run cat "${PROJECT_ROOT}/.claude/commands/test2.md"
-    assert_output --partial "Official template content"
+    assert_local_template_content "${PROJECT_ROOT}/.claude/commands/test1.md"
+    assert_official_template_content "${PROJECT_ROOT}/.claude/commands/test2.md"
 }
 
 @test "merge_templates: ローカル独自のファイルも追加される" {
-    # ローカル独自のテンプレートを作成
-    cat > "${TEMPLATES_LOCAL_DIR}/.claude/commands/custom.md" << 'EOF'
-# Custom Command
-This is a custom local template
-EOF
+    # Arrange
+    create_custom_local_template
+    define_merge_templates_function
 
-    # merge_templates 関数を定義
-    merge_templates() {
-        local target_subdir="$1"
-        local official_template="${TEMPLATES_DIR}/${target_subdir}"
-        local local_template="${TEMPLATES_LOCAL_DIR}/${target_subdir}"
-        local destination="${PROJECT_ROOT}/${target_subdir}"
-
-        # 1. 公式テンプレートをコピー
-        if [[ -d "${official_template}" ]]; then
-            mkdir -p "${destination}"
-            cp -r "${official_template}/"* "${destination}/" 2>/dev/null || true
-        fi
-
-        # 2. ローカルテンプレートで上書き（存在する場合）
-        if [[ -d "${local_template}" ]]; then
-            cp -r "${local_template}/"* "${destination}/" 2>/dev/null || true
-        fi
-    }
-
-    # テスト実行
+    # Act
     run merge_templates ".claude/commands"
 
-    # 検証
+    # Assert
     assert_success
-
-    # 公式テンプレートが存在
-    assert_file_exist "${PROJECT_ROOT}/.claude/commands/test1.md"
-    assert_file_exist "${PROJECT_ROOT}/.claude/commands/test2.md"
-
-    # ローカル独自のファイルも存在
+    assert_official_template_files_exist
     assert_file_exist "${PROJECT_ROOT}/.claude/commands/custom.md"
-
-    run cat "${PROJECT_ROOT}/.claude/commands/custom.md"
-    assert_output --partial "This is a custom local template"
+    assert_custom_template_content "${PROJECT_ROOT}/.claude/commands/custom.md"
 }
 
 @test "merge_templates: 公式テンプレートが存在しない場合でもエラーにならない" {
-    # 存在しないディレクトリを指定
-    merge_templates() {
-        local target_subdir="$1"
-        local official_template="${TEMPLATES_DIR}/${target_subdir}"
-        local local_template="${TEMPLATES_LOCAL_DIR}/${target_subdir}"
-        local destination="${PROJECT_ROOT}/${target_subdir}"
+    # Arrange
+    define_merge_templates_function
 
-        # 1. 公式テンプレートをコピー
-        if [[ -d "${official_template}" ]]; then
-            mkdir -p "${destination}"
-            cp -r "${official_template}/"* "${destination}/" 2>/dev/null || true
-        fi
-
-        # 2. ローカルテンプレートで上書き（存在する場合）
-        if [[ -d "${local_template}" ]]; then
-            cp -r "${local_template}/"* "${destination}/" 2>/dev/null || true
-        fi
-    }
-
-    # テスト実行
+    # Act
     run merge_templates ".nonexistent/path"
 
-    # エラーにならず正常終了すること
+    # Assert
     assert_success
 }
 
 @test "merge_templates: ローカルテンプレートが存在しない場合でもエラーにならない" {
-    # ローカルテンプレートディレクトリを削除
+    # Arrange
     rm -rf "${TEMPLATES_LOCAL_DIR}/.claude"
+    define_merge_templates_function
 
-    merge_templates() {
-        local target_subdir="$1"
-        local official_template="${TEMPLATES_DIR}/${target_subdir}"
-        local local_template="${TEMPLATES_LOCAL_DIR}/${target_subdir}"
-        local destination="${PROJECT_ROOT}/${target_subdir}"
-
-        # 1. 公式テンプレートをコピー
-        if [[ -d "${official_template}" ]]; then
-            mkdir -p "${destination}"
-            cp -r "${official_template}/"* "${destination}/" 2>/dev/null || true
-        fi
-
-        # 2. ローカルテンプレートで上書き（存在する場合）
-        if [[ -d "${local_template}" ]]; then
-            cp -r "${local_template}/"* "${destination}/" 2>/dev/null || true
-        fi
-    }
-
-    # テスト実行
+    # Act
     run merge_templates ".claude/commands"
 
-    # エラーにならず正常終了すること
+    # Assert
     assert_success
-
-    # 公式テンプレートはコピーされる
-    assert_file_exist "${PROJECT_ROOT}/.claude/commands/test1.md"
-    assert_file_exist "${PROJECT_ROOT}/.claude/commands/test2.md"
+    assert_official_template_files_exist
 }
 
-# ----------------------------------------------------------------------------
+# ==============================================================================
 # init-ai-configs.sh スクリプト全体のテスト
-# ----------------------------------------------------------------------------
+# ==============================================================================
 
 @test "init-ai-configs.sh: スクリプトが正常に実行できる" {
     # スクリプトのシンタックスチェック

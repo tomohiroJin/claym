@@ -1,117 +1,107 @@
 #!/usr/bin/env bash
+# =============================================================================
 # AI拡張機能の設定ファイルを自動セットアップするスクリプト
-# コンテナ起動時に実行され、各AIツールが利用可能な状態を作成します
+# =============================================================================
+#
+# コンテナ起動時に実行され、各AIツールが利用可能な状態を作成します。
+#
+# リファクタリング適用パターン:
+# - Extract Function: 共通ロジックを common.sh に抽出
+# - Replace Magic Number/String: 定数化
+# - Compose Method: 複雑な関数を小さな関数に分解
+#
+# =============================================================================
 
 set -euo pipefail
 
-# 色付き出力
-readonly RED='\033[0;31m'
-readonly GREEN='\033[0;32m'
-readonly YELLOW='\033[1;33m'
-readonly BLUE='\033[0;34m'
-readonly NC='\033[0m' # No Color
-
-# ログ関数
-log_info() {
-    echo -e "${BLUE}[INFO]${NC} $*"
-}
-
-log_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $*"
-}
-
-log_warn() {
-    echo -e "${YELLOW}[WARN]${NC} $*"
-}
-
-log_error() {
-    echo -e "${RED}[ERROR]${NC} $*"
-}
-
-# プロジェクトルートを取得
-PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-TEMPLATES_DIR="${PROJECT_ROOT}/templates"
-TEMPLATES_LOCAL_DIR="${PROJECT_ROOT}/templates-local"
-
-log_info "AI拡張機能の設定を初期化します..."
-log_info "プロジェクトルート: ${PROJECT_ROOT}"
-
 # =============================================================================
-# テンプレートのマージ処理
+# 共通ヘルパーの読み込み
 # =============================================================================
 
-# 公式テンプレートとローカルテンプレートをマージする関数
+readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# 共通ヘルパー関数を読み込み
+# shellcheck source=./common.sh
+source "${SCRIPT_DIR}/common.sh"
+
+# =============================================================================
+# プロジェクト固有の定数
+# =============================================================================
+
+readonly PROJECT_ROOT="$(get_project_root "${SCRIPT_DIR}")"
+readonly TEMPLATES_DIR="${PROJECT_ROOT}/templates"
+readonly TEMPLATES_LOCAL_DIR="${PROJECT_ROOT}/templates-local"
+
+# =============================================================================
+# テンプレートマージ関数
+# =============================================================================
+
+# 公式テンプレートとローカルテンプレートをマージ
+#
 # 引数:
 #   $1: マージ対象のディレクトリ（例: .claude/commands）
+#
 merge_templates() {
     local target_subdir="$1"
-    local official_template="${TEMPLATES_DIR}/${target_subdir}"
-    local local_template="${TEMPLATES_LOCAL_DIR}/${target_subdir}"
-    local destination="${PROJECT_ROOT}/${target_subdir}"
 
     log_info "テンプレートをマージ中: ${target_subdir}"
 
-    # 1. 公式テンプレートをコピー
-    if [[ -d "${official_template}" ]]; then
-        mkdir -p "${destination}"
-        cp -r "${official_template}/"* "${destination}/" 2>/dev/null || true
-        log_info "公式テンプレートをコピーしました: ${official_template}"
-    fi
-
-    # 2. ローカルテンプレートで上書き（存在する場合）
-    if [[ -d "${local_template}" ]]; then
-        cp -r "${local_template}/"* "${destination}/" 2>/dev/null || true
-        log_success "ローカルテンプレートを適用しました: ${local_template}"
-    fi
+    merge_template_directories \
+        "${target_subdir}" \
+        "${TEMPLATES_DIR}" \
+        "${TEMPLATES_LOCAL_DIR}" \
+        "${PROJECT_ROOT}"
 }
 
 # =============================================================================
 # Claude Code 設定
 # =============================================================================
+
+# Claude Code の設定ファイルをセットアップ
+#
 setup_claude_code() {
     log_info "Claude Code 設定をセットアップ中..."
 
     local claude_dir="${PROJECT_ROOT}/.claude"
     local settings_file="${claude_dir}/settings.local.json"
     local custom_instructions="${claude_dir}/CLAUDE.md"
+    local commands_dir="${claude_dir}/commands"
 
     # ディレクトリ作成
     mkdir -p "${claude_dir}"
 
-    # settings.local.json が存在しない場合のみコピー
-    if [[ ! -f "${settings_file}" ]]; then
-        if [[ -f "${TEMPLATES_DIR}/.claude/settings.local.json.example" ]]; then
-            cp "${TEMPLATES_DIR}/.claude/settings.local.json.example" "${settings_file}"
-            log_success "Claude Code 設定ファイルを作成しました: ${settings_file}"
-        else
-            log_warn "Claude Code テンプレートが見つかりません"
-        fi
-    else
-        log_info "Claude Code 設定ファイルは既に存在します（スキップ）"
-    fi
+    # settings.local.json をコピー
+    copy_file_if_not_exists \
+        "${TEMPLATES_DIR}/.claude/settings.local.json.example" \
+        "${settings_file}" \
+        "Claude Code 設定ファイル"
 
-    # CLAUDE.md が存在しない場合のみコピー
-    if [[ ! -f "${custom_instructions}" ]]; then
-        if [[ -f "${TEMPLATES_DIR}/.claude/CLAUDE.md" ]]; then
-            cp "${TEMPLATES_DIR}/.claude/CLAUDE.md" "${custom_instructions}"
-            log_success "Claude Code カスタム指示を作成しました: ${custom_instructions}"
-        fi
-    else
-        log_info "Claude Code カスタム指示は既に存在します（スキップ）"
-    fi
+    # CLAUDE.md をコピー
+    copy_file_if_not_exists \
+        "${TEMPLATES_DIR}/.claude/CLAUDE.md" \
+        "${custom_instructions}" \
+        "Claude Code カスタム指示"
 
     # commands ディレクトリのマージ処理
-    local commands_dir="${claude_dir}/commands"
+    setup_claude_commands "${commands_dir}"
+}
+
+# Claude Code のコマンドディレクトリをセットアップ
+#
+# 引数:
+#   $1: コマンドディレクトリパス
+#
+setup_claude_commands() {
+    local commands_dir="$1"
+
     if [[ ! -d "${commands_dir}" ]]; then
         merge_templates ".claude/commands"
         log_success "Claude Code カスタムコマンドを作成しました: ${commands_dir}"
 
-        # 利用可能なコマンドをリストアップ
-        local cmd_count=0
-        if [[ -d "${commands_dir}" ]]; then
-            cmd_count=$(find "${commands_dir}" -name "*.md" -type f | wc -l)
-            log_info "利用可能なコマンド: ${cmd_count} 個"
-        fi
+        # 利用可能なコマンド数を表示
+        local cmd_count
+        cmd_count=$(count_files_in_directory "${commands_dir}" "*.md")
+        log_info "利用可能なコマンド: ${cmd_count} 個"
     else
         log_info "Claude Code カスタムコマンドは既に存在します（スキップ）"
     fi
@@ -120,6 +110,9 @@ setup_claude_code() {
 # =============================================================================
 # Codex CLI 設定
 # =============================================================================
+
+# Codex CLI の設定ファイルをセットアップ
+#
 setup_codex_cli() {
     log_info "Codex CLI 設定をセットアップ中..."
 
@@ -130,16 +123,34 @@ setup_codex_cli() {
     # ディレクトリ作成
     mkdir -p "${codex_dir}"
 
-    # config.toml が存在しない場合のみコピーして置換
+    # config.toml をセットアップ
+    setup_codex_config "${config_file}"
+
+    # AGENTS.md をコピー
+    copy_file_if_not_exists \
+        "${TEMPLATES_DIR}/.codex/AGENTS.md" \
+        "${agents_md}" \
+        "Codex CLI エージェント指示"
+}
+
+# Codex CLI の設定ファイルを作成してプロジェクトパスを置換
+#
+# 引数:
+#   $1: 設定ファイルパス
+#
+setup_codex_config() {
+    local config_file="$1"
+
     if [[ ! -f "${config_file}" ]]; then
         if [[ -f "${TEMPLATES_DIR}/.codex/config.toml.example" ]]; then
             # テンプレートをコピー
             cp "${TEMPLATES_DIR}/.codex/config.toml.example" "${config_file}"
 
-            # YOUR_PROJECT_NAME をプロジェクト名に置換
-            local project_name
-            project_name="$(basename "${PROJECT_ROOT}")"
-            sed -i "s|/workspaces/YOUR_PROJECT_NAME|${PROJECT_ROOT}|g" "${config_file}"
+            # YOUR_PROJECT_NAME をプロジェクトパスに置換
+            replace_in_file \
+                "${config_file}" \
+                "/workspaces/YOUR_PROJECT_NAME" \
+                "${PROJECT_ROOT}"
 
             log_success "Codex CLI 設定ファイルを作成しました: ${config_file}"
             log_info "プロジェクトパスを ${PROJECT_ROOT} に設定しました"
@@ -149,23 +160,14 @@ setup_codex_cli() {
     else
         log_info "Codex CLI 設定ファイルは既に存在します（スキップ）"
     fi
-
-    # AGENTS.md が存在しない場合のみコピー（プロジェクトルートに配置）
-    if [[ ! -f "${agents_md}" ]]; then
-        if [[ -f "${TEMPLATES_DIR}/.codex/AGENTS.md" ]]; then
-            cp "${TEMPLATES_DIR}/.codex/AGENTS.md" "${agents_md}"
-            log_success "Codex CLI エージェント指示を作成しました: ${agents_md}"
-        else
-            log_warn "AGENTS.md テンプレートが見つかりません"
-        fi
-    else
-        log_info "Codex CLI エージェント指示は既に存在します（スキップ）"
-    fi
 }
 
 # =============================================================================
 # GEMINI 設定
 # =============================================================================
+
+# GEMINI の設定ファイルをセットアップ
+#
 setup_gemini() {
     log_info "GEMINI 設定をセットアップ中..."
 
@@ -176,13 +178,33 @@ setup_gemini() {
     # ディレクトリ作成
     mkdir -p "${gemini_dir}"
 
-    # settings.json が存在しない場合のみコピーして置換
+    # settings.json をセットアップ
+    setup_gemini_settings "${settings_file}"
+
+    # GEMINI.md をコピー
+    copy_file_if_not_exists \
+        "${TEMPLATES_DIR}/.gemini/GEMINI.md" \
+        "${gemini_md}" \
+        "GEMINI カスタム指示"
+}
+
+# GEMINI の設定ファイルを作成してプレースホルダーを置換
+#
+# 引数:
+#   $1: 設定ファイルパス
+#
+setup_gemini_settings() {
+    local settings_file="$1"
+
     if [[ ! -f "${settings_file}" ]]; then
         if [[ -f "${TEMPLATES_DIR}/.gemini/settings.json.example" ]]; then
             cp "${TEMPLATES_DIR}/.gemini/settings.json.example" "${settings_file}"
 
             # ${workspaceFolder} をプロジェクトルートに置換
-            sed -i "s|\${workspaceFolder}|${PROJECT_ROOT}|g" "${settings_file}"
+            replace_in_file \
+                "${settings_file}" \
+                "\${workspaceFolder}" \
+                "${PROJECT_ROOT}"
 
             log_success "GEMINI 設定ファイルを作成しました: ${settings_file}"
         else
@@ -191,23 +213,14 @@ setup_gemini() {
     else
         log_info "GEMINI 設定ファイルは既に存在します（スキップ）"
     fi
-
-    # GEMINI.md が存在しない場合のみコピー
-    if [[ ! -f "${gemini_md}" ]]; then
-        if [[ -f "${TEMPLATES_DIR}/.gemini/GEMINI.md" ]]; then
-            cp "${TEMPLATES_DIR}/.gemini/GEMINI.md" "${gemini_md}"
-            log_success "GEMINI カスタム指示を作成しました: ${gemini_md}"
-        else
-            log_warn "GEMINI.md テンプレートが見つかりません"
-        fi
-    else
-        log_info "GEMINI カスタム指示は既に存在します（スキップ）"
-    fi
 }
 
 # =============================================================================
-# プロンプトテンプレート
+# プロンプトテンプレート設定
 # =============================================================================
+
+# プロンプトテンプレートをセットアップ
+#
 setup_prompt_templates() {
     log_info "プロンプトテンプレートをセットアップ中..."
 
@@ -218,33 +231,43 @@ setup_prompt_templates() {
     mkdir -p "${tasks_dir}"
 
     # system.md をコピー
-    if [[ ! -f "${prompts_dir}/system.md" ]]; then
-        if [[ -f "${TEMPLATES_DIR}/docs/prompts/system.md" ]]; then
-            cp "${TEMPLATES_DIR}/docs/prompts/system.md" "${prompts_dir}/system.md"
-            log_success "システムプロンプトテンプレートを作成しました"
-        fi
-    fi
+    copy_file_if_not_exists \
+        "${TEMPLATES_DIR}/docs/prompts/system.md" \
+        "${prompts_dir}/system.md" \
+        "システムプロンプトテンプレート"
 
     # タスクプロンプトをコピー
+    setup_task_prompts "${tasks_dir}"
+}
+
+# タスクプロンプトテンプレートをコピー
+#
+# 引数:
+#   $1: タスクディレクトリパス
+#
+setup_task_prompts() {
+    local tasks_dir="$1"
     local task_files=("feature-add.md" "bug-fix.md" "refactor.md" "review.md")
+
     for task_file in "${task_files[@]}"; do
-        if [[ ! -f "${tasks_dir}/${task_file}" ]]; then
-            if [[ -f "${TEMPLATES_DIR}/docs/prompts/tasks/${task_file}" ]]; then
-                cp "${TEMPLATES_DIR}/docs/prompts/tasks/${task_file}" "${tasks_dir}/${task_file}"
-                log_success "タスクプロンプトを作成しました: ${task_file}"
-            fi
-        fi
+        copy_file_if_not_exists \
+            "${TEMPLATES_DIR}/docs/prompts/tasks/${task_file}" \
+            "${tasks_dir}/${task_file}" \
+            "タスクプロンプト (${task_file})"
     done
 }
 
 # =============================================================================
 # .gitignore 更新
 # =============================================================================
+
+# .gitignore にAI拡張機能の除外設定を追加
+#
 update_gitignore() {
     log_info ".gitignore を更新中..."
 
     local gitignore="${PROJECT_ROOT}/.gitignore"
-    local entries=(
+    local -a entries=(
         ""
         "# AI拡張機能のローカル設定"
         ".claude/settings.local.json"
@@ -252,54 +275,39 @@ update_gitignore() {
         ""
     )
 
-    # .gitignore が存在しない場合は作成
-    if [[ ! -f "${gitignore}" ]]; then
-        touch "${gitignore}"
-    fi
-
-    # 既に追加されているかチェック
-    if ! grep -q "# AI拡張機能のローカル設定" "${gitignore}"; then
-        for entry in "${entries[@]}"; do
-            echo "${entry}" >> "${gitignore}"
-        done
-        log_success ".gitignore を更新しました"
-    else
-        log_info ".gitignore は既に更新されています（スキップ）"
-    fi
+    update_gitignore_safe \
+        "${gitignore}" \
+        "# AI拡張機能のローカル設定" \
+        "${entries[@]}"
 }
 
 # =============================================================================
 # 環境変数の確認
 # =============================================================================
+
+# APIキーの環境変数をチェック
+#
 check_environment() {
     log_info "環境変数を確認中..."
 
-    local missing_vars=()
-
-    # 各APIキーの存在確認（警告のみ、エラーにはしない）
-    [[ -z "${ANTHROPIC_API_KEY:-}" ]] && missing_vars+=("ANTHROPIC_API_KEY")
-    [[ -z "${OPENAI_API_KEY:-}" ]] && missing_vars+=("OPENAI_API_KEY")
-    [[ -z "${GEMINI_API_KEY:-}" ]] && missing_vars+=("GEMINI_API_KEY")
-    [[ -z "${GITHUB_TOKEN:-}" ]] && missing_vars+=("GITHUB_TOKEN")
-
-    if [[ ${#missing_vars[@]} -gt 0 ]]; then
-        log_warn "以下の環境変数が設定されていません:"
-        for var in "${missing_vars[@]}"; do
-            log_warn "  - ${var}"
-        done
-        log_info "必要に応じて .env ファイルに設定してください"
-    else
-        log_success "必要な環境変数が設定されています"
-    fi
+    check_api_keys \
+        "ANTHROPIC_API_KEY" \
+        "OPENAI_API_KEY" \
+        "GEMINI_API_KEY" \
+        "GITHUB_TOKEN"
 }
 
 # =============================================================================
 # メイン処理
 # =============================================================================
+
+# セットアップのメイン処理
+#
 main() {
-    echo "========================================"
-    echo "  AI Extensions Configuration Setup"
-    echo "========================================"
+    show_header "AI Extensions Configuration Setup"
+
+    log_info "AI拡張機能の設定を初期化します..."
+    log_info "プロジェクトルート: ${PROJECT_ROOT}"
     echo ""
 
     # 各セットアップを実行
@@ -321,10 +329,8 @@ main() {
     check_environment
     echo ""
 
-    echo "========================================"
-    log_success "セットアップが完了しました！"
-    echo "========================================"
-    echo ""
+    show_footer "$(log_success "セットアップが完了しました！")"
+
     log_info "次のステップ:"
     echo "  1. 環境変数を設定（.env ファイル）"
     echo "  2. .claude/settings.local.json で権限をカスタマイズ"

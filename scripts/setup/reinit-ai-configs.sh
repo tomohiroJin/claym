@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
+# =============================================================================
 # AI拡張機能の設定ファイルを再生成するスクリプト
-# バックアップ機能付きで安全に設定を更新できます
+# =============================================================================
+#
+# バックアップ機能付きで安全に設定を更新できます。
 #
 # 使い方:
 #   bash scripts/setup/reinit-ai-configs.sh           # 対話モード
@@ -8,26 +11,30 @@
 #   bash scripts/setup/reinit-ai-configs.sh --backup-only   # バックアップのみ
 #   bash scripts/setup/reinit-ai-configs.sh --restore 20251019_153000  # 復元
 #
-# 詳細は docs/scripts-setup-tools.md を参照してください
+# リファクタリング適用パターン:
+# - Extract Function: 共通ログ関数を common.sh に抽出
+# - Replace Magic Number/String: 定数化
+#
+# =============================================================================
 
 set -euo pipefail
+
+# =============================================================================
+# 共通ヘルパーの読み込み
+# =============================================================================
+
+readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# 共通ヘルパー関数を読み込み
+# shellcheck source=./common.sh
+source "${SCRIPT_DIR}/common.sh"
 
 # =============================================================================
 # 定数・グローバル変数
 # =============================================================================
 
-# 色付き出力
-readonly RED='\033[0;31m'
-readonly GREEN='\033[0;32m'
-readonly YELLOW='\033[1;33m'
-readonly BLUE='\033[0;34m'
-readonly CYAN='\033[0;36m'
-readonly BOLD='\033[1m'
-readonly NC='\033[0m' # No Color
-
 # プロジェクトルート
-readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+readonly PROJECT_ROOT="$(get_project_root "${SCRIPT_DIR}")"
 readonly TEMPLATES_DIR="${PROJECT_ROOT}/templates"
 
 # バックアップディレクトリ
@@ -43,36 +50,7 @@ RESTORE_TIMESTAMP=""
 DRY_RUN=false
 VERBOSE=false
 
-# =============================================================================
-# ログ関数
-# =============================================================================
-
-log_info() {
-    echo -e "${BLUE}[INFO]${NC} $*"
-}
-
-log_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $*"
-}
-
-log_warn() {
-    echo -e "${YELLOW}[WARN]${NC} $*"
-}
-
-log_error() {
-    echo -e "${RED}[ERROR]${NC} $*"
-}
-
-log_debug() {
-    if [[ "${VERBOSE}" == "true" ]]; then
-        echo -e "${CYAN}[DEBUG]${NC} $*"
-    fi
-}
-
-log_step() {
-    echo ""
-    echo -e "${BOLD}${BLUE}>>> $*${NC}"
-}
+# ログ関数は common.sh で定義されています
 
 # =============================================================================
 # ヘルプ表示
@@ -444,10 +422,7 @@ confirm() {
 
 main() {
     # ヘッダー
-    echo "========================================"
-    echo "  AI Extensions Configuration Reset"
-    echo "========================================"
-    echo ""
+    show_header "AI Extensions Configuration Reset"
 
     if [[ "${DRY_RUN}" == "true" ]]; then
         log_warn "DRY-RUN モード（実際には変更しません）"
@@ -479,11 +454,7 @@ main() {
     regenerate_configs
 
     # 完了メッセージ
-    echo ""
-    echo "========================================"
-    log_success "すべての処理が完了しました！"
-    echo "========================================"
-    echo ""
+    show_footer "$(log_success "すべての処理が完了しました！")"
     log_info "次のステップ:"
     echo "  1. .claude/settings.local.json で権限をカスタマイズ"
     echo "  2. ~/.codex/config.toml でモデルを選択"
