@@ -178,8 +178,7 @@ copy_directory_safe() {
 #   $4: コピー先ディレクトリ
 #
 # 戻り値:
-#   0: マージ成功
-#   1: 公式テンプレートが存在しない
+#   0: 常に成功（警告のみで処理を継続）
 #
 merge_template_directories() {
     local target_subdir="$1"
@@ -194,7 +193,6 @@ merge_template_directories() {
         log_debug "公式テンプレートをコピーしました: ${official_template}"
     else
         log_debug "公式テンプレートが存在しません: ${official_template}"
-        return 1
     fi
 
     # 2. ローカルテンプレートで上書き（存在する場合）
@@ -202,6 +200,7 @@ merge_template_directories() {
         log_success "ローカルテンプレートを適用しました: ${local_template}"
     fi
 
+    # 公式テンプレートが存在しない場合でもエラーにしない
     return 0
 }
 
