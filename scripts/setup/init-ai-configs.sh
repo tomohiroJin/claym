@@ -118,7 +118,7 @@ setup_codex_cli() {
 
     local codex_dir="${HOME}/.codex"
     local config_file="${codex_dir}/config.toml"
-    local agents_md="${PROJECT_ROOT}/AGENTS.md"
+    local agents_md="${codex_dir}/AGENTS.md"
 
     # ディレクトリ作成
     mkdir -p "${codex_dir}"
@@ -126,7 +126,7 @@ setup_codex_cli() {
     # config.toml をセットアップ
     setup_codex_config "${config_file}"
 
-    # AGENTS.md をコピー
+    # AGENTS.md をコピー（~/.codex/AGENTS.md に配置）
     copy_file_if_not_exists \
         "${TEMPLATES_DIR}/.codex/AGENTS.md" \
         "${agents_md}" \
