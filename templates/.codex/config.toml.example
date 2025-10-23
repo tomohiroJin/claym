@@ -7,12 +7,6 @@
 # 注意: このファイルは .gitignore に追加してバージョン管理対象外にしてください
 #
 # 参考: https://github.com/openai/codex/blob/main/docs/config.md
-#
-# === 重要: ネットワーク設定 ===
-# この設定ファイルでは、デフォルトでネットワークアクセスが無効化されています。
-# [network] セクションで enabled = false に設定されています。
-#
-# ネットワークを有効化する場合は、[network] セクションを参照してください。
 
 # === モデルプロバイダー設定 ===
 [model_providers.openai]
@@ -122,9 +116,9 @@ git_operations = "auto"
 # 基本的に全てのコマンドを自動承認し、危険なコマンドのみ確認を求めます
 bash_operations = "auto"
 
-# Web検索・フェッチ操作
-# ネットワークが無効化されているため、デフォルトでは確認を求めます
-web_operations = "prompt"  # ネットワーク有効時は "auto" に変更可能
+# Web検索・フェッチ操作は自動承認
+# 外部サイトへのアクセスが発生しますが、開発効率のため許可します
+web_operations = "auto"
 
 # 危険なコマンドのブロックリスト（確認を求める）
 # これらのコマンドは実行前に必ず確認プロンプトが表示されます
@@ -186,22 +180,6 @@ max_output_lines = 10000
 max_tokens = 128000
 # 会話履歴の保持数
 max_history = 100
-
-# === ネットワーク設定 ===
-# ネットワークアクセスを無効化（セキュリティ強化）
-[network]
-# すべてのネットワークアクセスを無効化
-enabled = false
-
-# 許可するホワイトリスト（必要に応じてコメントを外す）
-# allowed_hosts = [
-#   "api.openai.com",           # OpenAI API（モデルプロバイダー）
-#   "api.anthropic.com",        # Anthropic API
-#   "api.github.com",           # GitHub API
-# ]
-
-# 接続タイムアウト（ミリ秒）
-# connection_timeout_ms = 5000
 
 # === サンドボックス設定 ===
 # コンテナ環境では無効化（既にコンテナ内のため）
