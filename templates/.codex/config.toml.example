@@ -184,6 +184,12 @@ max_history = 100
 # === ネットワーク設定 ===
 # ネットワークアクセスを有効化
 [network]
+# ネットワークアクセスレベル: "unrestricted", "restricted", "disabled"
+# - unrestricted: すべてのネットワークアクセスを許可
+# - restricted: 一部のネットワークアクセスのみ許可（デフォルト）
+# - disabled: すべてのネットワークアクセスを禁止
+network_access = "unrestricted"
+
 # すべてのネットワークアクセスを許可
 enabled = true
 
