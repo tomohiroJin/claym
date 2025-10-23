@@ -427,9 +427,11 @@ jobs:
 
 ## 📚 関連ドキュメント
 
-- [テンプレート README](../templates/README.md) - テンプレートの詳細説明
-- [コンテナツール一覧](./container-tooling.md) - プリインストール済みツール
-- [VSCode拡張機能](./vscode-extensions.md) - AI拡張機能の概要
+- [Scripts README](../README.md) - スクリプト全体の概要
+- [テストリファクタリングレポート](./test-refactoring-report.md) - リファクタリングの詳細
+- [テンプレート README](../../templates/README.md) - テンプレートの詳細説明
+- [コンテナツール一覧](../../docs/container-tooling.md) - プリインストール済みツール
+- [VSCode拡張機能](../../docs/vscode-extensions.md) - AI拡張機能の概要
 
 ## 💬 サポート
 
