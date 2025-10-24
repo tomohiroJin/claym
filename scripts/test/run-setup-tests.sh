@@ -6,32 +6,36 @@
 
 set -euo pipefail
 
-# 色付き出力
-readonly RED='\033[0;31m'
-readonly GREEN='\033[0;32m'
-readonly YELLOW='\033[1;33m'
-readonly BLUE='\033[0;34m'
-readonly NC='\033[0m' # No Color
+# =============================================================================
+# 共通ライブラリの読み込み
+# =============================================================================
 
-# ログ関数
-log_info() {
-    echo -e "${BLUE}[INFO]${NC} $*"
-}
+# scripts/lib/common.sh から色定義とログ関数を読み込み
+readonly TEST_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly SCRIPTS_ROOT="$(cd "${TEST_SCRIPT_DIR}/.." && pwd)"
+readonly PROJECT_ROOT="$(cd "${SCRIPTS_ROOT}/.." && pwd)"
 
-log_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $*"
-}
+# 共通ライブラリが存在する場合は読み込む
+if [[ -f "${SCRIPTS_ROOT}/lib/common.sh" ]]; then
+    # shellcheck source=../lib/common.sh
+    source "${SCRIPTS_ROOT}/lib/common.sh"
+else
+    # フォールバック: 共通ライブラリがない場合の基本定義
+    readonly RED='\033[0;31m'
+    readonly GREEN='\033[0;32m'
+    readonly YELLOW='\033[1;33m'
+    readonly BLUE='\033[0;34m'
+    readonly NC='\033[0m'
 
-log_warn() {
-    echo -e "${YELLOW}[WARN]${NC} $*"
-}
+    log_info() { echo -e "${BLUE}[INFO]${NC} $*"; }
+    log_success() { echo -e "${GREEN}[SUCCESS]${NC} $*"; }
+    log_warn() { echo -e "${YELLOW}[WARN]${NC} $*"; }
+    log_error() { echo -e "${RED}[ERROR]${NC} $*"; }
+    show_header() { local title="$1" width="${2:-40}"; printf '=%.0s' $(seq 1 "$width"); echo ""; printf "  %s\\n" "$title"; printf '=%.0s' $(seq 1 "$width"); echo ""; echo ""; }
+    show_footer() { local message="$1" width="${2:-40}"; echo ""; printf '=%.0s' $(seq 1 "$width"); echo ""; echo -e "  ${message}"; printf '=%.0s' $(seq 1 "$width"); echo ""; echo ""; }
+fi
 
-log_error() {
-    echo -e "${RED}[ERROR]${NC} $*"
-}
-
-# プロジェクトルートを取得
-PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# テストディレクトリ
 TESTS_DIR="${PROJECT_ROOT}/tests/setup"
 
 # bats が利用可能かチェック

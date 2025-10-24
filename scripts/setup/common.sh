@@ -12,91 +12,51 @@
 # - Extract Function: 重複するログ関数とパス取得ロジックを抽出
 # - Extract Variable: 色定数とプロジェクトパスを抽出
 # - Single Responsibility: 各関数が単一の責任を持つ
+# - DRY: 色定義とログ関数を scripts/lib/common.sh に統合
 #
 # =============================================================================
 
 # =============================================================================
-# 定数定義
+# 共通ライブラリの読み込み
 # =============================================================================
 
-# 色付き出力の定義
-readonly RED='\033[0;31m'
-readonly GREEN='\033[0;32m'
-readonly YELLOW='\033[1;33m'
-readonly BLUE='\033[0;34m'
-readonly CYAN='\033[0;36m'
-readonly BOLD='\033[1m'
-readonly NC='\033[0m' # No Color
+# scripts/lib/common.sh から色定義とログ関数を読み込み
+readonly SETUP_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly SCRIPTS_ROOT="$(cd "${SETUP_SCRIPT_DIR}/.." && pwd)"
+
+# 共通ライブラリが存在する場合は読み込む
+if [[ -f "${SCRIPTS_ROOT}/lib/common.sh" ]]; then
+    # shellcheck source=../lib/common.sh
+    source "${SCRIPTS_ROOT}/lib/common.sh"
+else
+    # フォールバック: 共通ライブラリがない場合の基本定義
+    readonly RED='\033[0;31m'
+    readonly GREEN='\033[0;32m'
+    readonly YELLOW='\033[1;33m'
+    readonly BLUE='\033[0;34m'
+    readonly CYAN='\033[0;36m'
+    readonly BOLD='\033[1m'
+    readonly NC='\033[0m'
+
+    log_info() { echo -e "${BLUE}[INFO]${NC} $*"; }
+    log_success() { echo -e "${GREEN}[SUCCESS]${NC} $*"; }
+    log_warn() { echo -e "${YELLOW}[WARN]${NC} $*"; }
+    log_error() { echo -e "${RED}[ERROR]${NC} $*"; }
+    log_debug() { [[ "${VERBOSE:-false}" == "true" ]] && echo -e "${CYAN}[DEBUG]${NC} $*"; }
+    log_step() { echo ""; echo -e "${BOLD}${BLUE}>>> $*${NC}"; }
+    show_header() { local title="$1" width="${2:-40}"; printf '=%.0s' $(seq 1 "$width"); echo ""; printf "  %s\\n" "$title"; printf '=%.0s' $(seq 1 "$width"); echo ""; echo ""; }
+    show_footer() { local message="$1" width="${2:-40}"; echo ""; printf '=%.0s' $(seq 1 "$width"); echo ""; echo -e "  ${message}"; printf '=%.0s' $(seq 1 "$width"); echo ""; echo ""; }
+fi
+
+# =============================================================================
+# セットアップスクリプト固有の関数
+# =============================================================================
 
 # プロジェクトパスの取得
 # 注: この変数は各スクリプトから呼び出されることを想定
 get_project_root() {
     local script_dir="$1"
     cd "${script_dir}/../.." && pwd
-}
-
-# =============================================================================
-# ログ関数
-# =============================================================================
-
-# 情報ログを出力
-#
-# 引数:
-#   $@: ログメッセージ
-#
-log_info() {
-    echo -e "${BLUE}[INFO]${NC} $*"
-}
-
-# 成功ログを出力
-#
-# 引数:
-#   $@: ログメッセージ
-#
-log_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $*"
-}
-
-# 警告ログを出力
-#
-# 引数:
-#   $@: ログメッセージ
-#
-log_warn() {
-    echo -e "${YELLOW}[WARN]${NC} $*"
-}
-
-# エラーログを出力
-#
-# 引数:
-#   $@: ログメッセージ
-#
-log_error() {
-    echo -e "${RED}[ERROR]${NC} $*"
-}
-
-# デバッグログを出力（VERBOSE=true の場合のみ）
-#
-# 引数:
-#   $@: ログメッセージ
-#
-# グローバル変数:
-#   VERBOSE: trueの場合のみデバッグログを出力
-#
-log_debug() {
-    if [[ "${VERBOSE:-false}" == "true" ]]; then
-        echo -e "${CYAN}[DEBUG]${NC} $*"
-    fi
-}
-
-# ステップログを出力（セクション区切り）
-#
-# 引数:
-#   $@: ステップメッセージ
-#
-log_step() {
-    echo ""
-    echo -e "${BOLD}${BLUE}>>> $*${NC}"
 }
 
 # =============================================================================
@@ -336,37 +296,4 @@ count_files_in_directory() {
 # ヘッダー/フッター表示ヘルパー
 # =============================================================================
 
-# セクションヘッダーを表示
-#
-# 引数:
-#   $1: タイトル
-#   $2: (オプション) 幅（デフォルト: 40）
-#
-show_header() {
-    local title="$1"
-    local width="${2:-40}"
-    local separator=$(printf '=%.0s' $(seq 1 $width))
-
-    echo "${separator}"
-    printf "  %s\n" "${title}"
-    echo "${separator}"
-    echo ""
-}
-
-# セクションフッターを表示
-#
-# 引数:
-#   $1: メッセージ
-#   $2: (オプション) 幅（デフォルト: 40）
-#
-show_footer() {
-    local message="$1"
-    local width="${2:-40}"
-    local separator=$(printf '=%.0s' $(seq 1 $width))
-
-    echo ""
-    echo "${separator}"
-    echo -e "  ${message}"
-    echo "${separator}"
-    echo ""
-}
+# 注: show_header と show_footer は scripts/lib/common.sh で定義されています
