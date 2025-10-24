@@ -126,9 +126,99 @@ teardown() {
     run type setup_claude_code
     assert_success
 
+    run type setup_claude_commands
+    assert_success
+
+    run type setup_claude_agents
+    assert_success
+
     run type setup_codex_cli
     assert_success
 
     run type setup_gemini
+    assert_success
+}
+
+# ==============================================================================
+# setup_claude_agents() 関数のテスト
+# ==============================================================================
+
+@test "setup_claude_agents: エージェントテンプレートが正しくコピーされる" {
+    # Arrange
+    create_agent_template_files
+    define_setup_claude_agents_function
+
+    # Act
+    run setup_claude_agents "${PROJECT_ROOT}/.claude/agents"
+
+    # Assert
+    assert_success
+    assert_agent_files_exist "${PROJECT_ROOT}/.claude/agents"
+}
+
+@test "setup_claude_agents: 3つのエージェントファイルがすべてコピーされる" {
+    # Arrange
+    create_agent_template_files
+    define_setup_claude_agents_function
+
+    # Act
+    run setup_claude_agents "${PROJECT_ROOT}/.claude/agents"
+
+    # Assert
+    assert_success
+
+    # ファイル数を確認
+    local agent_count
+    agent_count=$(find "${PROJECT_ROOT}/.claude/agents" -name "*.yaml" -type f | wc -l)
+    [ "${agent_count}" -eq 3 ]
+}
+
+@test "setup_claude_agents: 既に存在する場合はスキップされる" {
+    # Arrange
+    create_agent_template_files
+    define_setup_claude_agents_function
+    mkdir -p "${PROJECT_ROOT}/.claude/agents"
+
+    # Act
+    run setup_claude_agents "${PROJECT_ROOT}/.claude/agents"
+
+    # Assert
+    assert_success
+    assert_output --partial "既に存在します"
+}
+
+@test "setup_claude_agents: テンプレートディレクトリが存在しない場合でもエラーにならない" {
+    # Arrange
+    define_setup_claude_agents_function
+    # テンプレートディレクトリを作成しない
+
+    # Act
+    run setup_claude_agents "${PROJECT_ROOT}/.claude/agents"
+
+    # Assert
+    assert_success
+}
+
+@test "setup_claude_agents: YAMLファイルの内容が正しくコピーされる" {
+    # Arrange
+    create_agent_template_files
+    define_setup_claude_agents_function
+
+    # Act
+    run setup_claude_agents "${PROJECT_ROOT}/.claude/agents"
+
+    # Assert
+    assert_success
+
+    # code-reviewer.yaml の内容を確認
+    run grep 'name: "code-reviewer"' "${PROJECT_ROOT}/.claude/agents/code-reviewer.yaml"
+    assert_success
+
+    # test-generator.yaml の内容を確認
+    run grep 'name: "test-generator"' "${PROJECT_ROOT}/.claude/agents/test-generator.yaml"
+    assert_success
+
+    # documentation-writer.yaml の内容を確認
+    run grep 'name: "documentation-writer"' "${PROJECT_ROOT}/.claude/agents/documentation-writer.yaml"
     assert_success
 }

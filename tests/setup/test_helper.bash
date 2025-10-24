@@ -366,6 +366,101 @@ define_copy_all_commands_function() {
 }
 
 # ==============================================================================
+# エージェント関連ヘルパー
+# ==============================================================================
+
+# エージェントテンプレートファイルを作成
+#
+# 引数:
+#   $1 - ベースディレクトリ（デフォルト: TEMPLATES_DIR）
+#
+create_agent_template_files() {
+    local base_dir="${1:-${TEMPLATES_DIR}}"
+
+    mkdir -p "${base_dir}/.claude/agents"
+
+    # code-reviewer.yaml
+    cat > "${base_dir}/.claude/agents/code-reviewer.yaml" <<'EOF'
+name: "code-reviewer"
+description: "Test code reviewer"
+version: "1.0"
+prompt: |
+  Test prompt
+tools:
+  - Read
+mode: "thorough"
+EOF
+
+    # test-generator.yaml
+    cat > "${base_dir}/.claude/agents/test-generator.yaml" <<'EOF'
+name: "test-generator"
+description: "Test generator"
+version: "1.0"
+prompt: |
+  Test prompt
+tools:
+  - Write
+mode: "balanced"
+EOF
+
+    # documentation-writer.yaml
+    cat > "${base_dir}/.claude/agents/documentation-writer.yaml" <<'EOF'
+name: "documentation-writer"
+description: "Test documentation writer"
+version: "1.0"
+prompt: |
+  Test prompt
+tools:
+  - Edit
+mode: "comprehensive"
+EOF
+}
+
+# setup_claude_agents 関数を定義（テスト用）
+#
+define_setup_claude_agents_function() {
+    # common.sh から必要な関数を読み込み
+    source /workspaces/claym/scripts/setup/common.sh
+
+    # setup_claude_agents 関数を定義
+    setup_claude_agents() {
+        local agents_dir="$1"
+
+        if [[ ! -d "${agents_dir}" ]]; then
+            # templates からシンプルにコピー（マージ不要）
+            if [[ -d "${TEMPLATES_DIR}/.claude/agents" ]]; then
+                mkdir -p "${agents_dir}"
+                # YAML ファイルをコピー
+                if cp "${TEMPLATES_DIR}/.claude/agents/"*.yaml "${agents_dir}/" 2>/dev/null; then
+                    log_success "Claude Code サブエージェントを作成しました: ${agents_dir}"
+
+                    # 利用可能なエージェント数を表示
+                    local agent_count
+                    agent_count=$(count_files_in_directory "${agents_dir}" "*.yaml")
+                    log_info "利用可能なサブエージェント: ${agent_count} 個"
+                else
+                    log_debug "コピーするエージェント定義が見つかりませんでした"
+                fi
+            else
+                log_debug "サブエージェントテンプレートディレクトリが見つかりません（スキップ）"
+            fi
+        else
+            log_info "Claude Code サブエージェントは既に存在します（スキップ）"
+        fi
+    }
+}
+
+# エージェントファイルの存在を検証
+#
+assert_agent_files_exist() {
+    local agents_dir="$1"
+
+    assert_file_exist "${agents_dir}/code-reviewer.yaml"
+    assert_file_exist "${agents_dir}/test-generator.yaml"
+    assert_file_exist "${agents_dir}/documentation-writer.yaml"
+}
+
+# ==============================================================================
 # クリーンアップヘルパー
 # ==============================================================================
 
