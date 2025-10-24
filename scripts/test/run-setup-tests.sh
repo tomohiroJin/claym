@@ -15,25 +15,14 @@ readonly TEST_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly SCRIPTS_ROOT="$(cd "${TEST_SCRIPT_DIR}/.." && pwd)"
 readonly PROJECT_ROOT="$(cd "${SCRIPTS_ROOT}/.." && pwd)"
 
-# ログ出力ライブラリが存在する場合は読み込む
-if [[ -f "${SCRIPTS_ROOT}/lib/logging.sh" ]]; then
-    # shellcheck source=../lib/logging.sh
-    source "${SCRIPTS_ROOT}/lib/logging.sh"
-else
-    # フォールバック: 共通ライブラリがない場合の基本定義
-    readonly RED='\033[0;31m'
-    readonly GREEN='\033[0;32m'
-    readonly YELLOW='\033[1;33m'
-    readonly BLUE='\033[0;34m'
-    readonly NC='\033[0m'
-
-    log_info() { echo -e "${BLUE}[INFO]${NC} $*"; }
-    log_success() { echo -e "${GREEN}[SUCCESS]${NC} $*"; }
-    log_warn() { echo -e "${YELLOW}[WARN]${NC} $*"; }
-    log_error() { echo -e "${RED}[ERROR]${NC} $*"; }
-    show_header() { local title="$1" width="${2:-40}"; printf '=%.0s' $(seq 1 "$width"); echo ""; printf "  %s\\n" "$title"; printf '=%.0s' $(seq 1 "$width"); echo ""; echo ""; }
-    show_footer() { local message="$1" width="${2:-40}"; echo ""; printf '=%.0s' $(seq 1 "$width"); echo ""; echo -e "  ${message}"; printf '=%.0s' $(seq 1 "$width"); echo ""; echo ""; }
+# ログ出力ライブラリを読み込む
+if [[ ! -f "${SCRIPTS_ROOT}/lib/logging.sh" ]]; then
+    echo "ERROR: ログ出力ライブラリが見つかりません: ${SCRIPTS_ROOT}/lib/logging.sh" >&2
+    exit 1
 fi
+
+# shellcheck source=../lib/logging.sh
+source "${SCRIPTS_ROOT}/lib/logging.sh"
 
 # テストディレクトリ
 TESTS_DIR="${PROJECT_ROOT}/tests/setup"

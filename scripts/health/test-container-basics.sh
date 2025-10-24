@@ -7,18 +7,26 @@
 
 set -euo pipefail
 
-# 色付き出力
-readonly RED='\033[0;31m'
-readonly GREEN='\033[0;32m'
-readonly BLUE='\033[0;34m'
-readonly NC='\033[0m'
+# スクリプトのパス
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly SCRIPT_DIR
+readonly SCRIPTS_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+# ログ出力ライブラリを読み込む
+if [[ ! -f "${SCRIPTS_ROOT}/lib/logging.sh" ]]; then
+    echo "ERROR: ログ出力ライブラリが見つかりません: ${SCRIPTS_ROOT}/lib/logging.sh" >&2
+    exit 1
+fi
+
+# shellcheck source=../lib/logging.sh
+source "${SCRIPTS_ROOT}/lib/logging.sh"
 
 # テスト結果カウンター
 TESTS_RUN=0
 TESTS_PASSED=0
 TESTS_FAILED=0
 
-# ログ関数
+# テスト固有のログ関数
 log_test() {
     echo -e "${BLUE}[TEST]${NC} $*"
 }
@@ -29,10 +37,6 @@ log_pass() {
 
 log_fail() {
     echo -e "${RED}[FAIL]${NC} $*"
-}
-
-log_info() {
-    echo -e "${BLUE}[INFO]${NC} $*"
 }
 
 # テスト実行関数
