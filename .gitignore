@@ -128,6 +128,7 @@ docs/prompts/
 # AI拡張機能のローカル設定
 .claude/settings.local.json
 .claude/custom-instructions.md
+.claude/agents/
 
 # ユーザー独自テンプレート（gitignore対象）
 templates-local/

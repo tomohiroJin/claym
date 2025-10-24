@@ -40,7 +40,7 @@ bash scripts/setup/init-ai-configs.sh
 ```
 
 **セットアップ内容**:
-- Claude Code 設定（`.claude/settings.local.json`, `CLAUDE.md`, `commands/`）
+- Claude Code 設定（`.claude/settings.local.json`, `CLAUDE.md`, `commands/`, `agents/`）
 - Codex CLI 設定（`~/.codex/config.toml`, `AGENTS.md`）
 - GEMINI 設定（`.gemini/settings.json`, `GEMINI.md`）
 - プロンプトテンプレート（`docs/prompts/`）
@@ -211,6 +211,85 @@ bash scripts/test/run-setup-tests.sh --help
 - **`check-environment.sh`**: 環境全体のヘルスチェック
 - **`test-container-basics.sh`**: コンテナ基本機能のテスト
 - **`test-health-checks.sh`**: ヘルスチェック機能自体のテスト
+
+## Claude Code サブエージェント
+
+Claude Code のサブエージェント機能を使用すると、特定のタスクに特化したエージェントを定義できます。
+
+### サブエージェントとは
+
+サブエージェントは、YAML形式で定義された専門的なAIエージェントです。各エージェントは特定のタスク（コードレビュー、テスト生成、ドキュメント作成など）に最適化されたプロンプトと設定を持ちます。
+
+### 標準提供されるサブエージェント
+
+`templates/.claude/agents/` には以下の3つのサブエージェントが標準で用意されています：
+
+1. **code-reviewer.yaml** - コードレビュー専門家
+   - コードの品質と可読性の評価
+   - セキュリティ問題の検出
+   - パフォーマンス改善提案
+   - ベストプラクティスへの準拠チェック
+
+2. **test-generator.yaml** - テスト生成専門家
+   - ユニットテストの自動生成
+   - 統合テストの生成
+   - テストカバレッジの向上
+   - テストフレームワーク対応（pytest, Jest, JUnit, RSpec, bats など）
+
+3. **documentation-writer.yaml** - ドキュメント作成専門家
+   - API ドキュメントの生成
+   - README の作成
+   - チュートリアルの作成
+   - コードコメントの自動生成
+
+### サブエージェントの使用方法
+
+1. `init-ai-configs.sh` を実行すると、`.claude/agents/` にサブエージェントが自動的にコピーされます
+2. Claude Code から特定のタスクを実行する際に、適切なサブエージェントを選択できます
+3. 各サブエージェントは専門化されたプロンプトとツール設定を持っています
+
+### サブエージェントのカスタマイズ
+
+サブエージェントは `.claude/agents/` に配置されるため、プロジェクト固有のカスタマイズが可能です：
+
+```bash
+# カスタムサブエージェントの作成
+cp templates/.claude/agents/code-reviewer.yaml .claude/agents/my-custom-reviewer.yaml
+
+# YAML ファイルを編集してカスタマイズ
+vim .claude/agents/my-custom-reviewer.yaml
+```
+
+**注意**: `.claude/agents/` は `.gitignore` に含まれているため、個人の設定としてカスタマイズできます。
+
+### YAML 形式
+
+サブエージェント定義の構造：
+
+```yaml
+name: "agent-name"
+description: "エージェントの説明"
+version: "1.0"
+
+prompt: |
+  エージェントのシステムプロンプト
+  （複数行可）
+
+tools:
+  - Read
+  - Write
+  - Bash
+
+mode: "thorough"  # または "balanced", "comprehensive"
+output_format: "markdown"
+
+settings:
+  max_files: 50
+  include_patterns:
+    - "**/*.py"
+  exclude_patterns:
+    - "**/node_modules/**"
+```
 
 ## テンプレートシステム
 

@@ -66,6 +66,7 @@ setup_claude_code() {
     local settings_file="${claude_dir}/settings.local.json"
     local custom_instructions="${claude_dir}/CLAUDE.md"
     local commands_dir="${claude_dir}/commands"
+    local agents_dir="${claude_dir}/agents"
 
     # ディレクトリ作成
     mkdir -p "${claude_dir}"
@@ -84,6 +85,9 @@ setup_claude_code() {
 
     # commands ディレクトリのマージ処理
     setup_claude_commands "${commands_dir}"
+
+    # agents ディレクトリのセットアップ
+    setup_claude_agents "${agents_dir}"
 }
 
 # Claude Code のコマンドディレクトリをセットアップ
@@ -104,6 +108,37 @@ setup_claude_commands() {
         log_info "利用可能なコマンド: ${cmd_count} 個"
     else
         log_info "Claude Code カスタムコマンドは既に存在します（スキップ）"
+    fi
+}
+
+# Claude Code のサブエージェントディレクトリをセットアップ
+#
+# 引数:
+#   $1: エージェントディレクトリパス
+#
+setup_claude_agents() {
+    local agents_dir="$1"
+
+    if [[ ! -d "${agents_dir}" ]]; then
+        # templates からシンプルにコピー（マージ不要）
+        if [[ -d "${TEMPLATES_DIR}/.claude/agents" ]]; then
+            mkdir -p "${agents_dir}"
+            # YAML ファイルをコピー
+            if cp "${TEMPLATES_DIR}/.claude/agents/"*.yaml "${agents_dir}/" 2>/dev/null; then
+                log_success "Claude Code サブエージェントを作成しました: ${agents_dir}"
+
+                # 利用可能なエージェント数を表示
+                local agent_count
+                agent_count=$(count_files_in_directory "${agents_dir}" "*.yaml")
+                log_info "利用可能なサブエージェント: ${agent_count} 個"
+            else
+                log_debug "コピーするエージェント定義が見つかりませんでした"
+            fi
+        else
+            log_debug "サブエージェントテンプレートディレクトリが見つかりません（スキップ）"
+        fi
+    else
+        log_info "Claude Code サブエージェントは既に存在します（スキップ）"
     fi
 }
 
