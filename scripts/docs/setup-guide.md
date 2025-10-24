@@ -168,6 +168,8 @@ bash scripts/setup/reinit-ai-configs.sh --backup-only
 **設定ファイル**:
 - `.claude/settings.local.json` - MCP サーバー設定と権限
 - `.claude/CLAUDE.md` - カスタム指示（日本語設定など）
+- `.claude/commands/` - カスタムコマンド
+- `.claude/agents/` - サブエージェント（タスク特化型AIエージェント）
 
 **主な設定項目**:
 ```json
@@ -189,6 +191,22 @@ bash scripts/setup/reinit-ai-configs.sh --backup-only
 - `mcpServers`: プロジェクトに必要なMCPサーバーを選択
 - `permissions.allow`: 自動承認する操作を追加
 - `permissions.ask`: 確認が必要な操作を追加
+
+**サブエージェント**:
+
+Claude Code のサブエージェント機能により、タスクごとに専門化されたAIエージェントを利用できます。
+
+標準提供されるサブエージェント：
+1. **code-reviewer** - コードレビュー専門家
+   - コード品質、セキュリティ、パフォーマンスを評価
+
+2. **test-generator** - テスト生成専門家
+   - ユニットテスト、統合テストを自動生成
+
+3. **documentation-writer** - ドキュメント作成専門家
+   - API仕様書、README、チュートリアルを作成
+
+詳細は [サブエージェント利用ガイド](./subagents-guide.md) を参照してください。
 
 ### Codex CLI
 

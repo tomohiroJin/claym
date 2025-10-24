@@ -150,9 +150,14 @@ claude mcp list
 
 # 環境ヘルスチェック
 bash scripts/health/check-environment.sh
+
+# サブエージェントの確認（Claude Code）
+ls -la .claude/agents/
 ```
 
 必要に応じて `which` で CLI のパスを確認してください。
+
+**Claude Code サブエージェント**: 初回起動時に、コードレビュー、テスト生成、ドキュメント作成に特化した3つのサブエージェントが自動的にセットアップされます。詳細は [scripts/docs/subagents-guide.md](scripts/docs/subagents-guide.md) を参照してください。
 
 ### 4.4 API キーの設定
 
