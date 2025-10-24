@@ -12,7 +12,7 @@
 # - Extract Function: 重複するログ関数とパス取得ロジックを抽出
 # - Extract Variable: 色定数とプロジェクトパスを抽出
 # - Single Responsibility: 各関数が単一の責任を持つ
-# - DRY: 色定義とログ関数を scripts/lib/common.sh に統合
+# - DRY: 色定義とログ関数を scripts/lib/logging.sh に統合
 #
 # =============================================================================
 
@@ -20,14 +20,14 @@
 # 共通ライブラリの読み込み
 # =============================================================================
 
-# scripts/lib/common.sh から色定義とログ関数を読み込み
+# scripts/lib/logging.sh から色定義とログ関数を読み込み
 readonly SETUP_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly SCRIPTS_ROOT="$(cd "${SETUP_SCRIPT_DIR}/.." && pwd)"
 
-# 共通ライブラリが存在する場合は読み込む
-if [[ -f "${SCRIPTS_ROOT}/lib/common.sh" ]]; then
-    # shellcheck source=../lib/common.sh
-    source "${SCRIPTS_ROOT}/lib/common.sh"
+# ログ出力ライブラリが存在する場合は読み込む
+if [[ -f "${SCRIPTS_ROOT}/lib/logging.sh" ]]; then
+    # shellcheck source=../lib/logging.sh
+    source "${SCRIPTS_ROOT}/lib/logging.sh"
 else
     # フォールバック: 共通ライブラリがない場合の基本定義
     readonly RED='\033[0;31m'

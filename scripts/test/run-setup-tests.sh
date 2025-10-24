@@ -10,15 +10,15 @@ set -euo pipefail
 # 共通ライブラリの読み込み
 # =============================================================================
 
-# scripts/lib/common.sh から色定義とログ関数を読み込み
+# scripts/lib/logging.sh から色定義とログ関数を読み込み
 readonly TEST_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly SCRIPTS_ROOT="$(cd "${TEST_SCRIPT_DIR}/.." && pwd)"
 readonly PROJECT_ROOT="$(cd "${SCRIPTS_ROOT}/.." && pwd)"
 
-# 共通ライブラリが存在する場合は読み込む
-if [[ -f "${SCRIPTS_ROOT}/lib/common.sh" ]]; then
-    # shellcheck source=../lib/common.sh
-    source "${SCRIPTS_ROOT}/lib/common.sh"
+# ログ出力ライブラリが存在する場合は読み込む
+if [[ -f "${SCRIPTS_ROOT}/lib/logging.sh" ]]; then
+    # shellcheck source=../lib/logging.sh
+    source "${SCRIPTS_ROOT}/lib/logging.sh"
 else
     # フォールバック: 共通ライブラリがない場合の基本定義
     readonly RED='\033[0;31m'
