@@ -85,6 +85,7 @@ bash scripts/setup/reinit-ai-configs.sh --help
 
 **バックアップ対象**:
 - `.claude/commands/`
+- `.claude/agents/`
 - `.claude/CLAUDE.md`
 - `templates-local/`
 
@@ -105,6 +106,12 @@ bash scripts/setup/copy-template-to-local.sh command review.md
 
 # すべてのコマンドをコピー
 bash scripts/setup/copy-template-to-local.sh command
+
+# 単一のエージェントファイルをコピー
+bash scripts/setup/copy-template-to-local.sh agent code-reviewer.yaml
+
+# すべてのエージェントをコピー
+bash scripts/setup/copy-template-to-local.sh agent
 
 # CLAUDE.md をコピー
 bash scripts/setup/copy-template-to-local.sh claude-md
