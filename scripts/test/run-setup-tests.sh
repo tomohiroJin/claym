@@ -11,13 +11,18 @@ set -euo pipefail
 # =============================================================================
 
 # scripts/lib/logging.sh から色定義とログ関数を読み込み
-readonly TEST_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly SCRIPTS_ROOT="$(cd "${TEST_SCRIPT_DIR}/.." && pwd)"
-readonly PROJECT_ROOT="$(cd "${SCRIPTS_ROOT}/.." && pwd)"
+TEST_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly TEST_SCRIPT_DIR
+
+SCRIPTS_ROOT="$(cd "${TEST_SCRIPT_DIR}/.." && pwd)"
+readonly SCRIPTS_ROOT
+
+PROJECT_ROOT="$(cd "${SCRIPTS_ROOT}/.." && pwd)"
+readonly PROJECT_ROOT
 
 # ログ出力ライブラリを読み込む
 if [[ ! -f "${SCRIPTS_ROOT}/lib/logging.sh" ]]; then
-    echo "ERROR: ログ出力ライブラリが見つかりません: ${SCRIPTS_ROOT}/lib/logging.sh" >&2
+    echo "エラー: ログ出力ライブラリが見つかりません: ${SCRIPTS_ROOT}/lib/logging.sh" >&2
     exit 1
 fi
 

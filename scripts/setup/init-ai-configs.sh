@@ -18,7 +18,8 @@ set -euo pipefail
 # 共通ヘルパーの読み込み
 # =============================================================================
 
-readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly SCRIPT_DIR
 
 # 共通ヘルパー関数を読み込み
 # shellcheck source=./common.sh

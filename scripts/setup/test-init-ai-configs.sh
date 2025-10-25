@@ -18,7 +18,7 @@ readonly PROJECT_ROOT
 
 # ログ出力ライブラリを読み込む
 if [[ ! -f "${SCRIPTS_ROOT}/lib/logging.sh" ]]; then
-    echo "ERROR: ログ出力ライブラリが見つかりません: ${SCRIPTS_ROOT}/lib/logging.sh" >&2
+    echo "エラー: ログ出力ライブラリが見つかりません: ${SCRIPTS_ROOT}/lib/logging.sh" >&2
     exit 1
 fi
 
