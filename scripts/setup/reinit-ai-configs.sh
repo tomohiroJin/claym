@@ -167,6 +167,7 @@ create_backup() {
     # バックアップ対象のディレクトリリスト
     local -a backup_dir_targets=(
         "${PROJECT_ROOT}/.claude/commands"
+        "${PROJECT_ROOT}/.claude/agents"
         "${PROJECT_ROOT}/templates-local"
     )
 
@@ -353,6 +354,7 @@ regenerate_configs() {
     # 既存ディレクトリを削除
     local -a config_dirs=(
         "${PROJECT_ROOT}/.claude/commands"
+        "${PROJECT_ROOT}/.claude/agents"
     )
 
     if [[ "${DRY_RUN}" == "true" ]]; then

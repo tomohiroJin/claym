@@ -44,16 +44,19 @@ show_usage() {
 
 テンプレート種別:
   command     - カスタムコマンド
+  agent       - サブエージェント
   claude-md   - CLAUDE.md
   settings    - settings.local.json.example
   all         - すべて
 
 例:
-  $0 command review.md    # review.md をローカルにコピー
-  $0 command              # すべてのコマンドをコピー
-  $0 claude-md            # CLAUDE.md をコピー
-  $0 settings             # settings.local.json.example をコピー
-  $0 all                  # すべてをコピー
+  $0 command review.md         # review.md をローカルにコピー
+  $0 command                   # すべてのコマンドをコピー
+  $0 agent code-reviewer.yaml  # code-reviewer.yaml をローカルにコピー
+  $0 agent                     # すべてのエージェントをコピー
+  $0 claude-md                 # CLAUDE.md をコピー
+  $0 settings                  # settings.local.json.example をコピー
+  $0 all                       # すべてをコピー
 
 説明:
   このスクリプトは、公式テンプレート（templates/）をローカルテンプレート
@@ -127,6 +130,62 @@ copy_all_commands() {
 }
 
 # =============================================================================
+# エージェントのコピー
+# =============================================================================
+
+# 単一のエージェントファイルをコピー
+#
+# 引数:
+#   $1: コピー対象のファイル名
+#
+# 戻り値:
+#   0: コピー成功
+#   1: ファイルが見つからない
+#
+copy_agent() {
+    local file="$1"
+    local src="${TEMPLATES_DIR}/.claude/agents/${file}"
+    local dst="${TEMPLATES_LOCAL_DIR}/.claude/agents/${file}"
+
+    if [[ ! -f "${src}" ]]; then
+        log_error "ファイルが見つかりません: ${src}"
+        return 1
+    fi
+
+    mkdir -p "$(dirname "${dst}")"
+    cp "${src}" "${dst}"
+    log_success "${file} をコピーしました: ${dst}"
+    return 0
+}
+
+# すべてのエージェントファイルをコピー
+#
+# 戻り値:
+#   0: コピー成功
+#
+copy_all_agents() {
+    log_info "すべてのエージェントをコピー中..."
+
+    local count=0
+    local src_dir="${TEMPLATES_DIR}/.claude/agents"
+
+    if [[ ! -d "${src_dir}" ]]; then
+        log_error "エージェントディレクトリが見つかりません: ${src_dir}"
+        return 1
+    fi
+
+    for agent in "${src_dir}/"*.yaml; do
+        if [[ -f "${agent}" ]]; then
+            copy_agent "$(basename "${agent}")"
+            count=$((count + 1))
+        fi
+    done
+
+    log_success "${count} 個のエージェントをコピーしました"
+    return 0
+}
+
+# =============================================================================
 # CLAUDE.md のコピー
 # =============================================================================
 
@@ -193,6 +252,7 @@ copy_all() {
     local failed=0
 
     copy_all_commands || ((failed++))
+    copy_all_agents || ((failed++))
     copy_claude_md || ((failed++))
     copy_settings || ((failed++))
 
@@ -246,6 +306,13 @@ main() {
                 copy_command "${file_name}"
             else
                 copy_all_commands
+            fi
+            ;;
+        agent)
+            if [[ -n "${file_name}" ]]; then
+                copy_agent "${file_name}"
+            else
+                copy_all_agents
             fi
             ;;
         claude-md)
