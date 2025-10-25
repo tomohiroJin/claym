@@ -153,7 +153,8 @@ setup_codex_cli() {
 
     local codex_dir="${HOME}/.codex"
     local config_file="${codex_dir}/config.toml"
-    local agents_md="${codex_dir}/AGENTS.md"
+    local agents_md_home="${codex_dir}/AGENTS.md"
+    local agents_md_project="${PROJECT_ROOT}/AGENTS.md"
 
     # ディレクトリ作成
     mkdir -p "${codex_dir}"
@@ -161,11 +162,17 @@ setup_codex_cli() {
     # config.toml をセットアップ
     setup_codex_config "${config_file}"
 
-    # AGENTS.md をコピー（~/.codex/AGENTS.md に配置）
+    # AGENTS.md をプロジェクトルートにコピー（チーム共有設定）
     copy_file_if_not_exists \
         "${TEMPLATES_DIR}/.codex/AGENTS.md" \
-        "${agents_md}" \
-        "Codex CLI エージェント指示"
+        "${agents_md_project}" \
+        "Codex CLI エージェント指示（チーム共有）"
+
+    # AGENTS.md を ~/.codex/ にもコピー（個人設定、優先度高）
+    copy_file_if_not_exists \
+        "${TEMPLATES_DIR}/.codex/AGENTS.md" \
+        "${agents_md_home}" \
+        "Codex CLI エージェント指示（個人設定）"
 }
 
 # Codex CLI の設定ファイルを作成してプロジェクトパスを置換
