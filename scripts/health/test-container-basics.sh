@@ -138,7 +138,8 @@ test_ripgrep_installed() {
 }
 
 test_fd_installed() {
-    command -v fd >/dev/null 2>&1
+    # Debian/Ubuntu では fd は fdfind としてインストールされる
+    command -v fd >/dev/null 2>&1 || command -v fdfind >/dev/null 2>&1
 }
 
 # シェル環境
