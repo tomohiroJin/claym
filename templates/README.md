@@ -9,7 +9,13 @@
 templates/
 ├── .claude/
 │   ├── settings.local.json.example    # Claude Code 設定テンプレート
-│   └── CLAUDE.md                       # Claude Code カスタム指示（日本語設定）
+│   ├── CLAUDE.md                       # Claude Code カスタム指示（日本語設定）
+│   ├── commands/                       # Claude Code カスタムコマンド
+│   │   └── *.md                        # コマンド定義ファイル
+│   └── agents/                         # Claude Code サブエージェント
+│       ├── code-reviewer.yaml          # コードレビュー専門家
+│       ├── test-generator.yaml         # テスト生成専門家
+│       └── documentation-writer.yaml   # ドキュメント作成専門家
 ├── .codex/
 │   ├── config.toml.example            # Codex CLI 設定テンプレート（使用環境緩和設定含む）
 │   └── AGENTS.md                      # Codex CLI エージェント指示（日本語設定）
@@ -40,7 +46,7 @@ scripts/
 devcontainer のビルド・起動時に `scripts/setup/init-ai-configs.sh` が自動実行され、
 以下が自動的に設定されます：
 
-- Claude Code 設定ファイル (`settings.local.json`, `CLAUDE.md`) の作成
+- Claude Code 設定ファイル (`settings.local.json`, `CLAUDE.md`, `commands/`, `agents/`) の作成
 - Codex CLI 設定ファイル (`config.toml`, `AGENTS.md`) の作成（プロジェクトパス自動設定）
 - GEMINI 設定ファイル (`settings.json`, `GEMINI.md`) の作成（プロジェクトパス自動設定）
 - プロンプトテンプレートのコピー
@@ -238,6 +244,72 @@ cat docs/prompts/tasks/refactor.md
 # AIにコードレビューを依頼する際
 cat docs/prompts/tasks/review.md
 ```
+
+### Claude Code サブエージェント
+
+サブエージェントは、特定のタスクに特化したAIエージェントです。YAML形式で定義され、専門化されたプロンプトとツール設定を持ちます。
+
+#### 標準提供されるサブエージェント
+
+`.claude/agents/` には以下の3つのサブエージェントが自動的にセットアップされます：
+
+1. **code-reviewer.yaml** - コードレビュー専門家
+   - コードの品質と可読性の評価
+   - セキュリティ問題の検出
+   - パフォーマンス改善提案
+   - ベストプラクティスへの準拠チェック
+
+2. **test-generator.yaml** - テスト生成専門家
+   - ユニットテストの自動生成
+   - 統合テストの生成
+   - テストカバレッジの向上
+   - 多言語対応（Python, JavaScript, Java, Go, Ruby, Bash など）
+
+3. **documentation-writer.yaml** - ドキュメント作成専門家
+   - API ドキュメントの生成
+   - README の作成
+   - チュートリアルの作成
+   - コードコメントの自動生成
+
+#### サブエージェントの使用例
+
+```bash
+# カスタムサブエージェントの作成
+cp .claude/agents/code-reviewer.yaml .claude/agents/security-focused-reviewer.yaml
+
+# セキュリティに特化したレビュアーにカスタマイズ
+vim .claude/agents/security-focused-reviewer.yaml
+```
+
+#### YAML 設定例
+
+```yaml
+name: "custom-agent"
+description: "カスタムエージェントの説明"
+version: "1.0"
+
+prompt: |
+  エージェントのシステムプロンプト
+  タスクの実行方法や注意点を記述
+
+tools:
+  - Read
+  - Write
+  - Bash
+  - mcp__serena__find_symbol
+
+mode: "thorough"
+output_format: "markdown"
+
+settings:
+  max_files: 50
+  include_patterns:
+    - "**/*.py"
+  exclude_patterns:
+    - "**/node_modules/**"
+```
+
+**詳細**: サブエージェントの詳細については、[scripts/README.md](../scripts/README.md#claude-code-サブエージェント) を参照してください。
 
 ## 🔧 MCP サーバー設定
 

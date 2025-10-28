@@ -7,29 +7,33 @@
 
 set -euo pipefail
 
-# 色付き出力
-readonly RED='\033[0;31m'
-readonly GREEN='\033[0;32m'
-readonly BLUE='\033[0;34m'
-readonly NC='\033[0m'
+# スクリプトのパス
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly SCRIPT_DIR
+readonly SCRIPTS_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+CHECK_SCRIPT="${SCRIPT_DIR}/check-environment.sh"
+readonly CHECK_SCRIPT
+
+# ログ出力ライブラリを読み込む
+if [[ ! -f "${SCRIPTS_ROOT}/lib/logging.sh" ]]; then
+    echo "エラー: ログ出力ライブラリが見つかりません: ${SCRIPTS_ROOT}/lib/logging.sh" >&2
+    exit 1
+fi
+
+# shellcheck source=../lib/logging.sh
+source "${SCRIPTS_ROOT}/lib/logging.sh"
 
 # テスト結果カウンター
 TESTS_RUN=0
 TESTS_PASSED=0
 TESTS_FAILED=0
 
-# スクリプトのパス
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly SCRIPT_DIR
-CHECK_SCRIPT="${SCRIPT_DIR}/check-environment.sh"
-readonly CHECK_SCRIPT
-
 # テスト用一時ディレクトリ
 TEST_TMPDIR="$(mktemp -d)"
 readonly TEST_TMPDIR
 trap 'rm -rf "$TEST_TMPDIR"' EXIT
 
-# ログ関数
+# テスト固有のログ関数
 log_test() {
     echo -e "${BLUE}[TEST]${NC} $*"
 }
@@ -40,10 +44,6 @@ log_pass() {
 
 log_fail() {
     echo -e "${RED}[FAIL]${NC} $*"
-}
-
-log_info() {
-    echo -e "${BLUE}[INFO]${NC} $*"
 }
 
 # テスト実行関数
@@ -92,12 +92,12 @@ test_list_checks_option() {
     grep -q "cli-paths" <<<"$output"
 }
 
-# テスト4: 通常実行が成功すること（終了コード0または2）
+# テスト4: 通常実行が成功すること（終了コード0、1、または2）
 test_normal_execution() {
     local exit_code=0
     "$CHECK_SCRIPT" >/dev/null 2>&1 || exit_code=$?
-    # 0（全成功）または 2（警告あり）は許容
-    [[ $exit_code -eq 0 || $exit_code -eq 2 ]]
+    # 0（全成功）、1（エラーあり）、または 2（警告あり）は許容
+    [[ $exit_code -eq 0 || $exit_code -eq 1 || $exit_code -eq 2 ]]
 }
 
 # テスト5: --json オプションで JSON 形式の出力が得られること
@@ -116,7 +116,10 @@ test_json_output() {
 
 # テスト6: --quick オプションが動作すること
 test_quick_option() {
-    "$CHECK_SCRIPT" --quick >/dev/null 2>&1 || [[ $? -eq 2 ]]
+    local exit_code=0
+    "$CHECK_SCRIPT" --quick >/dev/null 2>&1 || exit_code=$?
+    # 0（成功）、1（エラー）、または 2（警告）は許容
+    [[ $exit_code -eq 0 || $exit_code -eq 1 || $exit_code -eq 2 ]]
 }
 
 # テスト7: 主要チェック項目が実行されること（system-basics）

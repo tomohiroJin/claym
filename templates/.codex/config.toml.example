@@ -181,6 +181,26 @@ max_tokens = 128000
 # 会話履歴の保持数
 max_history = 100
 
+# === ネットワーク設定 ===
+# ネットワークアクセスを有効化
+[network]
+# ネットワークアクセスレベル: "unrestricted", "restricted", "disabled"
+# - unrestricted: すべてのネットワークアクセスを許可
+# - restricted: 一部のネットワークアクセスのみ許可（デフォルト）
+# - disabled: すべてのネットワークアクセスを禁止
+network_access = "unrestricted"
+
+# すべてのネットワークアクセスを許可
+enabled = true
+
+# タイムアウト設定（ミリ秒）
+connection_timeout_ms = 30000      # 接続タイムアウト: 30秒
+read_timeout_ms = 60000            # 読み取りタイムアウト: 60秒
+
+# リトライ設定
+max_retries = 3                    # 最大リトライ回数
+retry_delay_ms = 1000              # リトライ間隔: 1秒
+
 # === サンドボックス設定 ===
 # コンテナ環境では無効化（既にコンテナ内のため）
 [sandbox]

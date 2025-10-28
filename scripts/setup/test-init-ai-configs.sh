@@ -7,25 +7,28 @@
 
 set -euo pipefail
 
-# 色付き出力
-readonly RED='\033[0;31m'
-readonly GREEN='\033[0;32m'
-readonly YELLOW='\033[1;33m'
-readonly BLUE='\033[0;34m'
-readonly NC='\033[0m'
+# スクリプトのパス
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly SCRIPT_DIR
+readonly SCRIPTS_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+INIT_SCRIPT="${SCRIPT_DIR}/init-ai-configs.sh"
+readonly INIT_SCRIPT
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+readonly PROJECT_ROOT
+
+# ログ出力ライブラリを読み込む
+if [[ ! -f "${SCRIPTS_ROOT}/lib/logging.sh" ]]; then
+    echo "エラー: ログ出力ライブラリが見つかりません: ${SCRIPTS_ROOT}/lib/logging.sh" >&2
+    exit 1
+fi
+
+# shellcheck source=../lib/logging.sh
+source "${SCRIPTS_ROOT}/lib/logging.sh"
 
 # テスト結果カウンター
 TESTS_RUN=0
 TESTS_PASSED=0
 TESTS_FAILED=0
-
-# スクリプトのパス
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly SCRIPT_DIR
-INIT_SCRIPT="${SCRIPT_DIR}/init-ai-configs.sh"
-readonly INIT_SCRIPT
-PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-readonly PROJECT_ROOT
 
 # テスト用一時ディレクトリ
 TEST_TMPDIR="$(mktemp -d)"
@@ -34,7 +37,7 @@ TEST_PROJECT="${TEST_TMPDIR}/test-project"
 readonly TEST_PROJECT
 trap 'rm -rf "$TEST_TMPDIR"' EXIT
 
-# ログ関数
+# テスト固有のログ関数
 log_test() {
     echo -e "${BLUE}[TEST]${NC} $*"
 }
@@ -45,14 +48,6 @@ log_pass() {
 
 log_fail() {
     echo -e "${RED}[FAIL]${NC} $*"
-}
-
-log_info() {
-    echo -e "${BLUE}[INFO]${NC} $*"
-}
-
-log_warn() {
-    echo -e "${YELLOW}[WARN]${NC} $*"
 }
 
 # テスト実行関数
