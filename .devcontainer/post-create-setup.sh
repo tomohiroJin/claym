@@ -59,9 +59,6 @@ ensure_imagesorcery_log_dir() {
       warn "ログディレクトリの作成に失敗しました: $log_dir"
       continue
     fi
-    if ! sudo chown -R vscode:vscode "$log_dir" >/dev/null 2>&1; then
-      warn "ログディレクトリの所有者設定に失敗しました: $log_dir"
-    fi
     if ! sudo chmod 755 "$log_dir" >/dev/null 2>&1; then
       warn "ログディレクトリの権限設定に失敗しました: $log_dir"
     fi
