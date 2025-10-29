@@ -58,7 +58,7 @@
   },
   "permissions": {
     "allow": [
-      "Read(//home/vscode/**)",
+      "Read(//root/**)",
       "Bash(echo:*)",
       "Bash(ls:*)",
       "Bash(cat:*)",

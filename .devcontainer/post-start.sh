@@ -37,10 +37,3 @@ if mapfile -t log_dirs < <(imagesorcery_log_dirs); then
 else
   warn "imagesorcery-mcp のログディレクトリ検出処理が失敗しました"
 fi
-
-SERENA_DIR="/opt/serena"
-if [[ -d "$SERENA_DIR" ]]; then
-  if ! chmod -R 755 "$SERENA_DIR" >/dev/null 2>&1; then
-    warn "Serena ディレクトリの権限設定に失敗しました: $SERENA_DIR"
-  fi
-fi

@@ -33,7 +33,7 @@ Claude Code の操作権限を制御します。
 以下の操作は確認なしで自動的に実行されます：
 
 **ファイル読み取り**:
-- `Read(//home/vscode/**)` - プロジェクトディレクトリ配下の全ファイル
+- `Read(//root/**)` - プロジェクトディレクトリ配下の全ファイル
 
 **基本的なシェルコマンド**（情報表示系）:
 - `echo`, `ls`, `cat`, `tail`, `head`, `grep`, `find`
@@ -130,7 +130,7 @@ bash scripts/setup/init-ai-configs.sh
 {
   "permissions": {
     "allow": [
-      "Read(//home/vscode/**)",
+      "Read(//root/**)",
       "Bash(npm:*)"  // ← npm コマンドを自動承認
     ]
   }
