@@ -282,26 +282,20 @@ RUN set -eux; \
 # Oh My Zsh とユーザー設定
 #
 # root ユーザーに Oh My Zsh を導入します。VS Code がコマンドを実行できるよう、
-# パスワード不要 sudo 権限を持つ "vscode" ユーザーを作成します。
-# Oh My Zsh の設定を root から vscode ユーザーへコピーし、
+# Oh My Zsh のインストールと root ユーザー用の設定を行います。
 # モダン CLI ツールのエイリアスと zoxide の初期化を追加します。
 # Debian の実体名に合わせて bat / fd のエイリアス（batcat / fdfind）も設定します。
 
 RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended \
-    && useradd -m -s /bin/zsh vscode \
-    && echo 'vscode ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers \
-    && cp -r /root/.oh-my-zsh /home/vscode/.oh-my-zsh \
-    && cp /root/.zshrc /home/vscode/.zshrc \
-    && echo 'alias bat="batcat"' >> /home/vscode/.zshrc \
-    && echo 'alias fd="fdfind"' >> /home/vscode/.zshrc \
-    && echo 'alias ll="eza -la --git"' >> /home/vscode/.zshrc \
-    && echo 'alias ls="eza"' >> /home/vscode/.zshrc \
-    && echo 'alias cat="batcat"' >> /home/vscode/.zshrc \
-    && echo 'alias find="fdfind"' >> /home/vscode/.zshrc \
-    && echo 'alias top="btop"' >> /home/vscode/.zshrc \
-    && echo 'eval "$(zoxide init zsh)"' >> /home/vscode/.zshrc \
-    && echo 'alias cd="z"' >> /home/vscode/.zshrc \
-    && chown -R vscode:vscode /home/vscode
+    && echo 'alias bat="batcat"' >> /root/.zshrc \
+    && echo 'alias fd="fdfind"' >> /root/.zshrc \
+    && echo 'alias ll="eza -la --git"' >> /root/.zshrc \
+    && echo 'alias ls="eza"' >> /root/.zshrc \
+    && echo 'alias cat="batcat"' >> /root/.zshrc \
+    && echo 'alias find="fdfind"' >> /root/.zshrc \
+    && echo 'alias top="btop"' >> /root/.zshrc \
+    && echo 'eval "$(zoxide init zsh)"' >> /root/.zshrc \
+    && echo 'alias cd="z"' >> /root/.zshrc
 
 # Git delta の設定
 # git diff や git log の出力を delta で見やすく表示します。

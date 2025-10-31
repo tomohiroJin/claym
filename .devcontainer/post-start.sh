@@ -29,9 +29,6 @@ if mapfile -t log_dirs < <(imagesorcery_log_dirs); then
         warn "ログディレクトリの作成に失敗しました: $dir"
         continue
       fi
-      if ! chown -R vscode:vscode "$dir" >/dev/null 2>&1; then
-        warn "ログディレクトリの所有者設定に失敗しました: $dir"
-      fi
       if ! chmod 755 "$dir" >/dev/null 2>&1; then
         warn "ログディレクトリの権限設定に失敗しました: $dir"
       fi
@@ -39,11 +36,4 @@ if mapfile -t log_dirs < <(imagesorcery_log_dirs); then
   fi
 else
   warn "imagesorcery-mcp のログディレクトリ検出処理が失敗しました"
-fi
-
-SERENA_DIR="/opt/serena"
-if [[ -d "$SERENA_DIR" ]]; then
-  if ! chown -R vscode:vscode "$SERENA_DIR" >/dev/null 2>&1; then
-    warn "Serena ディレクトリの所有者変更に失敗しました: $SERENA_DIR"
-  fi
 fi

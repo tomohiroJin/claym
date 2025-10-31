@@ -144,11 +144,11 @@ test_fd_installed() {
 
 # シェル環境
 test_zshrc_exists() {
-    [[ -f /home/vscode/.zshrc ]]
+    [[ -f /root/.zshrc ]]
 }
 
 test_zsh_aliases_configured() {
-    local zshrc="/home/vscode/.zshrc"
+    local zshrc="/root/.zshrc"
     [[ -f "$zshrc" ]] && \
     grep -q "alias ll=" "$zshrc" && \
     grep -q "alias ls=" "$zshrc" && \

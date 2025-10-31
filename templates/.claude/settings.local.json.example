@@ -58,7 +58,8 @@
   },
   "permissions": {
     "allow": [
-      "Read(//home/vscode/**)",
+      "Read(//workspaces/**)",
+      "Read(//root/.codex/**)",
       "Bash(echo:*)",
       "Bash(ls:*)",
       "Bash(cat:*)",
