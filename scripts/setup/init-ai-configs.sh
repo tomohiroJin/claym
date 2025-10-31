@@ -54,6 +54,26 @@ merge_templates() {
         "${PROJECT_ROOT}"
 }
 
+# テンプレートの実体を templates-local 優先で解決
+#
+# 引数:
+#   $1: テンプレートの相対パス（例: .codex/CODEX.md）
+#
+# 戻り値:
+#   標準出力に選択されたテンプレートのパスを出力
+#
+resolve_template_source() {
+    local relative_path="$1"
+    local local_template="${TEMPLATES_LOCAL_DIR}/${relative_path}"
+    local official_template="${TEMPLATES_DIR}/${relative_path}"
+
+    if [[ -f "${local_template}" ]]; then
+        echo "${local_template}"
+    else
+        echo "${official_template}"
+    fi
+}
+
 # =============================================================================
 # Claude Code 設定
 # =============================================================================
@@ -153,12 +173,14 @@ setup_codex_cli() {
     log_info "Codex CLI 設定をセットアップ中..."
 
     local codex_dir="${HOME}/.codex"
+    local codex_project_dir="${PROJECT_ROOT}/.codex"
     local config_file="${codex_dir}/config.toml"
     local agents_md_home="${codex_dir}/AGENTS.md"
     local agents_md_project="${PROJECT_ROOT}/AGENTS.md"
 
     # ディレクトリ作成
     mkdir -p "${codex_dir}"
+    mkdir -p "${codex_project_dir}"
 
     # config.toml をセットアップ
     setup_codex_config "${config_file}"
@@ -174,6 +196,9 @@ setup_codex_cli() {
         "${TEMPLATES_DIR}/.codex/AGENTS.md" \
         "${agents_md_home}" \
         "Codex CLI エージェント指示（個人設定）"
+
+    # カスタムプロンプトをセットアップ
+    setup_codex_prompt "${codex_dir}" "${codex_project_dir}"
 }
 
 # Codex CLI の設定ファイルを作成してプロジェクトパスを置換
@@ -203,6 +228,43 @@ setup_codex_config() {
     else
         log_info "Codex CLI 設定ファイルは既に存在します（スキップ）"
     fi
+}
+
+# Codex CLI のカスタムプロンプトをセットアップ
+#
+# 引数:
+#   $1: ホームディレクトリ側の Codex ルート
+#   $2: プロジェクトルート側の Codex ルート
+#
+setup_codex_prompt() {
+    local codex_home_dir="$1"
+    local codex_project_dir="$2"
+    local relative_path=".codex/CODEX.md"
+    local template_source
+
+    template_source="$(resolve_template_source "${relative_path}")"
+
+    if [[ ! -f "${template_source}" ]]; then
+        log_warn "Codex CLI カスタムプロンプトのテンプレートが見つかりません: ${relative_path}"
+        return 0
+    fi
+
+    if [[ "${template_source}" == "${TEMPLATES_LOCAL_DIR}"/* ]]; then
+        log_info "templates-local 版の Codex プロンプトを使用します: ${template_source}"
+    fi
+
+    local project_prompt="${codex_project_dir}/CODEX.md"
+    local home_prompt="${codex_home_dir}/CODEX.md"
+
+    copy_file_if_not_exists \
+        "${template_source}" \
+        "${project_prompt}" \
+        "Codex CLI カスタムプロンプト（プロジェクト共有）"
+
+    copy_file_if_not_exists \
+        "${template_source}" \
+        "${home_prompt}" \
+        "Codex CLI カスタムプロンプト（個人設定）"
 }
 
 # =============================================================================

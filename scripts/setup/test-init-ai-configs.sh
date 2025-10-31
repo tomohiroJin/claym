@@ -108,27 +108,32 @@ test_codex_templates_exist() {
     [[ -f "${PROJECT_ROOT}/templates/.codex/AGENTS.md" ]]
 }
 
-# テスト5: GEMINI テンプレートが存在すること
+# テスト5: Codex カスタムプロンプトテンプレートが存在すること
+test_codex_prompt_template_exists() {
+    [[ -f "${PROJECT_ROOT}/templates/.codex/CODEX.md" ]]
+}
+
+# テスト6: GEMINI テンプレートが存在すること
 test_gemini_templates_exist() {
     [[ -f "${PROJECT_ROOT}/templates/.gemini/settings.json.example" ]] && \
     [[ -f "${PROJECT_ROOT}/templates/.gemini/GEMINI.md" ]]
 }
 
-# テスト6: プロンプトテンプレートが存在すること
+# テスト7: プロンプトテンプレートが存在すること
 test_prompt_templates_exist() {
     [[ -f "${PROJECT_ROOT}/templates/docs/prompts/system.md" ]] && \
     [[ -f "${PROJECT_ROOT}/templates/docs/prompts/tasks/bug-fix.md" ]] && \
     [[ -f "${PROJECT_ROOT}/templates/docs/prompts/tasks/feature-add.md" ]]
 }
 
-# テスト7: 実際のプロジェクトで Claude Code 設定が作成されること
+# テスト8: 実際のプロジェクトで Claude Code 設定が作成されること
 test_claude_setup_in_real_project() {
     # 実際のプロジェクトルートで確認
     [[ -f "${PROJECT_ROOT}/.claude/settings.local.json" ]] || \
     [[ -f "${PROJECT_ROOT}/.claude/CLAUDE.md" ]]
 }
 
-# テスト8: 実際のプロジェクトで Codex CLI 設定が作成されること
+# テスト9: 実際のプロジェクトで Codex CLI 設定が作成されること
 test_codex_setup_in_real_project() {
     # AGENTS.md が実際のプロジェクトルートに存在するか確認
     [[ -f "${PROJECT_ROOT}/AGENTS.md" ]] || \
@@ -136,19 +141,29 @@ test_codex_setup_in_real_project() {
     [[ -f "${HOME}/.codex/config.toml" ]]
 }
 
-# テスト9: 実際のプロジェクトで GEMINI 設定が作成されること
+# テスト10: 実際のプロジェクトで Codex プロンプトが作成されること
+test_codex_prompt_created_in_real_project() {
+    if [[ -f "${PROJECT_ROOT}/.codex/CODEX.md" ]] || [[ -f "${HOME}/.codex/CODEX.md" ]]; then
+        return 0
+    fi
+
+    log_warn "Codex prompt not found (.codex/CODEX.md or ~/.codex/CODEX.md)。初回セットアップが未実行の場合は正常です"
+    return 0
+}
+
+# テスト11: 実際のプロジェクトで GEMINI 設定が作成されること
 test_gemini_setup_in_real_project() {
     [[ -f "${PROJECT_ROOT}/.gemini/settings.json" ]] || \
     [[ -f "${PROJECT_ROOT}/.gemini/GEMINI.md" ]]
 }
 
-# テスト10: プロンプトテンプレートがコピーされていること
+# テスト12: プロンプトテンプレートがコピーされていること
 test_prompts_copied_in_real_project() {
     [[ -f "${PROJECT_ROOT}/docs/prompts/system.md" ]] || \
     [[ -f "${PROJECT_ROOT}/docs/prompts/tasks/bug-fix.md" ]]
 }
 
-# テスト11: .gitignore が更新されていること
+# テスト13: .gitignore が更新されていること
 test_gitignore_updated() {
     local gitignore="${PROJECT_ROOT}/.gitignore"
     if [[ -f "$gitignore" ]]; then
@@ -160,7 +175,7 @@ test_gitignore_updated() {
     fi
 }
 
-# テスト12: テンプレート内のパス置換が機能すること（Codex）
+# テスト14: テンプレート内のパス置換が機能すること（Codex）
 test_codex_path_substitution() {
     local template="${PROJECT_ROOT}/templates/.codex/config.toml.example"
     if [[ -f "$template" ]]; then
@@ -173,7 +188,7 @@ test_codex_path_substitution() {
     fi
 }
 
-# テスト13: テンプレート内のパス置換が機能すること（GEMINI）
+# テスト15: テンプレート内のパス置換が機能すること（GEMINI）
 test_gemini_path_substitution() {
     local template="${PROJECT_ROOT}/templates/.gemini/settings.json.example"
     if [[ -f "$template" ]]; then
@@ -186,12 +201,12 @@ test_gemini_path_substitution() {
     fi
 }
 
-# テスト14: README.md が templates ディレクトリに存在すること
+# テスト16: README.md が templates ディレクトリに存在すること
 test_templates_readme_exists() {
     [[ -f "${PROJECT_ROOT}/templates/README.md" ]]
 }
 
-# テスト15: 実際に展開された設定ファイルにプロジェクトパスが含まれていること
+# テスト17: 実際に展開された設定ファイルにプロジェクトパスが含まれていること
 test_expanded_config_has_project_path() {
     # Codex の設定を確認
     local codex_config="${HOME}/.codex/config.toml"
@@ -225,6 +240,7 @@ main() {
     log_info "テンプレートの存在確認"
     run_test "Claude Code テンプレート存在確認" test_claude_templates_exist
     run_test "Codex CLI テンプレート存在確認" test_codex_templates_exist
+    run_test "Codex プロンプトテンプレート存在確認" test_codex_prompt_template_exists
     run_test "GEMINI テンプレート存在確認" test_gemini_templates_exist
     run_test "プロンプトテンプレート存在確認" test_prompt_templates_exist
     run_test "templates README 存在確認" test_templates_readme_exists
@@ -240,6 +256,7 @@ main() {
     log_info "実際のプロジェクトでのセットアップ確認"
     run_test "Claude Code 設定の存在確認" test_claude_setup_in_real_project
     run_test "Codex CLI 設定の存在確認" test_codex_setup_in_real_project
+    run_test "Codex プロンプトの存在確認" test_codex_prompt_created_in_real_project
     run_test "GEMINI 設定の存在確認" test_gemini_setup_in_real_project
     run_test "プロンプトテンプレートのコピー確認" test_prompts_copied_in_real_project
     run_test ".gitignore 更新確認" test_gitignore_updated

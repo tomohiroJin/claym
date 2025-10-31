@@ -47,6 +47,7 @@ show_usage() {
   agent       - サブエージェント
   claude-md   - CLAUDE.md
   settings    - settings.local.json.example
+  codex       - Codex CLI カスタムプロンプト (CODEX.md)
   all         - すべて
 
 例:
@@ -56,6 +57,7 @@ show_usage() {
   $0 agent                     # すべてのエージェントをコピー
   $0 claude-md                 # CLAUDE.md をコピー
   $0 settings                  # settings.local.json.example をコピー
+  $0 codex                     # Codex CLI カスタムプロンプトをコピー
   $0 all                       # すべてをコピー
 
 説明:
@@ -236,6 +238,31 @@ copy_settings() {
 }
 
 # =============================================================================
+# Codex CLI テンプレートのコピー
+# =============================================================================
+
+# Codex CLI カスタムプロンプトをテンプレートローカルにコピー
+#
+# 戻り値:
+#   0: コピー成功
+#   1: ファイルが見つからない
+#
+copy_codex_prompt() {
+    local src="${TEMPLATES_DIR}/.codex/CODEX.md"
+    local dst="${TEMPLATES_LOCAL_DIR}/.codex/CODEX.md"
+
+    if [[ ! -f "${src}" ]]; then
+        log_error "ファイルが見つかりません: ${src}"
+        return 1
+    fi
+
+    mkdir -p "$(dirname "${dst}")"
+    cp "${src}" "${dst}"
+    log_success "Codex CLI カスタムプロンプトをコピーしました: ${dst}"
+    return 0
+}
+
+# =============================================================================
 # すべてのテンプレートをコピー
 # =============================================================================
 
@@ -255,6 +282,7 @@ copy_all() {
     copy_all_agents || ((failed++))
     copy_claude_md || ((failed++))
     copy_settings || ((failed++))
+    copy_codex_prompt || ((failed++))
 
     if [[ ${failed} -eq 0 ]]; then
         log_success "すべてのテンプレートをコピーしました"
@@ -320,6 +348,9 @@ main() {
             ;;
         settings)
             copy_settings
+            ;;
+        codex)
+            copy_codex_prompt
             ;;
         all)
             copy_all
