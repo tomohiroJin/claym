@@ -18,7 +18,8 @@ templates/
 │       └── documentation-writer.yaml   # ドキュメント作成専門家
 ├── .codex/
 │   ├── config.toml.example            # Codex CLI 設定テンプレート（使用環境緩和設定含む）
-│   └── AGENTS.md                      # Codex CLI エージェント指示（日本語設定）
+│   ├── AGENTS.md                      # Codex CLI エージェント指示（日本語設定）
+│   └── CODEX.md                       # Codex CLI カスタムプロンプト（日本語設定）
 ├── .gemini/
 │   ├── settings.json.example          # GEMINI 設定テンプレート
 │   └── GEMINI.md                      # GEMINI カスタム指示（日本語設定）
@@ -68,12 +69,15 @@ bash scripts/setup/init-ai-configs.sh
 cd /path/to/your/project
 
 # 設定ディレクトリを作成
-mkdir -p .claude docs/prompts/tasks
+mkdir -p .claude .codex docs/prompts/tasks
+mkdir -p ~/.codex
 
 # テンプレートをコピー
 cp templates/.claude/settings.local.json.example .claude/settings.local.json
 cp templates/.claude/CLAUDE.md .claude/CLAUDE.md
 cp templates/.codex/config.toml.example ~/.codex/config.toml
+cp templates/.codex/CODEX.md .codex/CODEX.md
+cp templates/.codex/CODEX.md ~/.codex/CODEX.md
 cp templates/.codex/AGENTS.md AGENTS.md
 cp templates/.gemini/settings.json.example .gemini/settings.json
 cp templates/.gemini/GEMINI.md .gemini/GEMINI.md
@@ -152,7 +156,26 @@ nano ~/.codex/config.toml
 
 注: プロジェクトパスは自動セットアップで設定済みです。
 
-#### 4. Codex CLI エージェント指示 (AGENTS.md)
+#### 4. Codex CLI カスタムプロンプト (.codex/CODEX.md)
+
+```bash
+# プロジェクト共有用の指示を編集
+nano .codex/CODEX.md
+
+# 個人設定を編集
+nano ~/.codex/CODEX.md
+```
+
+**カスタマイズポイント**:
+- Codex CLI 起動時のベース指示を記述（日本語・ですます調・確認フローなど）
+- プロジェクト固有のワークフローや禁止事項を明記
+- templates-local/.codex/CODEX.md を用意するとテンプレートを上書き可能
+
+**運用メモ**:
+- 自動セットアップ時は templates/.codex/CODEX.md が `.codex` と `~/.codex` の両方にコピーされる
+- 既存ファイルがある場合は上書きされないため、再生成する場合は `reinit-ai-configs.sh` を利用する
+
+#### 5. Codex CLI エージェント指示 (AGENTS.md)
 
 ```bash
 # ファイルを編集（プロジェクトルート）
@@ -176,7 +199,7 @@ nano AGENTS.md
 nano ~/.codex/AGENTS.md
 ```
 
-#### 5. GEMINI カスタム指示 (.gemini/GEMINI.md)
+#### 6. GEMINI カスタム指示 (.gemini/GEMINI.md)
 
 ```bash
 # ファイルを編集

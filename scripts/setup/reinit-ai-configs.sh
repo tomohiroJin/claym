@@ -76,7 +76,9 @@ AI拡張機能 設定再生成スクリプト
 バックアップ対象:
   - .claude/settings.local.json
   - .claude/CLAUDE.md
+  - .codex/CODEX.md
   - ~/.codex/config.toml
+  - ~/.codex/CODEX.md
   - AGENTS.md（プロジェクトルート、チーム共有）
   - ~/.codex/AGENTS.md（個人設定、優先度高）
   - .gemini/settings.json
@@ -157,7 +159,9 @@ create_backup() {
     local -a backup_targets=(
         "${PROJECT_ROOT}/.claude/settings.local.json"
         "${PROJECT_ROOT}/.claude/CLAUDE.md"
+        "${PROJECT_ROOT}/.codex/CODEX.md"
         "${HOME}/.codex/config.toml"
+        "${HOME}/.codex/CODEX.md"
         "${PROJECT_ROOT}/AGENTS.md"
         "${HOME}/.codex/AGENTS.md"
         "${PROJECT_ROOT}/.gemini/settings.json"
@@ -344,7 +348,9 @@ regenerate_configs() {
     local -a config_files=(
         "${PROJECT_ROOT}/.claude/settings.local.json"
         "${PROJECT_ROOT}/.claude/CLAUDE.md"
+        "${PROJECT_ROOT}/.codex/CODEX.md"
         "${HOME}/.codex/config.toml"
+        "${HOME}/.codex/CODEX.md"
         "${PROJECT_ROOT}/AGENTS.md"
         "${HOME}/.codex/AGENTS.md"
         "${PROJECT_ROOT}/.gemini/settings.json"

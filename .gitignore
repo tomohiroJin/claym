@@ -117,6 +117,10 @@ local/
 .claude/
 !templates/.claude/
 
+# Codex 設定（全体を個人設定として管理）
+.codex/
+!templates/.codex/
+
 # GEMINI 設定（全体を個人設定として管理）
 .gemini/
 !templates/.gemini/
@@ -132,4 +136,3 @@ docs/prompts/
 
 # ユーザー独自テンプレート（gitignore対象）
 templates-local/
-
