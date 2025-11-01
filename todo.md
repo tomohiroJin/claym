@@ -1,13 +1,11 @@
 # TODO
 
-- [x] README.md を読んでコンテナ構成と既存セットアップの流れを把握する
-- [x] `.claude` 向けテンプレートコピー処理（init/reinit/copy scripts）を確認する
-- [x] Codex プロンプトの構成（ファイル名・配置先）を決定し spec のオープン事項を解消する
-- [x] `templates/.codex` にカスタムプロンプトテンプレートを追加する（必要ならば既存ファイル調整）
-- [x] `init-ai-configs.sh` を拡張し、Codex プロンプトを公式テンプレート＋templates-local からコピーする
-- [x] `reinit-ai-configs.sh` とバックアップ対象を Codex プロンプト対応に更新する
-- [x] `copy-template-to-local.sh` に Codex 用コピーオプションを追加する
-- [x] `test-init-ai-configs.sh` など関連テストを更新し期待値を確認する
-- [x] ドキュメント（templates/README.md など）を Codex プロンプト対応の説明で更新する
-- [x] 動作確認（必要なスクリプトを実行 or 手動確認）を行う
-- [x] 変更内容をコミットする（細かいコミットを意識）
+- [x] 既存の `templates/.codex/CODEX.md` や関連ロジックを撤去し、slash コマンド向け設計に切り替える範囲を整理する
+- [x] `templates/.codex/prompts/` および `templates-local/.codex/prompts/` のディレクトリ構造とサンプルプロンプトを用意する
+- [x] `init-ai-configs.sh` を更新し、公式＋ローカルテンプレートから `.codex/prompts` と `~/.codex/prompts` にコピーする
+- [x] `reinit-ai-configs.sh` を更新し、バックアップ／再生成対象を prompts ディレクトリに合わせる
+- [x] `copy-template-to-local.sh` に Codex プロンプト用サブコマンドを実装する
+- [x] `test-init-ai-configs.sh` を修正し、新しいプロンプト生成ロジックを検証する
+- [x] `.gitignore`, README, templates/README などドキュメント類を slash コマンド前提に書き換える
+- [x] 必要な動作確認（例: `bash scripts/setup/test-init-ai-configs.sh`）を実施する
+- [x] 作業単位ごとにコミットを作成する

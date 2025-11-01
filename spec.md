@@ -1,49 +1,47 @@
-# Codex カスタムプロンプト展開仕様
+# Codex カスタムプロンプト（slash コマンド）対応仕様
 
 ## 背景
-- `scripts/setup/init-ai-configs.sh` では `.claude` 配下のテンプレートを templates-local を含めてコピーする仕組みがあるが、Codex CLI については `config.toml` と `AGENTS.md` のみをコピーしている。
-- ユーザーは Codex CLI 用のカスタムプロンプトを公式テンプレートから自動コピーし、`templates-local/.codex` に独自ファイルがある場合はそれを優先する仕組みを求めている。
-- 前回実装済みの `.claude` 向けマージロジック（公式テンプレート + templates-local 上書き）を参考に Codex 版を整備する。
+- Codex CLI には `~/.codex/prompts/` 配下に Markdown を置くことで `/prompts:<name>` から呼び出せる「カスタムプロンプト」機能がある。
+- 現行実装では Codex 用テンプレートとして `CODEX.md`（共有用メモ）が生成されるが、slash コマンドには対応していない。
+- 公式テンプレート／templates-local の内容を、プロジェクト共有用 `.codex/prompts/` と個人用 `~/.codex/prompts/` に展開できるよう改善し、不要になった `CODEX.md` 系の処理を整理する。
 
 ## 目的
-1. Codex CLI 用カスタムプロンプトのテンプレートを追加する。
-2. Dev Container 起動時に `init-ai-configs.sh` がテンプレートをコピーするよう拡張する。
-3. `templates-local/.codex` に同名ファイルがある場合はそちらで上書きできるようにする。
-4. `reinit-ai-configs.sh` やバックアップ処理、テスト、ドキュメントを Codex プロンプト対応に追従させる。
+1. Codex CLI のカスタムプロンプトテンプレートを `templates/.codex/prompts/*.md` として管理し、公式＋ローカルテンプレートをコピー可能にする。
+2. `init-ai-configs.sh` で初期セットアップ時にプロジェクト共有用（`.codex/prompts`）と個人用（`~/.codex/prompts`）へ slash コマンドテンプレートを展開する。
+3. `reinit-ai-configs.sh` / `copy-template-to-local.sh` / テスト類を新しいテンプレート構成に合わせて更新し、旧 `CODEX.md` 系処理を撤去する。
+4. ドキュメントを slash コマンド前提の構成へ修正し、CLI 使用者が `/prompts:<name>` で実行できることを明示する。
 
 ## 対象範囲
-- `templates/.codex/` 以下に新たなプロンプトテンプレート（`CODEX.md`）を追加
-- `templates-local/.codex/` からのコピーを許容するためのヘルパー処理
+- `templates/.codex/prompts/`（新規ディレクトリ）および関連テンプレートの整備
+- `templates-local/.codex/prompts/` からの上書き対応
 - `scripts/setup/init-ai-configs.sh`
 - `scripts/setup/reinit-ai-configs.sh`
 - `scripts/setup/copy-template-to-local.sh`
 - `scripts/setup/test-init-ai-configs.sh`
-- テンプレート README など必要に応じたドキュメント
+- `.gitignore`, `README.md`, `templates/README.md` 等の関連ドキュメント
 
 ## 実装方針
-1. **テンプレート構造**
-   - `templates/.codex/CODEX.md` を新設し、Codex CLI 用カスタムプロンプト本文を格納。
-   - コピー先はプロジェクトルートの `.codex/CODEX.md`（共有設定）と `~/.codex/CODEX.md`（個人設定）。
+1. **テンプレート構造の再構成**
+   - 共有テンプレート: `templates/.codex/prompts/<prompt>.md`
+   - ローカルテンプレート: `templates-local/.codex/prompts/<prompt>.md`
+   - 旧 `templates/.codex/CODEX.md` など slash コマンド非対応ファイルは削除
 
-2. **コピー／マージ戦略**
-   - 単一ファイル用のコピー関数を用意し、`templates-local/.codex/CODEX.md` が存在すればそちらを優先。
-   - コピー先はプロジェクトルートとホームディレクトリの両方。既存ファイルがある場合は上書きせず、初期セットアップ時のみ生成。
+2. **初期化スクリプト**
+   - `init-ai-configs.sh` で `merge_template_directories` を利用し `.codex/prompts` と `~/.codex/prompts` を作成
+   - 既存の `resolve_template_source` 等、単一ファイル向けロジックは不要になれば削除
 
-3. **補助ファイルの取り扱い**
-   - `copy_template_to_local.sh` に Codex 用オプション（例: `codex`）を追加し、ローカルテンプレートへのコピー操作を簡素化。
-   - `reinit-ai-configs.sh` のバックアップ／削除対象に `.codex/CODEX.md`（およびホーム側の対応ファイル）を追加。
+3. **再初期化／バックアップ**
+   - `reinit-ai-configs.sh` のバックアップ対象に `.codex/prompts`（プロジェクト／ホーム両方）を追加し、`CODEX.md` を対象から外す
+   - 再生成時は prompts ディレクトリを削除後に `init-ai-configs.sh` を実行
 
-4. **テスト／検証**
-   - `scripts/setup/test-init-ai-configs.sh` に Codex プロンプト生成の検証を追加。
-   - 必要であれば簡易スモークテストを追加し、テンプレートがコピーされているか確認する。
+4. **テンプレートコピー CLI**
+   - `copy-template-to-local.sh` に Codex 用サブコマンドを定義（例: `codex-prompts`）し、`templates-local/.codex/prompts` へコピーできるようにする
 
-5. **ドキュメント更新**
-   - `templates/README.md` や関連ドキュメントに Codex プロンプトの使い方・配置先を追記する。
+5. **テストとドキュメント**
+   - `test-init-ai-configs.sh` で prompts ディレクトリ生成とローカル適用を検証
+   - README 類を `/prompts:<name>` 手順に合わせて更新
 
 ## 想定される課題
-- Codex CLI が外部ファイルのプロンプトを参照する標準的な仕組みがあるか要確認。存在しない場合、`config.toml` から読み込むワークフローを併記する。
-- `HOME` 配下へのコピーは `init-ai-configs.sh` が root / devcontainer ユーザで動くことを前提にしているため、権限問題に注意。
-- 既にユーザーがカスタムプロンプトを設置済みの場合に上書きしないよう、`.claude` 同様「存在しなければコピー」ポリシーを維持する。
-
-## オープンな確認事項
-- 現時点で追加の確認事項はありません。
+- 既存ユーザーの `~/.codex/prompts/` に同名ファイルがある場合は「存在すれば上書きしない」戦略を維持する。
+- テンプレート削除に伴うドキュメントの参照先更新漏れに注意する。
+- 既存ブランチに生成済み `CODEX.md` が残っている場合、クリーンアップ手順を周知する必要がある。
