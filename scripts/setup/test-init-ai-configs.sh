@@ -110,7 +110,8 @@ test_codex_templates_exist() {
 
 # テスト5: Codex カスタムプロンプトテンプレートが存在すること
 test_codex_prompt_template_exists() {
-    [[ -f "${PROJECT_ROOT}/templates/.codex/CODEX.md" ]]
+    local prompt_dir="${PROJECT_ROOT}/templates/.codex/prompts"
+    [[ -d "${prompt_dir}" ]] && find "${prompt_dir}" -maxdepth 1 -name "*.md" | grep -q ".md"
 }
 
 # テスト6: GEMINI テンプレートが存在すること
@@ -143,11 +144,11 @@ test_codex_setup_in_real_project() {
 
 # テスト10: 実際のプロジェクトで Codex プロンプトが作成されること
 test_codex_prompt_created_in_real_project() {
-    if [[ -f "${PROJECT_ROOT}/.codex/CODEX.md" ]] || [[ -f "${HOME}/.codex/CODEX.md" ]]; then
+    if [[ -d "${PROJECT_ROOT}/.codex/prompts" ]] || [[ -d "${HOME}/.codex/prompts" ]]; then
         return 0
     fi
 
-    log_warn "Codex prompt not found (.codex/CODEX.md or ~/.codex/CODEX.md)。初回セットアップが未実行の場合は正常です"
+    log_warn "Codex prompts ディレクトリが見つかりません（.codex/prompts または ~/.codex/prompts）。初回セットアップが未実行の場合は正常です"
     return 0
 }
 
