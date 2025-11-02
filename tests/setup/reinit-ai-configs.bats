@@ -213,7 +213,7 @@ EOF
 
 @test "reinit-ai-configs.sh: templates-local がバックアップ対象に含まれている" {
     # スクリプトから backup_dir_targets の定義を抽出
-    run grep -A 3 'backup_dir_targets=' /workspaces/claym/scripts/setup/reinit-ai-configs.sh
+    run grep -A 5 'backup_dir_targets=' /workspaces/claym/scripts/setup/reinit-ai-configs.sh
 
     # templates-local が含まれていることを確認
     assert_success
