@@ -135,4 +135,5 @@ docs/prompts/
 .claude/agents/
 
 # ユーザー独自テンプレート（gitignore対象）
-templates-local/
+templates-local/*
+!templates-local/.gitkeep
