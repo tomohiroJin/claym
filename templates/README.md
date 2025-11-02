@@ -165,10 +165,10 @@ nano ~/.codex/config.toml
 
 ```bash
 # プロジェクト共有用のプロンプトを編集
-nano .codex/prompts/review.md
+nano .codex/prompts/yfinance.md
 
 # 個人設定を編集
-nano ~/.codex/prompts/review.md
+nano ~/.codex/prompts/yfinance.md
 ```
 
 **カスタマイズポイント**:
