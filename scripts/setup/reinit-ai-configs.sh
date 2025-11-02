@@ -78,6 +78,7 @@ AI拡張機能 設定再生成スクリプト
   - .claude/CLAUDE.md
   - ~/.codex/config.toml
   - .codex/prompts/
+  - templates-local/
   - ~/.codex/prompts/
   - AGENTS.md（プロジェクトルート、チーム共有）
   - ~/.codex/AGENTS.md（個人設定、優先度高）
