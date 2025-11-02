@@ -22,8 +22,9 @@ stream_idle_timeout_ms = 300000
 requires_openai_auth = true
 
 # === デフォルトモデル設定 ===
-# 使用するモデルを指定（例: "gpt-4", "gpt-4-turbo", "o3" など）
-# model = "gpt-4-turbo"
+# Codex 本体のデフォルトモデルはリリースごとに更新されるため、最新を追従する場合はコメントのままにします。
+# 固定したいモデルがある場合のみ下記を有効化してください（例: "gpt-5-codex"）。
+# model = "gpt-5-codex"
 
 # === MCP サーバー設定 ===
 # Model Context Protocol サーバーの設定
@@ -206,6 +207,10 @@ retry_delay_ms = 1000              # リトライ間隔: 1秒
 [sandbox]
 enabled = false
 # docker_image = "python:3.11"
+
+# === Web 検索設定 ===
+# Codex の web_search ツールを有効化し、プロンプトから検索が利用できるようにする
+web_search = true
 
 # === カスタムプロンプト設定 ===
 # システムプロンプトのカスタマイズ

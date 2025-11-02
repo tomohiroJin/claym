@@ -153,12 +153,14 @@ setup_codex_cli() {
     log_info "Codex CLI 設定をセットアップ中..."
 
     local codex_dir="${HOME}/.codex"
+    local codex_project_dir="${PROJECT_ROOT}/.codex"
     local config_file="${codex_dir}/config.toml"
     local agents_md_home="${codex_dir}/AGENTS.md"
     local agents_md_project="${PROJECT_ROOT}/AGENTS.md"
 
     # ディレクトリ作成
     mkdir -p "${codex_dir}"
+    mkdir -p "${codex_project_dir}"
 
     # config.toml をセットアップ
     setup_codex_config "${config_file}"
@@ -174,6 +176,9 @@ setup_codex_cli() {
         "${TEMPLATES_DIR}/.codex/AGENTS.md" \
         "${agents_md_home}" \
         "Codex CLI エージェント指示（個人設定）"
+
+    # カスタムプロンプトをセットアップ
+    setup_codex_prompts "${codex_project_dir}" "${codex_dir}"
 }
 
 # Codex CLI の設定ファイルを作成してプロジェクトパスを置換
@@ -202,6 +207,62 @@ setup_codex_config() {
         fi
     else
         log_info "Codex CLI 設定ファイルは既に存在します（スキップ）"
+    fi
+}
+
+# Codex CLI のカスタムプロンプトをセットアップ
+#
+# 引数:
+#   $1: プロジェクトルート側の Codex ディレクトリ
+#   $2: ホームディレクトリ側の Codex ディレクトリ
+#
+setup_codex_prompts() {
+    local codex_project_dir="$1"
+    local codex_home_dir="$2"
+    local project_prompts_dir="${codex_project_dir}/prompts"
+    local home_prompts_dir="${codex_home_dir}/prompts"
+    local official_prompts="${TEMPLATES_DIR}/.codex/prompts"
+    local local_prompts="${TEMPLATES_LOCAL_DIR}/.codex/prompts"
+
+    if [[ ! -d "${official_prompts}" && ! -d "${local_prompts}" ]]; then
+        log_debug "Codex CLI カスタムプロンプトのテンプレートが見つかりません（スキップ）"
+        return 0
+    fi
+
+    # プロジェクト共有用
+    if [[ ! -d "${project_prompts_dir}" ]]; then
+        merge_template_directories \
+            ".codex/prompts" \
+            "${TEMPLATES_DIR}" \
+            "${TEMPLATES_LOCAL_DIR}" \
+            "${PROJECT_ROOT}"
+
+        if [[ -d "${project_prompts_dir}" ]]; then
+            local shared_count
+            shared_count=$(count_files_in_directory "${project_prompts_dir}" "*.md")
+            log_success "Codex CLI カスタムプロンプト（共有）を作成しました: ${project_prompts_dir}"
+            log_info "共有プロンプト数: ${shared_count} 個"
+        fi
+    else
+        log_info "Codex CLI カスタムプロンプト（共有）は既に存在します（スキップ）"
+    fi
+
+    # 個人用
+    if [[ ! -d "${home_prompts_dir}" ]]; then
+        merge_template_directories \
+            ".codex/prompts" \
+            "${TEMPLATES_DIR}" \
+            "${TEMPLATES_LOCAL_DIR}" \
+            "${HOME}"
+
+        if [[ -d "${home_prompts_dir}" ]]; then
+            local personal_count
+            personal_count=$(count_files_in_directory "${home_prompts_dir}" "*.md")
+            log_success "Codex CLI カスタムプロンプト（個人）を作成しました: ${home_prompts_dir}"
+            log_info "個人プロンプト数: ${personal_count} 個"
+        fi
+    else
+        log_info "Codex CLI カスタムプロンプト（個人）は既に存在します（スキップ）"
     fi
 }
 

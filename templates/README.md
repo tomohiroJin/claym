@@ -18,7 +18,9 @@ templates/
 │       └── documentation-writer.yaml   # ドキュメント作成専門家
 ├── .codex/
 │   ├── config.toml.example            # Codex CLI 設定テンプレート（使用環境緩和設定含む）
-│   └── AGENTS.md                      # Codex CLI エージェント指示（日本語設定）
+│   ├── AGENTS.md                      # Codex CLI エージェント指示（日本語設定）
+│   └── prompts/                       # Codex CLI カスタムプロンプト（slash コマンド）
+│       └── *.md                       # `/prompts:<name>` で呼び出せるテンプレート
 ├── .gemini/
 │   ├── settings.json.example          # GEMINI 設定テンプレート
 │   └── GEMINI.md                      # GEMINI カスタム指示（日本語設定）
@@ -68,13 +70,16 @@ bash scripts/setup/init-ai-configs.sh
 cd /path/to/your/project
 
 # 設定ディレクトリを作成
-mkdir -p .claude docs/prompts/tasks
+mkdir -p .claude .codex/prompts docs/prompts/tasks
+mkdir -p ~/.codex/prompts
 
 # テンプレートをコピー
 cp templates/.claude/settings.local.json.example .claude/settings.local.json
 cp templates/.claude/CLAUDE.md .claude/CLAUDE.md
 cp templates/.codex/config.toml.example ~/.codex/config.toml
 cp templates/.codex/AGENTS.md AGENTS.md
+cp templates/.codex/prompts/*.md .codex/prompts/
+cp templates/.codex/prompts/*.md ~/.codex/prompts/
 cp templates/.gemini/settings.json.example .gemini/settings.json
 cp templates/.gemini/GEMINI.md .gemini/GEMINI.md
 
@@ -87,6 +92,10 @@ cat >> .gitignore <<EOF
 # CLAUDE 設定（全体を個人設定として管理）
 .claude/
 !templates/.claude/
+
+# Codex 設定（全体を個人設定として管理）
+.codex/
+!templates/.codex/
 
 # GEMINI 設定（全体を個人設定として管理）
 .gemini/
@@ -152,7 +161,26 @@ nano ~/.codex/config.toml
 
 注: プロジェクトパスは自動セットアップで設定済みです。
 
-#### 4. Codex CLI エージェント指示 (AGENTS.md)
+#### 4. Codex CLI カスタムプロンプト (.codex/prompts/*.md)
+
+```bash
+# プロジェクト共有用のプロンプトを編集
+nano .codex/prompts/yfinance.md
+
+# 個人設定を編集
+nano ~/.codex/prompts/yfinance.md
+```
+
+**カスタマイズポイント**:
+- 各 `.md` ファイルが `/prompts:<name>` で呼び出せるコマンドになる
+- プレースホルダー（$1, $FILE など）や YAML フロントマターで slash ポップアップを強化できる
+- templates-local/.codex/prompts/ 以下に同名ファイルを置くと、公式テンプレートを上書き可能
+
+**運用メモ**:
+- 自動セットアップ時は templates/.codex/prompts/ 内の Markdown が `.codex/prompts` と `~/.codex/prompts` にコピーされる
+- 既存ディレクトリがある場合は上書きされないため、再生成する場合は `reinit-ai-configs.sh` を利用する
+
+#### 5. Codex CLI エージェント指示 (AGENTS.md)
 
 ```bash
 # ファイルを編集（プロジェクトルート）
@@ -176,7 +204,7 @@ nano AGENTS.md
 nano ~/.codex/AGENTS.md
 ```
 
-#### 5. GEMINI カスタム指示 (.gemini/GEMINI.md)
+#### 6. GEMINI カスタム指示 (.gemini/GEMINI.md)
 
 ```bash
 # ファイルを編集

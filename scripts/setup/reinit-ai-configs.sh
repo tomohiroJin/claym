@@ -77,6 +77,9 @@ AI拡張機能 設定再生成スクリプト
   - .claude/settings.local.json
   - .claude/CLAUDE.md
   - ~/.codex/config.toml
+  - .codex/prompts/
+  - templates-local/
+  - ~/.codex/prompts/
   - AGENTS.md（プロジェクトルート、チーム共有）
   - ~/.codex/AGENTS.md（個人設定、優先度高）
   - .gemini/settings.json
@@ -168,7 +171,9 @@ create_backup() {
     local -a backup_dir_targets=(
         "${PROJECT_ROOT}/.claude/commands"
         "${PROJECT_ROOT}/.claude/agents"
+        "${PROJECT_ROOT}/.codex/prompts"
         "${PROJECT_ROOT}/templates-local"
+        "${HOME}/.codex/prompts"
     )
 
     if [[ "${DRY_RUN}" != "true" ]]; then
@@ -355,6 +360,8 @@ regenerate_configs() {
     local -a config_dirs=(
         "${PROJECT_ROOT}/.claude/commands"
         "${PROJECT_ROOT}/.claude/agents"
+        "${PROJECT_ROOT}/.codex/prompts"
+        "${HOME}/.codex/prompts"
     )
 
     if [[ "${DRY_RUN}" == "true" ]]; then
