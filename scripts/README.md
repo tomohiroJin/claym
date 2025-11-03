@@ -119,6 +119,18 @@ bash scripts/setup/copy-template-to-local.sh claude-md
 # settings.local.json.example をコピー
 bash scripts/setup/copy-template-to-local.sh settings
 
+# Codex CLI テンプレートをコピー (.codex/ 配下のファイル)
+bash scripts/setup/copy-template-to-local.sh codex
+
+# Codex CLI プロンプトのみコピー (従来の shorthand と互換)
+bash scripts/setup/copy-template-to-local.sh codex review.md
+
+# Codex CLI プロンプトを相対パスで指定してコピー
+bash scripts/setup/copy-template-to-local.sh codex prompts/review.md
+
+# Codex CLI の AGENTS.md をコピー
+bash scripts/setup/copy-template-to-local.sh codex AGENTS.md
+
 # すべてをコピー
 bash scripts/setup/copy-template-to-local.sh all
 
