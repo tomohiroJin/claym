@@ -300,6 +300,7 @@ setup_gemini() {
     local gemini_dir="${PROJECT_ROOT}/.gemini"
     local settings_file="${gemini_dir}/settings.json"
     local gemini_md="${gemini_dir}/GEMINI.md"
+    local commands_dir="${gemini_dir}/commands"
 
     # ディレクトリ作成
     mkdir -p "${gemini_dir}"
@@ -312,6 +313,37 @@ setup_gemini() {
         "${TEMPLATES_DIR}/.gemini/GEMINI.md" \
         "${gemini_md}" \
         "GEMINI カスタム指示"
+
+    # カスタムコマンドをセットアップ
+    setup_gemini_commands "${commands_dir}"
+}
+
+# GEMINI のカスタムコマンドディレクトリをセットアップ
+#
+# 引数:
+#   $1: コマンドディレクトリパス
+#
+setup_gemini_commands() {
+    local commands_dir="$1"
+
+    if [[ ! -d "${commands_dir}" ]]; then
+        merge_template_directories \
+            ".gemini/commands" \
+            "${TEMPLATES_DIR}" \
+            "${TEMPLATES_LOCAL_DIR}" \
+            "${PROJECT_ROOT}"
+
+        if [[ -d "${commands_dir}" ]]; then
+            local cmd_count
+            cmd_count=$(count_files_in_directory "${commands_dir}" "*.md")
+            log_success "GEMINI カスタムコマンドを作成しました: ${commands_dir}"
+            log_info "利用可能なコマンド: ${cmd_count} 個"
+        else
+            log_debug "GEMINI カスタムコマンドをコピーできませんでした（テンプレート未検出）"
+        fi
+    else
+        log_info "GEMINI カスタムコマンドは既に存在します（スキップ）"
+    fi
 }
 
 # GEMINI の設定ファイルを作成してプレースホルダーを置換

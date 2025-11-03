@@ -120,6 +120,11 @@ test_gemini_templates_exist() {
     [[ -f "${PROJECT_ROOT}/templates/.gemini/GEMINI.md" ]]
 }
 
+# テスト6b: GEMINI カスタムコマンドテンプレートが存在すること
+test_gemini_command_template_exists() {
+    [[ -f "${PROJECT_ROOT}/templates/.gemini/commands/yfinance.md" ]]
+}
+
 # テスト7: プロンプトテンプレートが存在すること
 test_prompt_templates_exist() {
     [[ -f "${PROJECT_ROOT}/templates/docs/prompts/system.md" ]] && \
@@ -156,6 +161,18 @@ test_codex_prompt_created_in_real_project() {
 test_gemini_setup_in_real_project() {
     [[ -f "${PROJECT_ROOT}/.gemini/settings.json" ]] || \
     [[ -f "${PROJECT_ROOT}/.gemini/GEMINI.md" ]]
+}
+
+# テスト11b: 実際のプロジェクトで GEMINI カスタムコマンドが作成されること
+test_gemini_commands_created_in_real_project() {
+    local cmd_dir="${PROJECT_ROOT}/.gemini/commands"
+
+    if [[ -d "${cmd_dir}" ]]; then
+        find "${cmd_dir}" -maxdepth 1 -name "*.md" | grep -q ".md"
+    else
+        log_warn "GEMINI コマンドディレクトリが見つかりません: ${cmd_dir}"
+        return 0
+    fi
 }
 
 # テスト12: プロンプトテンプレートがコピーされていること
@@ -243,6 +260,7 @@ main() {
     run_test "Codex CLI テンプレート存在確認" test_codex_templates_exist
     run_test "Codex プロンプトテンプレート存在確認" test_codex_prompt_template_exists
     run_test "GEMINI テンプレート存在確認" test_gemini_templates_exist
+    run_test "GEMINI コマンドテンプレート存在確認" test_gemini_command_template_exists
     run_test "プロンプトテンプレート存在確認" test_prompt_templates_exist
     run_test "templates README 存在確認" test_templates_readme_exists
     echo ""
@@ -259,6 +277,7 @@ main() {
     run_test "Codex CLI 設定の存在確認" test_codex_setup_in_real_project
     run_test "Codex プロンプトの存在確認" test_codex_prompt_created_in_real_project
     run_test "GEMINI 設定の存在確認" test_gemini_setup_in_real_project
+    run_test "GEMINI カスタムコマンドの存在確認" test_gemini_commands_created_in_real_project
     run_test "プロンプトテンプレートのコピー確認" test_prompts_copied_in_real_project
     run_test ".gitignore 更新確認" test_gitignore_updated
     run_test "展開済み設定のパス確認" test_expanded_config_has_project_path
