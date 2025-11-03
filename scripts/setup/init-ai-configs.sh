@@ -157,23 +157,31 @@ setup_codex_cli() {
     local config_file="${codex_dir}/config.toml"
     local agents_md_home="${codex_dir}/AGENTS.md"
     local agents_md_project="${PROJECT_ROOT}/AGENTS.md"
+    local codex_agents_local="${TEMPLATES_LOCAL_DIR}/.codex/AGENTS.md"
+    local codex_agents_official="${TEMPLATES_DIR}/.codex/AGENTS.md"
+    local codex_agents_template="${codex_agents_official}"
 
     # ディレクトリ作成
     mkdir -p "${codex_dir}"
     mkdir -p "${codex_project_dir}"
+
+    if [[ -f "${codex_agents_local}" ]]; then
+        codex_agents_template="${codex_agents_local}"
+        log_debug "Codex ローカルテンプレート (.codex/AGENTS.md) を使用します"
+    fi
 
     # config.toml をセットアップ
     setup_codex_config "${config_file}"
 
     # AGENTS.md をプロジェクトルートにコピー（チーム共有設定）
     copy_file_if_not_exists \
-        "${TEMPLATES_DIR}/.codex/AGENTS.md" \
+        "${codex_agents_template}" \
         "${agents_md_project}" \
         "Codex CLI エージェント指示（チーム共有）"
 
     # AGENTS.md を ~/.codex/ にもコピー（個人設定、優先度高）
     copy_file_if_not_exists \
-        "${TEMPLATES_DIR}/.codex/AGENTS.md" \
+        "${codex_agents_template}" \
         "${agents_md_home}" \
         "Codex CLI エージェント指示（個人設定）"
 
@@ -188,16 +196,30 @@ setup_codex_cli() {
 #
 setup_codex_config() {
     local config_file="$1"
+    local config_template_official="${TEMPLATES_DIR}/.codex/config.toml.example"
+    local config_template_local="${TEMPLATES_LOCAL_DIR}/.codex/config.toml.example"
+    local config_template="${config_template_official}"
 
     if [[ ! -f "${config_file}" ]]; then
-        if [[ -f "${TEMPLATES_DIR}/.codex/config.toml.example" ]]; then
+        if [[ -f "${config_template_local}" ]]; then
+            config_template="${config_template_local}"
+            log_debug "Codex ローカルテンプレート (.codex/config.toml.example) を使用します"
+        fi
+
+        if [[ -f "${config_template}" ]]; then
             # テンプレートをコピー
-            cp "${TEMPLATES_DIR}/.codex/config.toml.example" "${config_file}"
+            cp "${config_template}" "${config_file}"
 
             # YOUR_PROJECT_NAME をプロジェクトパスに置換
             replace_in_file \
                 "${config_file}" \
                 "/workspaces/YOUR_PROJECT_NAME" \
+                "${PROJECT_ROOT}"
+
+            # __PROJECT_ROOT__ プレースホルダーにも対応
+            replace_in_file \
+                "${config_file}" \
+                "__PROJECT_ROOT__" \
                 "${PROJECT_ROOT}"
 
             log_success "Codex CLI 設定ファイルを作成しました: ${config_file}"

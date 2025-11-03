@@ -47,7 +47,7 @@ show_usage() {
   agent       - サブエージェント
   claude-md   - CLAUDE.md
   settings    - settings.local.json.example
-  codex       - Codex CLI カスタムプロンプト (prompts/*.md)
+  codex       - Codex CLI 設定 (.codex/ 配下のファイル・ディレクトリ)
   all         - すべて
 
 例:
@@ -57,8 +57,10 @@ show_usage() {
   $0 agent                     # すべてのエージェントをコピー
   $0 claude-md                 # CLAUDE.md をコピー
   $0 settings                  # settings.local.json.example をコピー
-  $0 codex review.md           # review.md をローカルにコピー
-  $0 codex                     # すべての Codex プロンプトをコピー
+  $0 codex review.md           # prompts/review.md をローカルにコピー
+  $0 codex prompts/review.md   # prompts 配下の特定ファイルをコピー
+  $0 codex AGENTS.md           # AGENTS.md をローカルにコピー
+  $0 codex                     # .codex 配下のすべてをコピー
   $0 all                       # すべてをコピー
 
 説明:
@@ -242,48 +244,104 @@ copy_settings() {
 # Codex CLI テンプレートのコピー
 # =============================================================================
 
-# Codex CLI カスタムプロンプトをテンプレートローカルにコピー
+# Codex CLI テンプレートの相対パスを解決
 #
 # 引数:
-#   $1: コピー対象のファイル名（例: review.md）
+#   $1: ユーザー入力のファイル名または相対パス
 #
-copy_codex_prompt() {
-    local file="$1"
-    local src="${TEMPLATES_DIR}/.codex/prompts/${file}"
-    local dst="${TEMPLATES_LOCAL_DIR}/.codex/prompts/${file}"
+# 戻り値:
+#   解決された相対パス（.codex/ からの相対パス）
+#
+resolve_codex_relative_path() {
+    local input_path="$1"
 
-    if [[ ! -f "${src}" ]]; then
-        log_error "ファイルが見つかりません: ${src}"
-        return 1
+    if [[ -z "${input_path}" ]]; then
+        echo ""
+        return 0
     fi
 
-    mkdir -p "$(dirname "${dst}")"
-    cp "${src}" "${dst}"
-    log_success "${file} をコピーしました: ${dst}"
+    if [[ "${input_path}" == */* ]]; then
+        echo "${input_path}"
+        return 0
+    fi
+
+    local top_level="${TEMPLATES_DIR}/.codex/${input_path}"
+    if [[ -e "${top_level}" ]]; then
+        echo "${input_path}"
+        return 0
+    fi
+
+    local prompts_path="${TEMPLATES_DIR}/.codex/prompts/${input_path}"
+    if [[ -e "${prompts_path}" ]]; then
+        echo "prompts/${input_path}"
+        return 0
+    fi
+
+    # 既存のパスでなければそのまま返し、後続でエラーハンドリング
+    echo "${input_path}"
     return 0
 }
 
-# すべての Codex CLI プロンプトをコピー
+# Codex CLI テンプレートをテンプレートローカルにコピー
 #
-copy_all_codex_prompts() {
-    log_info "すべての Codex CLI プロンプトをコピー中..."
+# 引数:
+#   $1: .codex/ からの相対パス
+#
+copy_codex_item() {
+    local relative_path
+    relative_path="$(resolve_codex_relative_path "$1")"
 
-    local count=0
-    local src_dir="${TEMPLATES_DIR}/.codex/prompts"
-
-    if [[ ! -d "${src_dir}" ]]; then
-        log_error "Codex プロンプトディレクトリが見つかりません: ${src_dir}"
+    if [[ -z "${relative_path}" ]]; then
+        log_error "コピー対象が指定されていません"
         return 1
     fi
 
-    for prompt in "${src_dir}/"*.md; do
-        if [[ -f "${prompt}" ]]; then
-            copy_codex_prompt "$(basename "${prompt}")"
+    local src="${TEMPLATES_DIR}/.codex/${relative_path}"
+    local dst="${TEMPLATES_LOCAL_DIR}/.codex/${relative_path}"
+
+    if [[ -d "${src}" ]]; then
+        if copy_directory_safe "${src}" "${dst}"; then
+            log_success "${relative_path}/ をコピーしました: ${dst}"
+            return 0
+        else
+            log_error "ディレクトリが見つかりません: ${src}"
+            return 1
+        fi
+    fi
+
+    if [[ -f "${src}" ]]; then
+        mkdir -p "$(dirname "${dst}")"
+        cp "${src}" "${dst}"
+        log_success "${relative_path} をコピーしました: ${dst}"
+        return 0
+    fi
+
+    log_error "テンプレートが見つかりません: ${src}"
+    return 1
+}
+
+# すべての Codex CLI テンプレートをコピー
+#
+copy_all_codex_items() {
+    log_info "すべての Codex CLI テンプレートをコピー中..."
+
+    local src_root="${TEMPLATES_DIR}/.codex"
+    if [[ ! -d "${src_root}" ]]; then
+        log_error "Codex テンプレートディレクトリが見つかりません: ${src_root}"
+        return 1
+    fi
+
+    local count=0
+    shopt -s nullglob dotglob
+    for item in "${src_root}/"*; do
+        local name="$(basename "${item}")"
+        if copy_codex_item "${name}"; then
             count=$((count + 1))
         fi
     done
+    shopt -u nullglob dotglob
 
-    log_success "${count} 個の Codex プロンプトをコピーしました"
+    log_success "${count} 個の Codex テンプレートをコピーしました"
     return 0
 }
 
@@ -307,7 +365,7 @@ copy_all() {
     copy_all_agents || ((failed++))
     copy_claude_md || ((failed++))
     copy_settings || ((failed++))
-    copy_all_codex_prompts || ((failed++))
+    copy_all_codex_items || ((failed++))
 
     if [[ ${failed} -eq 0 ]]; then
         log_success "すべてのテンプレートをコピーしました"
@@ -376,9 +434,9 @@ main() {
             ;;
         codex)
             if [[ -n "${file_name}" ]]; then
-                copy_codex_prompt "${file_name}"
+                copy_codex_item "${file_name}"
             else
-                copy_all_codex_prompts
+                copy_all_codex_items
             fi
             ;;
         all)
