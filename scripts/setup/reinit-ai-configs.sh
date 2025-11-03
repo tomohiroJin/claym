@@ -84,6 +84,7 @@ AI拡張機能 設定再生成スクリプト
   - ~/.codex/AGENTS.md（個人設定、優先度高）
   - .gemini/settings.json
   - .gemini/GEMINI.md
+  - .gemini/commands/
 
 使用例:
   # 対話モードで再生成
@@ -172,6 +173,7 @@ create_backup() {
         "${PROJECT_ROOT}/.claude/commands"
         "${PROJECT_ROOT}/.claude/agents"
         "${PROJECT_ROOT}/.codex/prompts"
+        "${PROJECT_ROOT}/.gemini/commands"
         "${PROJECT_ROOT}/templates-local"
         "${HOME}/.codex/prompts"
     )
@@ -361,6 +363,7 @@ regenerate_configs() {
         "${PROJECT_ROOT}/.claude/commands"
         "${PROJECT_ROOT}/.claude/agents"
         "${PROJECT_ROOT}/.codex/prompts"
+        "${PROJECT_ROOT}/.gemini/commands"
         "${HOME}/.codex/prompts"
     )
 

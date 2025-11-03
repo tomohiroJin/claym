@@ -23,7 +23,9 @@ templates/
 │       └── *.md                       # `/prompts:<name>` で呼び出せるテンプレート
 ├── .gemini/
 │   ├── settings.json.example          # GEMINI 設定テンプレート
-│   └── GEMINI.md                      # GEMINI カスタム指示（日本語設定）
+│   ├── GEMINI.md                      # GEMINI カスタム指示（日本語設定）
+│   └── commands/                      # GEMINI カスタムコマンド
+│       └── *.md                       # `/prompts:<name>` で呼び出せるテンプレート
 ├── docs/
 │   └── prompts/
 │       ├── system.md                  # システムプロンプトテンプレート
@@ -50,7 +52,7 @@ devcontainer のビルド・起動時に `scripts/setup/init-ai-configs.sh` が�
 
 - Claude Code 設定ファイル (`settings.local.json`, `CLAUDE.md`, `commands/`, `agents/`) の作成
 - Codex CLI 設定ファイル (`config.toml`, `AGENTS.md`) の作成（プロジェクトパス自動設定）
-- GEMINI 設定ファイル (`settings.json`, `GEMINI.md`) の作成（プロジェクトパス自動設定）
+- GEMINI 設定ファイル (`settings.json`, `GEMINI.md`, `commands/`) の作成（プロジェクトパス自動設定）
 - プロンプトテンプレートのコピー
 - .gitignore の更新
 
@@ -70,7 +72,7 @@ bash scripts/setup/init-ai-configs.sh
 cd /path/to/your/project
 
 # 設定ディレクトリを作成
-mkdir -p .claude .codex/prompts docs/prompts/tasks
+mkdir -p .claude .codex/prompts .gemini/commands docs/prompts/tasks
 mkdir -p ~/.codex/prompts
 
 # テンプレートをコピー
@@ -82,6 +84,7 @@ cp templates/.codex/prompts/*.md .codex/prompts/
 cp templates/.codex/prompts/*.md ~/.codex/prompts/
 cp templates/.gemini/settings.json.example .gemini/settings.json
 cp templates/.gemini/GEMINI.md .gemini/GEMINI.md
+cp templates/.gemini/commands/*.md .gemini/commands/
 
 # プロンプトテンプレートをコピー
 cp -r templates/docs/prompts/* docs/prompts/
@@ -216,7 +219,21 @@ nano .gemini/GEMINI.md
 - `/init`: プロジェクト用の GEMINI.md を生成
 - サブディレクトリにも配置可能
 
-#### 6. システムプロンプト (docs/prompts/system.md)
+#### 7. GEMINI カスタムコマンド (.gemini/commands/*.md)
+
+```bash
+# 公式テンプレートをローカルにコピー
+bash scripts/setup/copy-template-to-local.sh gemini-command yfinance.md
+
+# プロジェクト共有のコマンドを編集
+nano .gemini/commands/yfinance.md
+```
+
+- `/prompts:<name>` 形式で呼び出せるコマンドテンプレートを定義します
+- 番号付き手順や注意事項を明記すると安定した出力が得られます
+- 詳細ガイド: `templates/.gemini/commands/README.md`
+
+#### 8. システムプロンプト (docs/prompts/system.md)
 
 ```bash
 # ファイルを編集

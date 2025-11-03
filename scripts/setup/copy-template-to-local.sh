@@ -43,16 +43,22 @@ show_usage() {
 使い方: $0 <テンプレート種別> [ファイル名]
 
 テンプレート種別:
-  command     - カスタムコマンド
-  agent       - サブエージェント
-  claude-md   - CLAUDE.md
-  settings    - settings.local.json.example
-  codex       - Codex CLI 設定 (.codex/ 配下のファイル・ディレクトリ)
-  all         - すべて
+  command        - Claude Code カスタムコマンド
+  gemini-command - Gemini CLI カスタムコマンド
+  agent          - サブエージェント
+  claude-md      - CLAUDE.md
+  settings       - settings.local.json.example
+  gemini         - Gemini CLI 設定 (.gemini/ 配下のファイル・ディレクトリ)
+  codex          - Codex CLI 設定 (.codex/ 配下のファイル・ディレクトリ)
+  all            - すべて
 
 例:
   $0 command review.md         # review.md をローカルにコピー
   $0 command                   # すべてのコマンドをコピー
+  $0 gemini-command yfinance.md # Gemini コマンドをローカルにコピー
+  $0 gemini-command            # すべての Gemini コマンドをコピー
+  $0 gemini GEMINI.md          # GEMINI.md をローカルにコピー
+  $0 gemini settings.json.example # settings.json.example をローカルにコピー
   $0 agent code-reviewer.yaml  # code-reviewer.yaml をローカルにコピー
   $0 agent                     # すべてのエージェントをコピー
   $0 claude-md                 # CLAUDE.md をコピー
@@ -131,6 +137,55 @@ copy_all_commands() {
     done
 
     log_success "${count} 個のコマンドをコピーしました"
+    return 0
+}
+
+# =============================================================================
+# GEMINI コマンドのコピー
+# =============================================================================
+
+# 単一の GEMINI コマンドファイルをコピー
+#
+# 引数:
+#   $1: コピー対象のファイル名
+#
+copy_gemini_command() {
+    local file="$1"
+    local src="${TEMPLATES_DIR}/.gemini/commands/${file}"
+    local dst="${TEMPLATES_LOCAL_DIR}/.gemini/commands/${file}"
+
+    if [[ ! -f "${src}" ]]; then
+        log_error "ファイルが見つかりません: ${src}"
+        return 1
+    fi
+
+    mkdir -p "$(dirname "${dst}")"
+    cp "${src}" "${dst}"
+    log_success "${file} をコピーしました: ${dst}"
+    return 0
+}
+
+# すべての GEMINI コマンドファイルをコピー
+#
+copy_all_gemini_commands() {
+    log_info "すべての GEMINI コマンドをコピー中..."
+
+    local count=0
+    local src_dir="${TEMPLATES_DIR}/.gemini/commands"
+
+    if [[ ! -d "${src_dir}" ]]; then
+        log_error "GEMINI コマンドディレクトリが見つかりません: ${src_dir}"
+        return 1
+    fi
+
+    for cmd in "${src_dir}/"*.md; do
+        if [[ -f "${cmd}" ]]; then
+            copy_gemini_command "$(basename "${cmd}")"
+            count=$((count + 1))
+        fi
+    done
+
+    log_success "${count} 個の GEMINI コマンドをコピーしました"
     return 0
 }
 
@@ -237,6 +292,114 @@ copy_settings() {
     mkdir -p "$(dirname "${dst}")"
     cp "${src}" "${dst}"
     log_success "settings.local.json.example をコピーしました: ${dst}"
+    return 0
+}
+
+# =============================================================================
+# GEMINI テンプレートのコピー
+# =============================================================================
+
+# Gemini CLI テンプレートの相対パスを解決
+#
+# 引数:
+#   $1: ユーザー入力のファイル名または相対パス
+#
+# 戻り値:
+#   解決された相対パス（.gemini/ からの相対パス）
+#
+resolve_gemini_relative_path() {
+    local input_path="$1"
+
+    if [[ -z "${input_path}" ]]; then
+        echo ""
+        return 0
+    fi
+
+    if [[ "${input_path}" == */* ]]; then
+        echo "${input_path}"
+        return 0
+    fi
+
+    local top_level="${TEMPLATES_DIR}/.gemini/${input_path}"
+    if [[ -e "${top_level}" ]]; then
+        echo "${input_path}"
+        return 0
+    fi
+
+    local commands_path="${TEMPLATES_DIR}/.gemini/commands/${input_path}"
+    if [[ -e "${commands_path}" ]]; then
+        echo "commands/${input_path}"
+        return 0
+    fi
+
+    echo "${input_path}"
+    return 0
+}
+
+# Gemini CLI テンプレートをテンプレートローカルにコピー
+#
+# 引数:
+#   $1: .gemini/ からの相対パス
+#
+copy_gemini_item() {
+    local relative_path
+    relative_path="$(resolve_gemini_relative_path "$1")"
+
+    if [[ -z "${relative_path}" ]]; then
+        log_error "コピー対象が指定されていません"
+        return 1
+    fi
+
+    local src="${TEMPLATES_DIR}/.gemini/${relative_path}"
+    local dst="${TEMPLATES_LOCAL_DIR}/.gemini/${relative_path}"
+
+    if [[ -d "${src}" ]]; then
+        if copy_directory_safe "${src}" "${dst}"; then
+            log_success "${relative_path}/ をコピーしました: ${dst}"
+            return 0
+        else
+            log_error "ディレクトリが見つかりません: ${src}"
+            return 1
+        fi
+    fi
+
+    if [[ -f "${src}" ]]; then
+        mkdir -p "$(dirname "${dst}")"
+        cp "${src}" "${dst}"
+        log_success "${relative_path} をコピーしました: ${dst}"
+        return 0
+    fi
+
+    log_error "テンプレートが見つかりません: ${src}"
+    return 1
+}
+
+# すべての Gemini CLI テンプレートをコピー
+#
+copy_all_gemini_items() {
+    log_info "すべての Gemini CLI テンプレートをコピー中..."
+
+    local src_root="${TEMPLATES_DIR}/.gemini"
+    if [[ ! -d "${src_root}" ]]; then
+        log_error "Gemini テンプレートディレクトリが見つかりません: ${src_root}"
+        return 1
+    fi
+
+    local count=0
+    shopt -s nullglob dotglob
+    for item in "${src_root}/"*; do
+        local name="$(basename "${item}")"
+        # commands ディレクトリは専用処理があるためスキップ
+        if [[ "${name}" == "commands" ]]; then
+            continue
+        fi
+        if copy_gemini_item "${name}"; then
+            count=$((count + 1))
+        fi
+    done
+    shopt -u nullglob dotglob
+
+    log_success "${count} 個の Gemini テンプレートをコピーしました"
     return 0
 }
 
@@ -365,6 +528,8 @@ copy_all() {
     copy_all_agents || ((failed++))
     copy_claude_md || ((failed++))
     copy_settings || ((failed++))
+    copy_all_gemini_items || ((failed++))
+    copy_all_gemini_commands || ((failed++))
     copy_all_codex_items || ((failed++))
 
     if [[ ${failed} -eq 0 ]]; then
@@ -387,6 +552,8 @@ show_next_steps() {
     log_info "次のステップ:"
     echo "  1. ローカルテンプレートを編集:"
     echo "     vim templates-local/.claude/commands/<ファイル名>"
+    echo "     vim templates-local/.gemini/GEMINI.md"
+    echo "     vim templates-local/.gemini/commands/<ファイル名>"
     echo ""
     echo "  2. 設定を再生成:"
     echo "     bash scripts/setup/reinit-ai-configs.sh"
@@ -417,6 +584,20 @@ main() {
                 copy_command "${file_name}"
             else
                 copy_all_commands
+            fi
+            ;;
+        gemini-command)
+            if [[ -n "${file_name}" ]]; then
+                copy_gemini_command "${file_name}"
+            else
+                copy_all_gemini_commands
+            fi
+            ;;
+        gemini)
+            if [[ -n "${file_name}" ]]; then
+                copy_gemini_item "${file_name}"
+            else
+                copy_all_gemini_items
             fi
             ;;
         agent)

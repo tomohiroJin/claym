@@ -63,7 +63,7 @@ AI拡張設定スクリプト群（`init-ai-configs.sh`、`reinit-ai-configs.sh`
 - [x] **手順3**: `ls .gemini`
 - [x] **期待結果**: `.claude/settings.local.json`, `.claude/CLAUDE.md`, `.claude/commands/*.md`, `.claude/agents/*.yaml` が存在
 - [x] **期待結果**: `AGENTS.md` がリポジトリ直下と `~/.codex/` に存在
-- [x] **期待結果**: `.gemini/settings.json`, `.gemini/GEMINI.md` が存在
+- [x] **期待結果**: `.gemini/settings.json`, `.gemini/GEMINI.md`, `.gemini/commands/*.md` が存在
 
 ### INIT-003: `.gitignore` 更新の冪等性
 - [x] **前提条件**: INIT-001 実施直後
@@ -79,7 +79,14 @@ AI拡張設定スクリプト群（`init-ai-configs.sh`、`reinit-ai-configs.sh`
 - [x] **手順3**: `cat templates-local/.claude/commands/review.md`
 - [x] **期待結果**: `templates-local/.claude/commands/review.md` が作成され、テンプレート内容がコピーされる
 
-### COPY-002: 一括コピー動作
+### COPY-002: GEMINI コマンドコピー
+- [x] **前提条件**: INIT-001 実施後
+- [x] **手順1**: `rm -rf templates-local`
+- [x] **手順2**: `bash scripts/setup/copy-template-to-local.sh gemini-command yfinance.md`
+- [x] **手順3**: `cat templates-local/.gemini/commands/yfinance.md`
+- [x] **期待結果**: `templates-local/.gemini/commands/yfinance.md` が作成され、テンプレート内容がコピーされる
+
+### COPY-003: 一括コピー動作
 - [x] **前提条件**: COPY-001 実施後
 - [x] **手順1**: `bash scripts/setup/copy-template-to-local.sh all`
 - [x] **期待結果**: `templates-local/.claude/commands/` に全コマンドが揃う
@@ -127,7 +134,8 @@ AI拡張設定スクリプト群（`init-ai-configs.sh`、`reinit-ai-configs.sh`
 | INIT-002 | 2025-10-25 | 神 | PASS | 全設定ファイルの生成を確認 |
 | INIT-003 | 2025-10-25 | 神 | PASS | .gitignore更新の冪等性を確認 |
 | COPY-001 | 2025-10-25 | 神 | PASS | 単一コマンドコピー動作確認 |
-| COPY-002 | 2025-10-25 | 神 | PASS | 一括コピー動作確認 |
+| COPY-002 | 2025-10-25 | 神 | PASS | GEMINI コマンドコピー動作確認 |
+| COPY-003 | 2025-10-25 | 神 | PASS | 一括コピー動作確認 |
 | REINIT-001 | 2025-10-25 | 神 | PASS | バックアップ生成とマニフェスト記録を確認 |
 | REINIT-002 | 2025-10-25 | 神 | PASS | 再初期化フロー動作確認 |
 | REINIT-003 | 2025-10-25 | 神 | PASS | バックアップからの復元動作確認 |

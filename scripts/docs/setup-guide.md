@@ -63,6 +63,7 @@ bash scripts/setup/reinit-ai-configs.sh -y
 - `AGENTS.md` - Codex CLI エージェント指示（プロジェクトルート）
 - `.gemini/settings.json` - Gemini CLI 設定
 - `.gemini/GEMINI.md` - Gemini CLI カスタム指示
+- `.gemini/commands/*.md` - Gemini CLI カスタムコマンド
 
 ### バックアップの保存場所
 
@@ -77,7 +78,9 @@ bash scripts/setup/reinit-ai-configs.sh -y
 │   │   └── config.toml
 │   ├── .gemini/
 │   │   ├── settings.json
-│   │   └── GEMINI.md
+│   │   ├── GEMINI.md
+│   │   └── commands/
+│   │       └── yfinance.md
 │   └── AGENTS.md
 ├── 20251019_163000/
 └── 20251019_173000/
@@ -239,6 +242,7 @@ language = "ja"
 **設定ファイル**:
 - `.gemini/settings.json` - MCP サーバー設定
 - `.gemini/GEMINI.md` - カスタム指示
+- `.gemini/commands/*.md` - カスタムコマンド
 
 **主な設定項目**:
 ```json
@@ -309,6 +313,7 @@ cat ~/.config/claym-backups/20251019_153000/backup-manifest.txt
 # AGENTS.md
 # .gemini/settings.json
 # .gemini/GEMINI.md
+# .gemini/commands/yfinance.md
 ```
 
 ## 🐛 トラブルシューティング

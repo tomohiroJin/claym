@@ -242,6 +242,7 @@ bash scripts/setup/init-ai-configs.sh
 | Codex CLI | `AGENTS.md` | プロジェクトルート | エージェント指示（日本語設定含む、**共有**） |
 | GEMINI | `settings.json` | `.gemini/` | UI設定・MCP登録 |
 | GEMINI | `GEMINI.md` | `.gemini/` | カスタム指示（日本語設定含む） |
+| GEMINI | `commands/*.md` | `.gemini/` | カスタムコマンド（slash コマンド） |
 
 **注意**: これらの設定ファイルはローカル環境専用です。`.gitignore` で除外されているため、個人の API キーや権限設定が誤ってコミットされる心配はありません。
 
@@ -254,6 +255,7 @@ bash scripts/setup/init-ai-configs.sh
 - Codex CLI の個人設定: `~/.codex/AGENTS.md` を作成（オプション）
 - GEMINI の設定調整: `.gemini/settings.json` を編集
 - GEMINI の日本語対応: `.gemini/GEMINI.md` を編集
+- GEMINI のカスタムコマンド: `.gemini/commands/` を編集（共有）
 - GEMINI のコンテキスト確認: `/memory show` コマンドを実行
 
 **テンプレートの確認**:
