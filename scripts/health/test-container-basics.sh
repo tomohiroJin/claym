@@ -169,8 +169,8 @@ test_git_delta_navigate() {
 }
 
 test_git_safe_directory() {
-    # safe.directory が設定されていることを確認
-    git config --global --get-all safe.directory >/dev/null 2>&1
+    # safe.directory が設定されていることを確認（global または system レベル）
+    git config --get-all safe.directory >/dev/null 2>&1
 }
 
 # Python MCP環境
