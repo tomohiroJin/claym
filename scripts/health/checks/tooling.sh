@@ -36,7 +36,7 @@ check_cli_versions() {
       outputs+=("$binary: <missing>")
       continue
     fi
-    if ! out=$(env LC_ALL=C $cmd 2>/dev/null | head -n1); then
+    if ! out=$(timeout 10 env LC_ALL=C $cmd 2>/dev/null < /dev/null | head -n1); then
       outputs+=("$binary: <unavailable>")
     else
       outputs+=("$binary: $out")
