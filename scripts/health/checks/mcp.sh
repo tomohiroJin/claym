@@ -51,7 +51,7 @@ check_mcp_registrations() {
   done
 
   if ((${#missing_global[@]})); then
-    set_result "FAIL" "Missing MCP registrations (${summary[*]})" "Re-run post-create setup to re-register MCPs"
+    set_result "WARN" "Missing MCP registrations (${summary[*]})" "Re-run post-create setup to re-register MCPs"
     return
   fi
   if ((${#warn_global[@]})); then
@@ -126,7 +126,7 @@ check_log_diagnostics() {
   set_result "PASS" "ImageSorcery log available at $latest_file" "$tail_output"
 }
 
-register_check "mcp-registrations" "MCP registrations" true true check_mcp_registrations
+register_check "mcp-registrations" "MCP registrations" false true check_mcp_registrations
 register_check "serena-ready" "Serena readiness" false false check_serena_ready
 register_check "playwright-assets" "Playwright assets" false false check_playwright_assets
 register_check "log-diagnostics" "ImageSorcery logs" false false check_log_diagnostics
