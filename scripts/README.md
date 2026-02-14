@@ -107,6 +107,19 @@ bash scripts/setup/copy-template-to-local.sh command review.md
 # すべてのコマンドをコピー
 bash scripts/setup/copy-template-to-local.sh command
 
+# 単一の GEMINI コマンドをコピー
+bash scripts/setup/copy-template-to-local.sh gemini-command yfinance.md
+
+# すべての GEMINI コマンドをコピー
+bash scripts/setup/copy-template-to-local.sh gemini-command
+
+# GEMINI 設定テンプレートをコピー (.gemini/ 配下)
+bash scripts/setup/copy-template-to-local.sh gemini
+
+# 特定の GEMINI テンプレートをコピー
+bash scripts/setup/copy-template-to-local.sh gemini GEMINI.md
+bash scripts/setup/copy-template-to-local.sh gemini settings.json.example
+
 # 単一のエージェントファイルをコピー
 bash scripts/setup/copy-template-to-local.sh agent code-reviewer.yaml
 
