@@ -57,7 +57,7 @@ check_modern_cli_versions() {
 
 check_shell_aliases() {
   # zsh エイリアスの存在確認（実際のシェル環境で評価されるため、ここでは設定ファイルの存在のみ確認）
-  local zshrc="/root/.zshrc"
+  local zshrc="/home/vscode/.zshrc"
   if [[ ! -f "$zshrc" ]]; then
     set_result "WARN" ".zshrc not found" "Rebuild container to configure shell aliases"
     return

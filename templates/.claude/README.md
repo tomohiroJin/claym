@@ -34,7 +34,7 @@ Claude Code の操作権限を制御します。
 
 **ファイル読み取り**:
 - `Read(//workspaces/**)` - プロジェクトディレクトリ配下の全ファイル
-- `Read(//root/.codex/**)` - Claude Code 設定ファイル
+- `Read(//home/vscode/.codex/**)` - Claude Code 設定ファイル
 
 **基本的なシェルコマンド**（情報表示系）:
 - `echo`, `ls`, `cat`, `tail`, `head`, `grep`, `find`
@@ -132,7 +132,7 @@ bash scripts/setup/init-ai-configs.sh
   "permissions": {
     "allow": [
       "Read(//workspaces/**)",
-      "Read(//root/.codex/**)",
+      "Read(//home/vscode/.codex/**)",
       "Bash(npm:*)"  // ← npm コマンドを自動承認
     ]
   }
