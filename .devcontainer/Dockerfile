@@ -141,6 +141,13 @@ RUN set -eux; \
     openssl; \
     rm -rf /var/lib/apt/lists/*
 
+# 非 root ユーザー（vscode）を作成し、パスワードなし sudo を許可します。
+# Claude Code YOLO モードは root 実行を拒否するため、非 root ユーザーが必要です。
+RUN groupadd --gid 1000 vscode \
+    && useradd --uid 1000 --gid 1000 -m -s /bin/zsh vscode \
+    && echo "vscode ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/vscode \
+    && chmod 0440 /etc/sudoers.d/vscode
+
 # ロケールとタイムゾーンの設定。
 # VS Code は既定で en_US.UTF-8 を使いますが、必要に応じて ja_JP.UTF-8 などに変更できます。
 RUN sed -i 's/^# *en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
@@ -192,7 +199,10 @@ RUN npm install -g \
 # MCP の初回利用時の待ち時間をなくします。--with-deps フラグは、
 # Playwright 実行に必要な apt パッケージが未導入の場合に自動で導入します
 # （既に存在するものは暗黙的にスキップされます）。
-RUN npx playwright install chromium --with-deps
+# ブラウザを共有パスにインストールし、非 root ユーザーからもアクセス可能にします。
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers
+RUN npx playwright install chromium --with-deps \
+    && chmod -R 755 /opt/playwright-browsers
 
 # ----------------------------------------------------------------------------
 # Python 環境と MCP サーバ
@@ -249,9 +259,10 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | \
 # 仮想環境にインストールされます。更新したい場合はリポジトリを pull して
 # MCP の再登録を行ってください。
 RUN git clone https://github.com/oraios/serena.git /opt/serena
+RUN chown -R vscode:vscode /opt/serena
 
 # uv などユーザー領域にインストールされるツールのために ~/.local/bin を PATH に追加。
-ENV PATH="/root/.local/bin:$PATH"
+ENV PATH="/home/vscode/.local/bin:$PATH"
 
 # ----------------------------------------------------------------------------
 # モダン CLI ツールのインストール
@@ -281,30 +292,31 @@ RUN set -eux; \
 # ----------------------------------------------------------------------------
 # Oh My Zsh とユーザー設定
 #
-# root ユーザーに Oh My Zsh を導入します。VS Code がコマンドを実行できるよう、
-# Oh My Zsh のインストールと root ユーザー用の設定を行います。
+# vscode ユーザーに Oh My Zsh を導入します。VS Code がコマンドを実行できるよう、
+# Oh My Zsh のインストールと vscode ユーザー用の設定を行います。
 # モダン CLI ツールのエイリアスと zoxide の初期化を追加します。
 # Debian の実体名に合わせて bat / fd のエイリアス（batcat / fdfind）も設定します。
 
-RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended \
-    && echo 'alias bat="batcat"' >> /root/.zshrc \
-    && echo 'alias fd="fdfind"' >> /root/.zshrc \
-    && echo 'alias ll="eza -la --git"' >> /root/.zshrc \
-    && echo 'alias ls="eza"' >> /root/.zshrc \
-    && echo 'alias cat="batcat"' >> /root/.zshrc \
-    && echo 'alias find="fdfind"' >> /root/.zshrc \
-    && echo 'alias top="btop"' >> /root/.zshrc \
-    && echo 'eval "$(zoxide init zsh)"' >> /root/.zshrc \
-    && echo 'alias cd="z"' >> /root/.zshrc
+RUN su vscode -c 'sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended' \
+    && echo 'alias bat="batcat"' >> /home/vscode/.zshrc \
+    && echo 'alias fd="fdfind"' >> /home/vscode/.zshrc \
+    && echo 'alias ll="eza -la --git"' >> /home/vscode/.zshrc \
+    && echo 'alias ls="eza"' >> /home/vscode/.zshrc \
+    && echo 'alias cat="batcat"' >> /home/vscode/.zshrc \
+    && echo 'alias find="fdfind"' >> /home/vscode/.zshrc \
+    && echo 'alias top="btop"' >> /home/vscode/.zshrc \
+    && echo 'eval "$(zoxide init zsh)"' >> /home/vscode/.zshrc \
+    && echo 'alias cd="z"' >> /home/vscode/.zshrc \
+    && chown vscode:vscode /home/vscode/.zshrc
 
 # Git delta の設定
 # git diff や git log の出力を delta で見やすく表示します。
-RUN git config --global core.pager "delta" \
-    && git config --global interactive.diffFilter "delta --color-only" \
-    && git config --global delta.navigate true \
-    && git config --global delta.light false \
-    && git config --global merge.conflictstyle diff3 \
-    && git config --global diff.colorMoved default
+RUN su vscode -c 'git config --global core.pager "delta"' \
+    && su vscode -c 'git config --global interactive.diffFilter "delta --color-only"' \
+    && su vscode -c 'git config --global delta.navigate true' \
+    && su vscode -c 'git config --global delta.light false' \
+    && su vscode -c 'git config --global merge.conflictstyle diff3' \
+    && su vscode -c 'git config --global diff.colorMoved default'
 
 # ----------------------------------------------------------------------------
 # Bash テストフレームワーク (bats-core) のインストール
@@ -333,9 +345,12 @@ RUN set -eux; \
 COPY .devcontainer/post-create-setup.sh /usr/local/bin/post-create-setup.sh
 RUN chmod +x /usr/local/bin/post-create-setup.sh
 
+# ワークスペースディレクトリの所有権を vscode ユーザーに設定します。
+RUN chown -R vscode:vscode /workspace
+
 # 対話シェルの既定ユーザーを非 root（vscode）にします。
 # VS Code Dev Containers は remoteUser が設定されていればそれを優先しますが、
 # この USER 指定はグローバルに適用されるため、ここでは明示的に設定します。
-USER root
+USER vscode
 
 CMD ["/bin/zsh"]

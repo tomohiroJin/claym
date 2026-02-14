@@ -144,11 +144,11 @@ test_fd_installed() {
 
 # シェル環境
 test_zshrc_exists() {
-    [[ -f /root/.zshrc ]]
+    [[ -f /home/vscode/.zshrc ]]
 }
 
 test_zsh_aliases_configured() {
-    local zshrc="/root/.zshrc"
+    local zshrc="/home/vscode/.zshrc"
     [[ -f "$zshrc" ]] && \
     grep -q "alias ll=" "$zshrc" && \
     grep -q "alias ls=" "$zshrc" && \
@@ -169,8 +169,8 @@ test_git_delta_navigate() {
 }
 
 test_git_safe_directory() {
-    # safe.directory が設定されていることを確認
-    git config --global --get-all safe.directory >/dev/null 2>&1
+    # safe.directory が設定されていることを確認（global または system レベル）
+    git config --get-all safe.directory >/dev/null 2>&1
 }
 
 # Python MCP環境

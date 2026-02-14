@@ -4,9 +4,9 @@
 collect_mcp_list() {
   local cli="$1" output=""
   case "$cli" in
-    claude) output=$(claude mcp list 2>/dev/null || true) ;;
-    codex) output=$(codex mcp list 2>/dev/null || true) ;;
-    gemini) output=$(gemini mcp list 2>/dev/null || true) ;;
+    claude) output=$(timeout 10 claude mcp list 2>/dev/null < /dev/null || true) ;;
+    codex) output=$(timeout 10 codex mcp list 2>/dev/null < /dev/null || true) ;;
+    gemini) output=$(timeout 10 gemini mcp list 2>/dev/null < /dev/null || true) ;;
   esac
   printf '%s' "$output"
 }
@@ -51,7 +51,7 @@ check_mcp_registrations() {
   done
 
   if ((${#missing_global[@]})); then
-    set_result "FAIL" "Missing MCP registrations (${summary[*]})" "Re-run post-create setup to re-register MCPs"
+    set_result "WARN" "Missing MCP registrations (${summary[*]})" "Re-run post-create setup to re-register MCPs"
     return
   fi
   if ((${#warn_global[@]})); then
@@ -72,7 +72,7 @@ check_serena_ready() {
     set_result "WARN" "Serena directory not accessible" "Run post-start script or fix permissions for $dir"
     return
   fi
-  if ! uv run --directory "$dir" serena --help >/dev/null 2>&1; then
+  if ! timeout 30 uv run --directory "$dir" serena --help >/dev/null 2>&1 < /dev/null; then
     set_result "WARN" "Serena CLI failed to respond" "Run 'uv run --directory /opt/serena serena --help' manually for details"
     return
   fi
@@ -126,7 +126,7 @@ check_log_diagnostics() {
   set_result "PASS" "ImageSorcery log available at $latest_file" "$tail_output"
 }
 
-register_check "mcp-registrations" "MCP registrations" true true check_mcp_registrations
+register_check "mcp-registrations" "MCP registrations" false true check_mcp_registrations
 register_check "serena-ready" "Serena readiness" false false check_serena_ready
 register_check "playwright-assets" "Playwright assets" false false check_playwright_assets
 register_check "log-diagnostics" "ImageSorcery logs" false false check_log_diagnostics

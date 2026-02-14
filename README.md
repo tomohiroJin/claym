@@ -16,7 +16,7 @@ Claym プロジェクトでは、AI エージェント（Claude Code / Codex CLI
 ## 1. コンテナ概要
 
 - **ベース OS**: Debian 12 (bookworm)（作業ディレクトリは `/workspaces/claym`）
-- **既定ユーザー**: `root`（sudo 権限あり） / シェル: Oh My Zsh
+- **既定ユーザー**: `vscode`（UID 1000、パスワードなし sudo 権限あり） / シェル: Oh My Zsh
 - **目的**: AI 向け CLI と MCP サーバーを事前導入し、チャット開始までの初期設定を数分で完了させる
 - **利用想定**: VS Code Dev Containers 拡張での再現性ある開発、エージェント動作検証、MCP ベースの自動化
 
@@ -268,7 +268,7 @@ bash scripts/setup/init-ai-configs.sh
 ```json
 {
   "mounts": [
-    "source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind,consistency=cached"
+    "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached"
   ],
   "remoteEnv": {
     "MY_SECRET_KEY": "${localEnv:MY_SECRET_KEY}"
