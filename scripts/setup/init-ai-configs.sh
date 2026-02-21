@@ -89,6 +89,10 @@ setup_claude_code() {
 
     # agents ディレクトリのセットアップ
     setup_claude_agents "${agents_dir}"
+
+    # rules ディレクトリのセットアップ
+    local rules_dir="${claude_dir}/rules"
+    setup_claude_rules "${rules_dir}"
 }
 
 # Claude Code のコマンドディレクトリをセットアップ
@@ -140,6 +144,30 @@ setup_claude_agents() {
         fi
     else
         log_info "Claude Code サブエージェントは既に存在します（スキップ）"
+    fi
+}
+
+# Claude Code のルールディレクトリをセットアップ
+#
+# 引数:
+#   $1: ルールディレクトリパス
+#
+setup_claude_rules() {
+    local rules_dir="$1"
+
+    if [[ ! -d "${rules_dir}" ]]; then
+        merge_templates ".claude/rules"
+
+        if [[ -d "${rules_dir}" ]]; then
+            local rule_count
+            rule_count=$(count_files_in_directory "${rules_dir}" "*.md")
+            log_success "Claude Code ルールを作成しました: ${rules_dir}"
+            log_info "利用可能なルール: ${rule_count} 個"
+        else
+            log_debug "Claude Code ルールのテンプレートが見つかりません（スキップ）"
+        fi
+    else
+        log_info "Claude Code ルールは既に存在します（スキップ）"
     fi
 }
 
