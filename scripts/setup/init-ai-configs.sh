@@ -144,6 +144,53 @@ setup_claude_agents() {
 }
 
 # =============================================================================
+# Claude Code グローバル設定（ユーザーレベル）
+# =============================================================================
+
+# Claude Code のユーザーレベル設定をセットアップ
+# コンテナ内のどのディレクトリからでも設定が適用されるようにする
+#
+setup_claude_code_global() {
+    log_info "Claude Code グローバル設定をセットアップ中..."
+
+    local claude_global_dir="${HOME}/.claude"
+    local settings_file="${claude_global_dir}/settings.json"
+    local custom_instructions="${claude_global_dir}/CLAUDE.md"
+
+    # ディレクトリ作成
+    mkdir -p "${claude_global_dir}"
+
+    # settings.json: mcpServers が未定義の場合のみテンプレートで置換
+    if [[ -f "${settings_file}" ]]; then
+        if grep -q '"mcpServers"' "${settings_file}" 2>/dev/null; then
+            log_info "Claude Code グローバル設定は既に mcpServers を含んでいます（スキップ）"
+        else
+            # mcpServers が未定義なのでテンプレートで置換
+            if [[ -f "${TEMPLATES_DIR}/.claude-global/settings.json.example" ]]; then
+                cp "${TEMPLATES_DIR}/.claude-global/settings.json.example" "${settings_file}"
+                log_success "Claude Code グローバル設定ファイルを更新しました: ${settings_file}"
+            else
+                log_warn "Claude Code グローバルテンプレートが見つかりません"
+            fi
+        fi
+    else
+        # settings.json が存在しない場合はテンプレートからコピー
+        if [[ -f "${TEMPLATES_DIR}/.claude-global/settings.json.example" ]]; then
+            cp "${TEMPLATES_DIR}/.claude-global/settings.json.example" "${settings_file}"
+            log_success "Claude Code グローバル設定ファイルを作成しました: ${settings_file}"
+        else
+            log_warn "Claude Code グローバルテンプレートが見つかりません"
+        fi
+    fi
+
+    # CLAUDE.md をコピー
+    copy_file_if_not_exists \
+        "${TEMPLATES_DIR}/.claude-global/CLAUDE.md" \
+        "${custom_instructions}" \
+        "Claude Code グローバルカスタム指示"
+}
+
+# =============================================================================
 # Codex CLI 設定
 # =============================================================================
 
@@ -374,6 +421,53 @@ setup_gemini_settings() {
 }
 
 # =============================================================================
+# GEMINI グローバル設定（ユーザーレベル）
+# =============================================================================
+
+# GEMINI のユーザーレベル設定をセットアップ
+# コンテナ内のどのディレクトリからでも設定が適用されるようにする
+#
+setup_gemini_global() {
+    log_info "GEMINI グローバル設定をセットアップ中..."
+
+    local gemini_global_dir="${HOME}/.gemini"
+    local settings_file="${gemini_global_dir}/settings.json"
+    local gemini_md="${gemini_global_dir}/GEMINI.md"
+
+    # ディレクトリ作成
+    mkdir -p "${gemini_global_dir}"
+
+    # settings.json: mcpServers が未定義の場合のみテンプレートでコピー
+    if [[ -f "${settings_file}" ]]; then
+        if grep -q '"mcpServers"' "${settings_file}" 2>/dev/null; then
+            log_info "GEMINI グローバル設定は既に mcpServers を含んでいます（スキップ）"
+        else
+            # mcpServers が未定義なのでテンプレートでコピー
+            if [[ -f "${TEMPLATES_DIR}/.gemini-global/settings.json.example" ]]; then
+                cp "${TEMPLATES_DIR}/.gemini-global/settings.json.example" "${settings_file}"
+                log_success "GEMINI グローバル設定ファイルを更新しました: ${settings_file}"
+            else
+                log_warn "GEMINI グローバルテンプレートが見つかりません"
+            fi
+        fi
+    else
+        # settings.json が存在しない場合はテンプレートからコピー
+        if [[ -f "${TEMPLATES_DIR}/.gemini-global/settings.json.example" ]]; then
+            cp "${TEMPLATES_DIR}/.gemini-global/settings.json.example" "${settings_file}"
+            log_success "GEMINI グローバル設定ファイルを作成しました: ${settings_file}"
+        else
+            log_warn "GEMINI グローバルテンプレートが見つかりません"
+        fi
+    fi
+
+    # GEMINI.md をコピー
+    copy_file_if_not_exists \
+        "${TEMPLATES_DIR}/.gemini-global/GEMINI.md" \
+        "${gemini_md}" \
+        "GEMINI グローバルカスタム指示"
+}
+
+# =============================================================================
 # プロンプトテンプレート設定
 # =============================================================================
 
@@ -472,10 +566,16 @@ main() {
     setup_claude_code
     echo ""
 
+    setup_claude_code_global
+    echo ""
+
     setup_codex_cli
     echo ""
 
     setup_gemini
+    echo ""
+
+    setup_gemini_global
     echo ""
 
     setup_prompt_templates

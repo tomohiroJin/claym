@@ -76,6 +76,8 @@ AI拡張機能 設定再生成スクリプト
 バックアップ対象:
   - .claude/settings.local.json
   - .claude/CLAUDE.md
+  - ~/.claude/settings.json（グローバル）
+  - ~/.claude/CLAUDE.md（グローバル）
   - ~/.codex/config.toml
   - .codex/prompts/
   - templates-local/
@@ -85,6 +87,8 @@ AI拡張機能 設定再生成スクリプト
   - .gemini/settings.json
   - .gemini/GEMINI.md
   - .gemini/commands/
+  - ~/.gemini/settings.json（グローバル）
+  - ~/.gemini/GEMINI.md（グローバル）
 
 使用例:
   # 対話モードで再生成
@@ -161,11 +165,15 @@ create_backup() {
     local -a backup_targets=(
         "${PROJECT_ROOT}/.claude/settings.local.json"
         "${PROJECT_ROOT}/.claude/CLAUDE.md"
+        "${HOME}/.claude/settings.json"
+        "${HOME}/.claude/CLAUDE.md"
         "${HOME}/.codex/config.toml"
         "${PROJECT_ROOT}/AGENTS.md"
         "${HOME}/.codex/AGENTS.md"
         "${PROJECT_ROOT}/.gemini/settings.json"
         "${PROJECT_ROOT}/.gemini/GEMINI.md"
+        "${HOME}/.gemini/settings.json"
+        "${HOME}/.gemini/GEMINI.md"
     )
 
     # バックアップ対象のディレクトリリスト
@@ -280,8 +288,8 @@ restore_backup() {
             local backup_dir="${restore_path}/${rel_path_clean}"
             local target_dir=""
 
-            # パスの復元先を決定
-            if [[ "${rel_path_clean}" == .codex/* ]]; then
+            # パスの復元先を決定（ホームディレクトリ配下のツール設定）
+            if [[ "${rel_path_clean}" == .codex/* || "${rel_path_clean}" == .claude/* || "${rel_path_clean}" == .gemini/* ]]; then
                 target_dir="${HOME}/${rel_path_clean}"
             else
                 target_dir="${PROJECT_ROOT}/${rel_path_clean}"
@@ -307,8 +315,8 @@ restore_backup() {
             local backup_file="${restore_path}/${rel_path}"
             local target_file=""
 
-            # パスの復元先を決定
-            if [[ "${rel_path}" == .codex/* ]]; then
+            # パスの復元先を決定（ホームディレクトリ配下のツール設定）
+            if [[ "${rel_path}" == .codex/* || "${rel_path}" == .claude/* || "${rel_path}" == .gemini/* ]]; then
                 target_file="${HOME}/${rel_path}"
             else
                 target_file="${PROJECT_ROOT}/${rel_path}"
@@ -351,11 +359,15 @@ regenerate_configs() {
     local -a config_files=(
         "${PROJECT_ROOT}/.claude/settings.local.json"
         "${PROJECT_ROOT}/.claude/CLAUDE.md"
+        "${HOME}/.claude/CLAUDE.md"
+        "${HOME}/.claude/settings.json"
         "${HOME}/.codex/config.toml"
         "${PROJECT_ROOT}/AGENTS.md"
         "${HOME}/.codex/AGENTS.md"
         "${PROJECT_ROOT}/.gemini/settings.json"
         "${PROJECT_ROOT}/.gemini/GEMINI.md"
+        "${HOME}/.gemini/settings.json"
+        "${HOME}/.gemini/GEMINI.md"
     )
 
     # 既存ディレクトリを削除
