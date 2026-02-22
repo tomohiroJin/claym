@@ -78,6 +78,8 @@ AI拡張機能 設定再生成スクリプト
   - .claude/CLAUDE.md
   - ~/.claude/settings.json（グローバル）
   - ~/.claude/CLAUDE.md（グローバル）
+  - .claude/skills/（Agent Skills）
+  - .agents/skills/（Agent Skills: Codex/Gemini 共用）
   - ~/.codex/config.toml
   - .codex/prompts/
   - templates-local/
@@ -180,6 +182,8 @@ create_backup() {
     local -a backup_dir_targets=(
         "${PROJECT_ROOT}/.claude/commands"
         "${PROJECT_ROOT}/.claude/agents"
+        "${PROJECT_ROOT}/.claude/skills"
+        "${PROJECT_ROOT}/.agents/skills"
         "${PROJECT_ROOT}/.codex/prompts"
         "${PROJECT_ROOT}/.gemini/commands"
         "${PROJECT_ROOT}/templates-local"
@@ -374,6 +378,8 @@ regenerate_configs() {
     local -a config_dirs=(
         "${PROJECT_ROOT}/.claude/commands"
         "${PROJECT_ROOT}/.claude/agents"
+        "${PROJECT_ROOT}/.claude/skills"
+        "${PROJECT_ROOT}/.agents/skills"
         "${PROJECT_ROOT}/.codex/prompts"
         "${PROJECT_ROOT}/.gemini/commands"
         "${HOME}/.codex/prompts"

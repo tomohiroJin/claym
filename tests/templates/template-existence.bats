@@ -7,7 +7,7 @@
 # feature/brush_up_overall ブランチで追加された全テンプレートファイルの
 # 存在を確認するテスト。
 #
-# テスト数: 13
+# テスト数: 15
 
 # ==============================================================================
 # テストヘルパーのロード
@@ -69,6 +69,25 @@ load 'template_test_helper'
 @test "Gemini コマンド5個が存在する" {
     local commands=("plan" "build-fix" "review" "refactor" "test")
     check_files_exist "${GEMINI_COMMANDS_DIR}" ".md" "${commands[@]}"
+}
+
+# ==============================================================================
+# Agent Skills の存在確認
+# ==============================================================================
+
+@test "skills ディレクトリが存在する" {
+    assert_dir_exist "${SKILLS_DIR}"
+}
+
+@test "Agent Skills 10個が存在する" {
+    local skills=(
+        "tdd-workflow" "code-review" "security-review" "search-first"
+        "verification-loop" "api-design" "refactor-safely"
+        "debug-systematically" "documentation-first" "git-workflow"
+    )
+    for skill in "${skills[@]}"; do
+        assert_file_exist "${SKILLS_DIR}/${skill}/SKILL.md"
+    done
 }
 
 # ==============================================================================

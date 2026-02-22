@@ -7,7 +7,7 @@
 # feature/brush_up_overall ブランチで init-ai-configs.sh に追加された
 # 関数・呼び出しが正しく定義されているかを検証。
 #
-# テスト数: 8
+# テスト数: 11
 
 # ==============================================================================
 # テストヘルパーのロード
@@ -78,4 +78,20 @@ setup() {
     local call_count
     call_count=$(grep -c 'setup_claude_commands' "${INIT_SCRIPT}")
     [[ "$call_count" -ge 2 ]]
+}
+
+# ==============================================================================
+# setup_skills 関連
+# ==============================================================================
+
+@test "setup_skills() 関数が定義されている" {
+    grep -q '^setup_skills()' "${INIT_SCRIPT}"
+}
+
+@test "setup_skills が .claude/skills に対して呼び出されている" {
+    grep -q 'setup_skills.*\.claude/skills' "${INIT_SCRIPT}"
+}
+
+@test "setup_skills が .agents/skills に対して呼び出されている" {
+    grep -q 'setup_skills.*\.agents/skills' "${INIT_SCRIPT}"
 }

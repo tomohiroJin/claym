@@ -93,6 +93,10 @@ setup_claude_code() {
     # rules ディレクトリのセットアップ
     local rules_dir="${claude_dir}/rules"
     setup_claude_rules "${rules_dir}"
+
+    # skills ディレクトリのセットアップ
+    local skills_dir="${claude_dir}/skills"
+    setup_skills "${skills_dir}" ".claude/skills"
 }
 
 # Claude Code のコマンドディレクトリをセットアップ
@@ -168,6 +172,68 @@ setup_claude_rules() {
         fi
     else
         log_info "Claude Code ルールは既に存在します（スキップ）"
+    fi
+}
+
+# =============================================================================
+# Agent Skills 設定
+# =============================================================================
+
+# Agent Skills をセットアップ（共通テンプレートから各ツールのパスにコピー）
+#
+# 引数:
+#   $1: スキルディレクトリパス
+#   $2: ターゲットのサブパス（例: .claude/skills）
+#
+setup_skills() {
+    local skills_dir="$1"
+    local target_subpath="$2"
+    local skills_source="${TEMPLATES_DIR}/skills"
+    local skills_local="${TEMPLATES_LOCAL_DIR}/skills"
+
+    if [[ ! -d "${skills_source}" ]]; then
+        log_debug "Agent Skills テンプレートディレクトリが見つかりません（スキップ）"
+        return 0
+    fi
+
+    if [[ ! -d "${skills_dir}" ]]; then
+        mkdir -p "${skills_dir}"
+
+        # 公式テンプレートからスキルをコピー
+        local skill_count=0
+        for skill_path in "${skills_source}"/*/; do
+            local skill_name
+            skill_name="$(basename "${skill_path}")"
+            local skill_file="${skill_path}SKILL.md"
+
+            if [[ -f "${skill_file}" ]]; then
+                mkdir -p "${skills_dir}/${skill_name}"
+                cp "${skill_file}" "${skills_dir}/${skill_name}/SKILL.md"
+                skill_count=$((skill_count + 1))
+            fi
+        done
+
+        # ローカルテンプレートで上書き・追加
+        if [[ -d "${skills_local}" ]]; then
+            for skill_path in "${skills_local}"/*/; do
+                local skill_name
+                skill_name="$(basename "${skill_path}")"
+                local skill_file="${skill_path}SKILL.md"
+
+                if [[ -f "${skill_file}" ]]; then
+                    mkdir -p "${skills_dir}/${skill_name}"
+                    cp "${skill_file}" "${skills_dir}/${skill_name}/SKILL.md"
+                    log_debug "ローカルテンプレートを適用: ${skill_name}"
+                fi
+            done
+        fi
+
+        if [[ ${skill_count} -gt 0 ]]; then
+            log_success "Agent Skills を作成しました (${target_subpath}): ${skills_dir}"
+            log_info "利用可能なスキル: ${skill_count} 個"
+        fi
+    else
+        log_info "Agent Skills は既に存在します (${target_subpath})（スキップ）"
     fi
 }
 
@@ -604,6 +670,11 @@ main() {
     echo ""
 
     setup_gemini_global
+    echo ""
+
+    # .agents/skills のセットアップ（Codex CLI / Gemini CLI 共用）
+    local agents_skills_dir="${PROJECT_ROOT}/.agents/skills"
+    setup_skills "${agents_skills_dir}" ".agents/skills"
     echo ""
 
     setup_prompt_templates
