@@ -24,7 +24,7 @@ Claym プロジェクトでは、AI エージェント（Claude Code / Codex CLI
 
 ### 2.1 システムと言語環境
 
-- Node.js 20 系（npm は最新化済み）
+- Node.js 22 系（npm は最新化済み）
 - Python 3 系（pip / venv / dev ヘッダ）
 - uv（Python プロジェクトの高速ランタイム）
 - Git / Git LFS / curl / wget / jq など基本ツール
@@ -442,5 +442,5 @@ bash /workspaces/claym/scripts/setup/init-ai-configs.sh
 ---
 
 **バージョン**: v0.2.0+
-**最終更新**: 2025-10-19
-**ブランチ**: feature/vscode-extensions-defaults
+**最終更新**: 2026-02-22
+**ブランチ**: feature/brush_up_overall
