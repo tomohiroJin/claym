@@ -371,6 +371,38 @@ settings:
 
 **詳細**: サブエージェントの詳細については、[scripts/README.md](../scripts/README.md#claude-code-サブエージェント) を参照してください。
 
+## 🧪 テンプレート品質テスト
+
+テンプレートの品質を自動検証するテストスイートが `tests/templates/` に用意されています。
+
+### 実行方法
+
+```bash
+# テンプレート品質テストのみ実行（52テスト）
+bash scripts/test/run-setup-tests.sh templates
+
+# セットアップテストも含む全テスト実行（91テスト）
+bash scripts/test/run-setup-tests.sh all
+```
+
+### テスト内容
+
+| テストファイル | テスト数 | 検証内容 |
+|--------------|---------|---------|
+| `template-existence.bats` | 13 | ディレクトリ・ファイルの存在確認 |
+| `template-quality.bats` | 15 | 非空チェック・YAML フィールド・Markdown 構造・共通原則一貫性 |
+| `cross-tool-consistency.bats` | 8 | Claude/Codex/Gemini 間の共通コマンド・キーワード一貫性 |
+| `template-genericity.bats` | 8 | 技術スタック非依存の汎用性チェック |
+| `init-script-integration.bats` | 8 | init スクリプトの関数定義・呼び出し検証 |
+
+### テンプレート変更時の確認
+
+テンプレートファイルを追加・変更した場合は、必ずテストを実行して品質を確認してください。
+
+```bash
+bash scripts/test/run-setup-tests.sh templates
+```
+
 ## 🔧 MCP サーバー設定
 
 ### 推奨MCPサーバー
