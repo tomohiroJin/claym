@@ -209,14 +209,25 @@ RUN npx playwright install chromium --with-deps \
 #
 # 仮想環境（venv）を作成し、Python 製 MCP サーバを隔離して導入します。
 # --no-cache-dir でイメージサイズを削減し、ImageSorcery MCP 用の追加モデルも取得します。
+# - imagesorcery-mcp: fastmcp/pydantic 互換性のため >=0.11.0 を要求
+# - fastmcp<3: imagesorcery-mcp 0.11.4 が FastMCP(log_level=...) を使用しており、
+#   fastmcp 3.0 で廃止された引数のため TypeError で起動不可。上流修正まで 2.x に固定
+#   (markitdown-mcp, mcp-github は mcp SDK 内蔵の FastMCP を使用しており影響なし)
+# - CLIP: imagesorcery の post-install より前に明示的インストール（推奨対処）
+# - post-install: 失敗しても続行するフォールバック付き
 ENV VIRTUAL_ENV=/opt/mcp-venv
 RUN python3 -m venv "$VIRTUAL_ENV" \
     && "$VIRTUAL_ENV/bin/pip" install --no-cache-dir --upgrade pip \
     && "$VIRTUAL_ENV/bin/pip" install --no-cache-dir \
-    markitdown-mcp \
-    imagesorcery-mcp \
-    mcp-github
-RUN "$VIRTUAL_ENV/bin/imagesorcery-mcp" --post-install
+        markitdown-mcp \
+        "imagesorcery-mcp>=0.11.0" \
+        "fastmcp>=2.10.0,<3" \
+        mcp-github \
+    && "$VIRTUAL_ENV/bin/pip" install --no-cache-dir \
+        git+https://github.com/ultralytics/CLIP.git \
+    && ( "$VIRTUAL_ENV/bin/imagesorcery-mcp" --post-install \
+         || echo "WARNING: imagesorcery-mcp post-install failed, models may need to be downloaded at runtime" ) \
+    && chown -R vscode:vscode "$VIRTUAL_ENV/lib/python3.11/site-packages/imagesorcery_mcp/logs" 2>/dev/null || true
 ENV PATH="${VIRTUAL_ENV}/bin:$PATH"
 
 # ----------------------------------------------------------------------------
