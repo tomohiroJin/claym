@@ -165,11 +165,11 @@ ENV LANG=en_US.UTF-8 \
 # ----------------------------------------------------------------------------
 # Node.js のインストール
 #
-# NodeSource から Node.js 20 を導入します。
+# NodeSource から Node.js 22 を導入します。
 # このバージョンは Claude Code / Codex CLI / Gemini CLI の要件を満たします。
 # インストール後、警告回避のため npm を最新版へ更新します。
 
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get update \
     && apt-get install -y --no-install-recommends nodejs \
     && npm install -g npm@latest \
@@ -209,19 +209,25 @@ RUN npx playwright install chromium --with-deps \
 #
 # 仮想環境（venv）を作成し、Python 製 MCP サーバを隔離して導入します。
 # --no-cache-dir でイメージサイズを削減し、ImageSorcery MCP 用の追加モデルも取得します。
+# - imagesorcery-mcp: fastmcp/pydantic 互換性のため >=0.11.0 を要求
+# - fastmcp<3: imagesorcery-mcp 0.11.4 が FastMCP(log_level=...) を使用しており、
+#   fastmcp 3.0 で廃止された引数のため TypeError で起動不可。上流修正まで 2.x に固定
+#   (markitdown-mcp, mcp-github は mcp SDK 内蔵の FastMCP を使用しており影響なし)
+# - CLIP: imagesorcery の post-install より前に明示的インストール（推奨対処）
+# - post-install: 失敗しても続行するフォールバック付き
 ENV VIRTUAL_ENV=/opt/mcp-venv
 RUN python3 -m venv "$VIRTUAL_ENV" \
     && "$VIRTUAL_ENV/bin/pip" install --no-cache-dir --upgrade pip \
     && "$VIRTUAL_ENV/bin/pip" install --no-cache-dir \
-    markitdown-mcp \
-    imagesorcery-mcp \
-    mcp-github
-# fastmcp 2.3.4 では ServerSettings.dependencies に default と default_factory が
-# 同時定義されており、pydantic>=2.11 では読み込み時にエラーになります。
-# 上流で修正されるまでの暫定措置として、インストール済みモジュールへパッチを適用します。
-COPY .devcontainer/scripts/patch-fastmcp.py /tmp/patch-fastmcp.py
-RUN "$VIRTUAL_ENV/bin/python" /tmp/patch-fastmcp.py && rm /tmp/patch-fastmcp.py
-RUN "$VIRTUAL_ENV/bin/imagesorcery-mcp" --post-install
+        markitdown-mcp \
+        "imagesorcery-mcp>=0.11.0" \
+        "fastmcp>=2.10.0,<3" \
+        mcp-github \
+    && "$VIRTUAL_ENV/bin/pip" install --no-cache-dir \
+        git+https://github.com/ultralytics/CLIP.git \
+    && ( "$VIRTUAL_ENV/bin/imagesorcery-mcp" --post-install \
+         || echo "WARNING: imagesorcery-mcp post-install failed, models may need to be downloaded at runtime" ) \
+    && chown -R vscode:vscode "$VIRTUAL_ENV/lib/python3.11/site-packages/imagesorcery_mcp/logs" 2>/dev/null || true
 ENV PATH="${VIRTUAL_ENV}/bin:$PATH"
 
 # ----------------------------------------------------------------------------
@@ -274,17 +280,17 @@ ENV PATH="/home/vscode/.local/bin:$PATH"
 # バイナリダウンロード (GitHub Releases)
 RUN set -eux; \
     ARCH=$(dpkg --print-architecture); \
-    # zoxide v0.9.4
-    curl -sLO "https://github.com/ajeetdsouza/zoxide/releases/download/v0.9.4/zoxide-0.9.4-x86_64-unknown-linux-musl.tar.gz"; \
+    # zoxide v0.9.8
+    curl -sLO "https://github.com/ajeetdsouza/zoxide/releases/download/v0.9.8/zoxide-0.9.8-x86_64-unknown-linux-musl.tar.gz"; \
     tar -xzf zoxide-*.tar.gz -C /usr/local/bin; \
     rm zoxide-*.tar.gz; \
-    # eza v0.18.0
-    curl -sLO "https://github.com/eza-community/eza/releases/download/v0.18.0/eza_x86_64-unknown-linux-musl.tar.gz"; \
+    # eza v0.20.22
+    curl -sLO "https://github.com/eza-community/eza/releases/download/v0.20.22/eza_x86_64-unknown-linux-musl.tar.gz"; \
     tar -xzf eza_*.tar.gz -C /usr/local/bin; \
     rm eza_*.tar.gz; \
-    # git-delta v0.17.0
-    curl -sLO "https://github.com/dandavison/delta/releases/download/0.17.0/delta-0.17.0-x86_64-unknown-linux-musl.tar.gz"; \
-    tar -xzf delta-*.tar.gz --strip-components=1 -C /usr/local/bin delta-0.17.0-x86_64-unknown-linux-musl/delta; \
+    # git-delta v0.18.2
+    curl -sLO "https://github.com/dandavison/delta/releases/download/0.18.2/delta-0.18.2-x86_64-unknown-linux-musl.tar.gz"; \
+    tar -xzf delta-*.tar.gz --strip-components=1 -C /usr/local/bin delta-0.18.2-x86_64-unknown-linux-musl/delta; \
     rm delta-*.tar.gz
 
 # Rust 製 CLI ツール（APT に統一）: btop/hyperfine/ncdu/cloc は上の apt ブロックで導入済み

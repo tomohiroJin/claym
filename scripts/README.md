@@ -20,6 +20,20 @@ scripts/
 │   └── copy-template-to-local.sh
 └── test/                # テスト実行スクリプト
     └── run-setup-tests.sh
+
+tests/
+├── setup/               # セットアップスクリプトのテスト
+│   ├── test_helper.bash
+│   ├── init-ai-configs.bats
+│   ├── reinit-ai-configs.bats
+│   └── copy-template-to-local.bats
+└── templates/           # テンプレート品質テスト
+    ├── template_test_helper.bash
+    ├── template-existence.bats
+    ├── template-quality.bats
+    ├── cross-tool-consistency.bats
+    ├── template-genericity.bats
+    └── init-script-integration.bats
 ```
 
 ## セットアップスクリプト (`setup/`)
@@ -201,36 +215,45 @@ log_success "完了しました"
 
 **実行方法**:
 ```bash
-# すべてのテストを実行
+# すべてのテストを実行（セットアップ + テンプレート品質）
 bash scripts/test/run-setup-tests.sh all
 
-# init-ai-configs.sh のテストのみ
+# セットアップテストのみ実行
+bash scripts/test/run-setup-tests.sh setup
+
+# テンプレート品質テストのみ実行
+bash scripts/test/run-setup-tests.sh templates
+
+# 個別テストの実行
 bash scripts/test/run-setup-tests.sh init
-
-# reinit-ai-configs.sh のテストのみ
 bash scripts/test/run-setup-tests.sh reinit
-
-# copy-template-to-local.sh のテストのみ
 bash scripts/test/run-setup-tests.sh copy
 
 # ヘルプ表示
 bash scripts/test/run-setup-tests.sh --help
 ```
 
-**テストファイル**: `tests/setup/*.bats`
+**テストファイル**:
+- `tests/setup/*.bats` - セットアップスクリプトのテスト
+- `tests/templates/*.bats` - テンプレート品質テスト
 
 **テスト内容**:
-- 関数の動作確認（34テストケース）
-- エッジケースの検証
-- エラーハンドリングの確認
 
-**実行結果**:
-```
-✅ init-ai-configs.sh:       7/7 テスト成功
-✅ reinit-ai-configs.sh:    14/14 テスト成功
-✅ copy-template-to-local:  13/13 テスト成功
-✅ 合計:                    34/34 テスト成功
-```
+| カテゴリ | テスト数 | 内容 |
+|---------|---------|------|
+| セットアップ（setup） | 39 | 関数の動作確認・エッジケース・エラーハンドリング |
+| テンプレート品質（templates） | 52 | 存在確認・品質・一貫性・汎用性・init 統合 |
+| **合計** | **91** | |
+
+**テンプレート品質テストの詳細**:
+
+| テストファイル | テスト数 | 検証内容 |
+|--------------|---------|---------|
+| `template-existence.bats` | 13 | ディレクトリ・ファイルの存在確認 |
+| `template-quality.bats` | 15 | 非空チェック・YAML フィールド・Markdown 構造・共通原則一貫性 |
+| `cross-tool-consistency.bats` | 8 | 3ツール間の共通コマンド・キーワード一貫性 |
+| `template-genericity.bats` | 8 | 技術スタック非依存の汎用性チェック |
+| `init-script-integration.bats` | 8 | init スクリプトの関数定義・呼び出し検証 |
 
 ## ヘルスチェックスクリプト (`health/`)
 

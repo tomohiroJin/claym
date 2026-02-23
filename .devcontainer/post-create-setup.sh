@@ -62,6 +62,10 @@ ensure_imagesorcery_log_dir() {
     if ! sudo chmod 755 "$log_dir" >/dev/null 2>&1; then
       warn "ログディレクトリの権限設定に失敗しました: $log_dir"
     fi
+    # ログディレクトリとファイルの所有者を vscode に変更
+    if ! sudo chown -R vscode:vscode "$log_dir" >/dev/null 2>&1; then
+      warn "ログディレクトリの所有者変更に失敗しました: $log_dir"
+    fi
   done
 }
 

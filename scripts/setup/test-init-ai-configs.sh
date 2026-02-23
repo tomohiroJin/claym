@@ -238,6 +238,90 @@ test_expanded_config_has_project_path() {
     fi
 }
 
+# テスト18: Claude Code グローバルテンプレートが存在すること
+test_claude_global_templates_exist() {
+    [[ -f "${PROJECT_ROOT}/templates/.claude-global/settings.json.example" ]] && \
+    [[ -f "${PROJECT_ROOT}/templates/.claude-global/CLAUDE.md" ]]
+}
+
+# テスト19: GEMINI グローバルテンプレートが存在すること
+test_gemini_global_templates_exist() {
+    [[ -f "${PROJECT_ROOT}/templates/.gemini-global/settings.json.example" ]] && \
+    [[ -f "${PROJECT_ROOT}/templates/.gemini-global/GEMINI.md" ]]
+}
+
+# テスト20: Claude Code グローバル設定がセットアップされていること
+test_claude_global_setup() {
+    local settings="${HOME}/.claude/settings.json"
+    if [[ -f "${settings}" ]]; then
+        grep -q '"mcpServers"' "${settings}"
+    else
+        log_warn "Claude Code グローバル設定が見つかりません: ${settings}（初回セットアップ前は正常）"
+        return 0
+    fi
+}
+
+# テスト21: Claude Code グローバル CLAUDE.md が存在すること
+test_claude_global_claude_md() {
+    local claude_md="${HOME}/.claude/CLAUDE.md"
+    if [[ -f "${claude_md}" ]]; then
+        return 0
+    else
+        log_warn "Claude Code グローバル CLAUDE.md が見つかりません: ${claude_md}（初回セットアップ前は正常）"
+        return 0
+    fi
+}
+
+# テスト22: GEMINI グローバル設定がセットアップされていること
+test_gemini_global_setup() {
+    local settings="${HOME}/.gemini/settings.json"
+    if [[ -f "${settings}" ]]; then
+        grep -q '"mcpServers"' "${settings}"
+    else
+        log_warn "GEMINI グローバル設定が見つかりません: ${settings}（初回セットアップ前は正常）"
+        return 0
+    fi
+}
+
+# テスト23: GEMINI グローバル GEMINI.md が存在すること
+test_gemini_global_gemini_md() {
+    local gemini_md="${HOME}/.gemini/GEMINI.md"
+    if [[ -f "${gemini_md}" ]]; then
+        return 0
+    else
+        log_warn "GEMINI グローバル GEMINI.md が見つかりません: ${gemini_md}（初回セットアップ前は正常）"
+        return 0
+    fi
+}
+
+# テスト24: グローバル設定にプロジェクト固有パスが含まれないこと
+test_global_no_project_paths() {
+    local has_project_path=false
+
+    # Claude Code グローバル設定をチェック
+    local claude_settings="${HOME}/.claude/settings.json"
+    if [[ -f "${claude_settings}" ]]; then
+        if grep -q "/workspaces/claym" "${claude_settings}" 2>/dev/null; then
+            log_fail "Claude Code グローバル設定にプロジェクト固有パスが含まれています: ${claude_settings}"
+            has_project_path=true
+        fi
+    fi
+
+    # GEMINI グローバル設定をチェック
+    local gemini_settings="${HOME}/.gemini/settings.json"
+    if [[ -f "${gemini_settings}" ]]; then
+        if grep -q "/workspaces/claym" "${gemini_settings}" 2>/dev/null; then
+            log_fail "GEMINI グローバル設定にプロジェクト固有パスが含まれています: ${gemini_settings}"
+            has_project_path=true
+        fi
+    fi
+
+    if [[ "${has_project_path}" == "true" ]]; then
+        return 1
+    fi
+    return 0
+}
+
 # =============================================================================
 # メイン実行
 # =============================================================================
@@ -257,9 +341,11 @@ main() {
     # テンプレートの存在確認
     log_info "テンプレートの存在確認"
     run_test "Claude Code テンプレート存在確認" test_claude_templates_exist
+    run_test "Claude Code グローバルテンプレート存在確認" test_claude_global_templates_exist
     run_test "Codex CLI テンプレート存在確認" test_codex_templates_exist
     run_test "Codex プロンプトテンプレート存在確認" test_codex_prompt_template_exists
     run_test "GEMINI テンプレート存在確認" test_gemini_templates_exist
+    run_test "GEMINI グローバルテンプレート存在確認" test_gemini_global_templates_exist
     run_test "GEMINI コマンドテンプレート存在確認" test_gemini_command_template_exists
     run_test "プロンプトテンプレート存在確認" test_prompt_templates_exist
     run_test "templates README 存在確認" test_templates_readme_exists
@@ -281,6 +367,15 @@ main() {
     run_test "プロンプトテンプレートのコピー確認" test_prompts_copied_in_real_project
     run_test ".gitignore 更新確認" test_gitignore_updated
     run_test "展開済み設定のパス確認" test_expanded_config_has_project_path
+    echo ""
+
+    # グローバル設定のセットアップ確認
+    log_info "グローバル設定のセットアップ確認"
+    run_test "Claude Code グローバル設定の確認" test_claude_global_setup
+    run_test "Claude Code グローバル CLAUDE.md の確認" test_claude_global_claude_md
+    run_test "GEMINI グローバル設定の確認" test_gemini_global_setup
+    run_test "GEMINI グローバル GEMINI.md の確認" test_gemini_global_gemini_md
+    run_test "グローバル設定にプロジェクト固有パスが含まれないこと" test_global_no_project_paths
     echo ""
 
     # サマリ表示

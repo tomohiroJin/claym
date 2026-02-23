@@ -1,0 +1,37 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest"
+      ]
+    },
+    "markitdown": {
+      "command": "markitdown-mcp",
+      "args": []
+    },
+    "imagesorcery": {
+      "command": "imagesorcery-mcp",
+      "args": []
+    },
+    "github": {
+      "command": "uvx",
+      "args": [
+        "mcp-github"
+      ]
+    },
+    "context7": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ]
+    },
+    "fetch": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-fetch"
+      ]
+    }
+  }
+}

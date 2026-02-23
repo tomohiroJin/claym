@@ -7,7 +7,7 @@
 
 ```
 templates/
-├── .claude/
+├── .claude/                             # プロジェクトレベル Claude Code 設定
 │   ├── settings.local.json.example    # Claude Code 設定テンプレート
 │   ├── CLAUDE.md                       # Claude Code カスタム指示（日本語設定）
 │   ├── commands/                       # Claude Code カスタムコマンド
@@ -16,16 +16,22 @@ templates/
 │       ├── code-reviewer.yaml          # コードレビュー専門家
 │       ├── test-generator.yaml         # テスト生成専門家
 │       └── documentation-writer.yaml   # ドキュメント作成専門家
+├── .claude-global/                      # ユーザーレベル Claude Code 設定（~/.claude/ に展開）
+│   ├── settings.json.example          # グローバル設定（プロジェクト非依存 MCP・権限）
+│   └── CLAUDE.md                       # グローバルカスタム指示（日本語設定）
 ├── .codex/
 │   ├── config.toml.example            # Codex CLI 設定テンプレート（使用環境緩和設定含む）
 │   ├── AGENTS.md                      # Codex CLI エージェント指示（日本語設定）
 │   └── prompts/                       # Codex CLI カスタムプロンプト（slash コマンド）
 │       └── *.md                       # `/prompts:<name>` で呼び出せるテンプレート
-├── .gemini/
+├── .gemini/                             # プロジェクトレベル GEMINI 設定
 │   ├── settings.json.example          # GEMINI 設定テンプレート
 │   ├── GEMINI.md                      # GEMINI カスタム指示（日本語設定）
 │   └── commands/                      # GEMINI カスタムコマンド
 │       └── *.md                       # `/prompts:<name>` で呼び出せるテンプレート
+├── .gemini-global/                      # ユーザーレベル GEMINI 設定（~/.gemini/ に展開）
+│   ├── settings.json.example          # グローバル設定（プロジェクト非依存 MCP）
+│   └── GEMINI.md                       # グローバルカスタム指示（日本語設定）
 ├── docs/
 │   └── prompts/
 │       ├── system.md                  # システムプロンプトテンプレート
@@ -40,6 +46,15 @@ scripts/
 └── setup/
     └── init-ai-configs.sh              # 自動セットアップスクリプト
 ```
+
+### プロジェクトレベル vs ユーザーレベル
+
+| レベル | 配置先 | 用途 | MCP サーバー |
+|--------|--------|------|-------------|
+| プロジェクト | `.claude/`, `.gemini/` | プロジェクト固有の設定 | serena, filesystem + 汎用6つ |
+| ユーザー | `~/.claude/`, `~/.gemini/` | コンテナ全体の汎用設定 | 汎用6つ（playwright, markitdown, imagesorcery, context7, github, fetch） |
+
+ユーザーレベル設定により、プロジェクトディレクトリ外から CLI を起動しても日本語設定や MCP サーバーが利用可能になります。
 
 ## 🚀 クイックスタート
 
@@ -355,6 +370,38 @@ settings:
 ```
 
 **詳細**: サブエージェントの詳細については、[scripts/README.md](../scripts/README.md#claude-code-サブエージェント) を参照してください。
+
+## 🧪 テンプレート品質テスト
+
+テンプレートの品質を自動検証するテストスイートが `tests/templates/` に用意されています。
+
+### 実行方法
+
+```bash
+# テンプレート品質テストのみ実行（52テスト）
+bash scripts/test/run-setup-tests.sh templates
+
+# セットアップテストも含む全テスト実行（91テスト）
+bash scripts/test/run-setup-tests.sh all
+```
+
+### テスト内容
+
+| テストファイル | テスト数 | 検証内容 |
+|--------------|---------|---------|
+| `template-existence.bats` | 13 | ディレクトリ・ファイルの存在確認 |
+| `template-quality.bats` | 15 | 非空チェック・YAML フィールド・Markdown 構造・共通原則一貫性 |
+| `cross-tool-consistency.bats` | 8 | Claude/Codex/Gemini 間の共通コマンド・キーワード一貫性 |
+| `template-genericity.bats` | 8 | 技術スタック非依存の汎用性チェック |
+| `init-script-integration.bats` | 8 | init スクリプトの関数定義・呼び出し検証 |
+
+### テンプレート変更時の確認
+
+テンプレートファイルを追加・変更した場合は、必ずテストを実行して品質を確認してください。
+
+```bash
+bash scripts/test/run-setup-tests.sh templates
+```
 
 ## 🔧 MCP サーバー設定
 

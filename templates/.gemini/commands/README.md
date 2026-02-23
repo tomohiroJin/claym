@@ -10,10 +10,35 @@
 
 ## 提供コマンド
 
+### `/prompts:plan` — 実装計画
+
+- 要件を分析し、影響範囲の特定・タスク分解を含む実装計画を作成します。
+- 詳細: [plan.md](./plan.md)
+
+### `/prompts:build-fix` — ビルドエラー修正
+
+- ビルドエラーや型エラーを解析し、原因特定から修正までを実行します。
+- 詳細: [build-fix.md](./build-fix.md)
+
+### `/prompts:review` — コードレビュー
+
+- セキュリティ、パフォーマンス、コード品質の観点でレビューを実施します。
+- 詳細: [review.md](./review.md)
+
+### `/prompts:refactor` — リファクタリング
+
+- コードの複雑度を分析し、SOLID原則に基づいた改善を実行します。
+- 詳細: [refactor.md](./refactor.md)
+
+### `/prompts:test` — テスト生成
+
+- テスト対象を分析し、AAA パターンでテストを生成します。
+- 詳細: [test.md](./test.md)
+
 ### `/prompts:yfinance` — 株価情報の取得
 
 - yfinance を利用して米国株の最新情報を取得・要約します。
-- 詳細手順は [yfinance.md](./yfinance.md) を参照してください。
+- 詳細: [yfinance.md](./yfinance.md)
 
 ## カスタマイズ方法
 

@@ -32,6 +32,10 @@ if mapfile -t log_dirs < <(imagesorcery_log_dirs); then
       if ! chmod 755 "$dir" >/dev/null 2>&1; then
         warn "ログディレクトリの権限設定に失敗しました: $dir"
       fi
+      # ログディレクトリとファイルの所有者を vscode に変更
+      if ! chown -R vscode:vscode "$dir" >/dev/null 2>&1; then
+        warn "ログディレクトリの所有者変更に失敗しました: $dir"
+      fi
     done
   fi
 else

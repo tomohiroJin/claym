@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# セットアップスクリプトのテストを実行するスクリプト
+# セットアップスクリプトおよびテンプレート品質テストを実行するスクリプト
 #
-# このスクリプトは bats-core を使用して、セットアップスクリプトの
-# 自動テストを実行します。
+# このスクリプトは bats-core を使用して以下のテストを実行します:
+# - セットアップスクリプトの動作テスト（tests/setup/）
+# - テンプレート品質テスト（tests/templates/）
 
 set -euo pipefail
 
@@ -30,7 +31,8 @@ fi
 source "${SCRIPTS_ROOT}/lib/logging.sh"
 
 # テストディレクトリ
-TESTS_DIR="${PROJECT_ROOT}/tests/setup"
+SETUP_TESTS_DIR="${PROJECT_ROOT}/tests/setup"
+TEMPLATE_TESTS_DIR="${PROJECT_ROOT}/tests/templates"
 
 # bats が利用可能かチェック
 check_bats_installation() {
@@ -71,13 +73,41 @@ check_bats_helpers() {
 
 # テストファイルの存在確認
 check_test_files() {
+    local test_target="$1"
     log_info "テストファイルを確認中..."
 
-    local test_files=(
-        "${TESTS_DIR}/init-ai-configs.bats"
-        "${TESTS_DIR}/reinit-ai-configs.bats"
-        "${TESTS_DIR}/copy-template-to-local.bats"
-    )
+    local test_files=()
+
+    case "${test_target}" in
+        "setup"|"init"|"reinit"|"copy")
+            test_files=(
+                "${SETUP_TESTS_DIR}/init-ai-configs.bats"
+                "${SETUP_TESTS_DIR}/reinit-ai-configs.bats"
+                "${SETUP_TESTS_DIR}/copy-template-to-local.bats"
+            )
+            ;;
+        "templates")
+            test_files=(
+                "${TEMPLATE_TESTS_DIR}/template-existence.bats"
+                "${TEMPLATE_TESTS_DIR}/template-quality.bats"
+                "${TEMPLATE_TESTS_DIR}/cross-tool-consistency.bats"
+                "${TEMPLATE_TESTS_DIR}/template-genericity.bats"
+                "${TEMPLATE_TESTS_DIR}/init-script-integration.bats"
+            )
+            ;;
+        "all")
+            test_files=(
+                "${SETUP_TESTS_DIR}/init-ai-configs.bats"
+                "${SETUP_TESTS_DIR}/reinit-ai-configs.bats"
+                "${SETUP_TESTS_DIR}/copy-template-to-local.bats"
+                "${TEMPLATE_TESTS_DIR}/template-existence.bats"
+                "${TEMPLATE_TESTS_DIR}/template-quality.bats"
+                "${TEMPLATE_TESTS_DIR}/cross-tool-consistency.bats"
+                "${TEMPLATE_TESTS_DIR}/template-genericity.bats"
+                "${TEMPLATE_TESTS_DIR}/init-script-integration.bats"
+            )
+            ;;
+    esac
 
     local missing_files=()
 
@@ -107,16 +137,22 @@ run_tests() {
 
     case "${test_target}" in
         "init")
-            bats "${TESTS_DIR}/init-ai-configs.bats"
+            bats "${SETUP_TESTS_DIR}/init-ai-configs.bats"
             ;;
         "reinit")
-            bats "${TESTS_DIR}/reinit-ai-configs.bats"
+            bats "${SETUP_TESTS_DIR}/reinit-ai-configs.bats"
             ;;
         "copy")
-            bats "${TESTS_DIR}/copy-template-to-local.bats"
+            bats "${SETUP_TESTS_DIR}/copy-template-to-local.bats"
+            ;;
+        "setup")
+            bats "${SETUP_TESTS_DIR}"/*.bats
+            ;;
+        "templates")
+            bats "${TEMPLATE_TESTS_DIR}"/*.bats
             ;;
         "all")
-            bats "${TESTS_DIR}"/*.bats
+            bats "${SETUP_TESTS_DIR}"/*.bats "${TEMPLATE_TESTS_DIR}"/*.bats
             ;;
         *)
             log_error "不明なテスト対象: ${test_target}"
@@ -134,10 +170,12 @@ Usage: bash scripts/test/run-setup-tests.sh [TARGET]
 セットアップスクリプトのテストを実行します。
 
 TARGET:
-  init      init-ai-configs.sh のテストを実行
-  reinit    reinit-ai-configs.sh のテストを実行
-  copy      copy-template-to-local.sh のテストを実行
-  all       すべてのテストを実行（デフォルト）
+  init        init-ai-configs.sh のテストを実行
+  reinit      reinit-ai-configs.sh のテストを実行
+  copy        copy-template-to-local.sh のテストを実行
+  setup       セットアップテストをすべて実行（init + reinit + copy）
+  templates   テンプレート品質テストを実行（存在確認・品質・一貫性・汎用性・init統合）
+  all         すべてのテストを実行（デフォルト）
 
 Options:
   -h, --help    このヘルプメッセージを表示
@@ -146,12 +184,17 @@ Examples:
   # すべてのテストを実行
   bash scripts/test/run-setup-tests.sh
 
+  # セットアップテストのみ実行
+  bash scripts/test/run-setup-tests.sh setup
+
+  # テンプレート品質テストのみ実行
+  bash scripts/test/run-setup-tests.sh templates
+
   # 特定のテストのみ実行
   bash scripts/test/run-setup-tests.sh init
 
 Environment Variables:
   PROJECT_ROOT    プロジェクトルートディレクトリ（自動検出）
-  TESTS_DIR       テストファイルのディレクトリ（自動検出）
 
 EOF
 }
@@ -167,7 +210,7 @@ main() {
                 show_usage
                 exit 0
                 ;;
-            init|reinit|copy|all)
+            init|reinit|copy|setup|templates|all)
                 test_target="$1"
                 shift
                 ;;
@@ -180,18 +223,19 @@ main() {
     done
 
     echo "========================================"
-    echo "  Setup Scripts Test Runner"
+    echo "  Bats Test Runner"
     echo "========================================"
     echo ""
 
     log_info "プロジェクトルート: ${PROJECT_ROOT}"
-    log_info "テストディレクトリ: ${TESTS_DIR}"
+    log_info "セットアップテストディレクトリ: ${SETUP_TESTS_DIR}"
+    log_info "テンプレートテストディレクトリ: ${TEMPLATE_TESTS_DIR}"
     echo ""
 
     # 事前チェック
     check_bats_installation
     check_bats_helpers || true  # 警告のみでエラーにはしない
-    check_test_files
+    check_test_files "${test_target}"
     echo ""
 
     # テスト実行
