@@ -93,6 +93,29 @@ cp templates/.claude/CLAUDE.md .claude/CLAUDE.md
 bash scripts/setup/init-ai-configs.sh
 ```
 
+### Claude CLI で `.mcp.json` を使う場合
+
+- `claude` コマンドのプロジェクトスコープ MCP は、プロジェクト直下の `.mcp.json` で管理します
+- `settings.local.json`（このテンプレート）は主に Claude Code のプロジェクト設定（権限・MCP 定義テンプレート）として使います
+- `init-ai-configs.sh` は `~/.claude/settings.json` と `~/.config/claude-code/settings.json` に `enableAllProjectMcpServers: true` を設定し、`.mcp.json` の利用を有効化しやすくします
+
+例（サブリポジトリ直下の `.mcp.json`）:
+
+```json
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "${workspaceFolder}"
+      ]
+    }
+  }
+}
+```
+
 ### 2. カスタマイズ
 
 #### MCP サーバーの追加・削除

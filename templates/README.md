@@ -16,7 +16,7 @@ templates/
 │       ├── code-reviewer.yaml          # コードレビュー専門家
 │       ├── test-generator.yaml         # テスト生成専門家
 │       └── documentation-writer.yaml   # ドキュメント作成専門家
-├── .claude-global/                      # ユーザーレベル Claude Code 設定（~/.claude/ に展開）
+├── .claude-global/                      # ユーザーレベル Claude Code 設定（~/.claude/ / ~/.config/claude-code に展開）
 │   ├── settings.json.example          # グローバル設定（プロジェクト非依存 MCP・権限）
 │   └── CLAUDE.md                       # グローバルカスタム指示（日本語設定）
 ├── .codex/
@@ -52,7 +52,7 @@ scripts/
 | レベル | 配置先 | 用途 | MCP サーバー |
 |--------|--------|------|-------------|
 | プロジェクト | `.claude/`, `.gemini/` | プロジェクト固有の設定 | serena, filesystem + 汎用6つ |
-| ユーザー | `~/.claude/`, `~/.gemini/` | コンテナ全体の汎用設定 | 汎用6つ（playwright, markitdown, imagesorcery, context7, github, fetch） |
+| ユーザー | `~/.claude/`, `~/.config/claude-code/`, `~/.gemini/` | コンテナ全体の汎用設定 | 汎用6つ（playwright, markitdown, imagesorcery, context7, github, fetch） |
 
 ユーザーレベル設定により、プロジェクトディレクトリ外から CLI を起動しても日本語設定や MCP サーバーが利用可能になります。
 

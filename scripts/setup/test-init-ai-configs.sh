@@ -254,7 +254,8 @@ test_gemini_global_templates_exist() {
 test_claude_global_setup() {
     local settings="${HOME}/.claude/settings.json"
     if [[ -f "${settings}" ]]; then
-        grep -q '"mcpServers"' "${settings}"
+        grep -q '"mcpServers"' "${settings}" && \
+        grep -q '"enableAllProjectMcpServers"[[:space:]]*:[[:space:]]*true' "${settings}"
     else
         log_warn "Claude Code グローバル設定が見つかりません: ${settings}（初回セットアップ前は正常）"
         return 0
@@ -268,6 +269,29 @@ test_claude_global_claude_md() {
         return 0
     else
         log_warn "Claude Code グローバル CLAUDE.md が見つかりません: ${claude_md}（初回セットアップ前は正常）"
+        return 0
+    fi
+}
+
+# テスト21b: Claude Code XDG 設定がセットアップされていること
+test_claude_xdg_setup() {
+    local settings="${HOME}/.config/claude-code/settings.json"
+    if [[ -f "${settings}" ]]; then
+        grep -q '"mcpServers"' "${settings}" && \
+        grep -q '"enableAllProjectMcpServers"[[:space:]]*:[[:space:]]*true' "${settings}"
+    else
+        log_warn "Claude Code XDG 設定が見つかりません: ${settings}（初回セットアップ前は正常）"
+        return 0
+    fi
+}
+
+# テスト21c: Claude Code XDG CLAUDE.md が存在すること
+test_claude_xdg_claude_md() {
+    local claude_md="${HOME}/.config/claude-code/CLAUDE.md"
+    if [[ -f "${claude_md}" ]]; then
+        return 0
+    else
+        log_warn "Claude Code XDG CLAUDE.md が見つかりません: ${claude_md}（初回セットアップ前は正常）"
         return 0
     fi
 }
@@ -303,6 +327,15 @@ test_global_no_project_paths() {
     if [[ -f "${claude_settings}" ]]; then
         if grep -q "/workspaces/claym" "${claude_settings}" 2>/dev/null; then
             log_fail "Claude Code グローバル設定にプロジェクト固有パスが含まれています: ${claude_settings}"
+            has_project_path=true
+        fi
+    fi
+
+    # Claude Code XDG 設定をチェック
+    local claude_xdg_settings="${HOME}/.config/claude-code/settings.json"
+    if [[ -f "${claude_xdg_settings}" ]]; then
+        if grep -q "/workspaces/claym" "${claude_xdg_settings}" 2>/dev/null; then
+            log_fail "Claude Code XDG 設定にプロジェクト固有パスが含まれています: ${claude_xdg_settings}"
             has_project_path=true
         fi
     fi
@@ -373,6 +406,8 @@ main() {
     log_info "グローバル設定のセットアップ確認"
     run_test "Claude Code グローバル設定の確認" test_claude_global_setup
     run_test "Claude Code グローバル CLAUDE.md の確認" test_claude_global_claude_md
+    run_test "Claude Code XDG 設定の確認" test_claude_xdg_setup
+    run_test "Claude Code XDG CLAUDE.md の確認" test_claude_xdg_claude_md
     run_test "GEMINI グローバル設定の確認" test_gemini_global_setup
     run_test "GEMINI グローバル GEMINI.md の確認" test_gemini_global_gemini_md
     run_test "グローバル設定にプロジェクト固有パスが含まれないこと" test_global_no_project_paths
