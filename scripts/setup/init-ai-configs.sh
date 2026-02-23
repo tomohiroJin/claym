@@ -282,6 +282,92 @@ setup_claude_code_global() {
         "${TEMPLATES_DIR}/.claude-global/CLAUDE.md" \
         "${custom_instructions}" \
         "Claude Code グローバルカスタム指示"
+
+    # .mcp.json をプロジェクトごとに運用できるよう、グローバルで有効化する
+    ensure_claude_project_mcp_servers_enabled "${settings_file}" "Claude Code グローバル設定"
+}
+
+# Claude Code のユーザーレベル設定をセットアップ（XDG互換）
+# ~/.config/claude-code/ を対象にする
+#
+setup_claude_code_xdg() {
+    log_info "Claude Code XDG 設定をセットアップ中..."
+
+    local config_root="${XDG_CONFIG_HOME:-${HOME}/.config}"
+    local claude_xdg_dir="${config_root}/claude-code"
+    local settings_file="${claude_xdg_dir}/settings.json"
+    local custom_instructions="${claude_xdg_dir}/CLAUDE.md"
+
+    # ディレクトリ作成
+    mkdir -p "${claude_xdg_dir}"
+
+    # settings.json: mcpServers が未定義の場合のみテンプレートで置換
+    if [[ -f "${settings_file}" ]]; then
+        if grep -q '"mcpServers"' "${settings_file}" 2>/dev/null; then
+            log_info "Claude Code XDG 設定は既に mcpServers を含んでいます（スキップ）"
+        else
+            # mcpServers が未定義なのでテンプレートで置換
+            if [[ -f "${TEMPLATES_DIR}/.claude-global/settings.json.example" ]]; then
+                cp "${TEMPLATES_DIR}/.claude-global/settings.json.example" "${settings_file}"
+                log_success "Claude Code XDG 設定ファイルを更新しました: ${settings_file}"
+            else
+                log_warn "Claude Code グローバルテンプレートが見つかりません"
+            fi
+        fi
+    else
+        # settings.json が存在しない場合はテンプレートからコピー
+        if [[ -f "${TEMPLATES_DIR}/.claude-global/settings.json.example" ]]; then
+            cp "${TEMPLATES_DIR}/.claude-global/settings.json.example" "${settings_file}"
+            log_success "Claude Code XDG 設定ファイルを作成しました: ${settings_file}"
+        else
+            log_warn "Claude Code グローバルテンプレートが見つかりません"
+        fi
+    fi
+
+    # CLAUDE.md をコピー
+    copy_file_if_not_exists \
+        "${TEMPLATES_DIR}/.claude-global/CLAUDE.md" \
+        "${custom_instructions}" \
+        "Claude Code XDG カスタム指示"
+
+    # XDG 設定でも同じフラグを保証する
+    ensure_claude_project_mcp_servers_enabled "${settings_file}" "Claude Code XDG 設定"
+}
+
+# Claude Code の project スコープ MCP (.mcp.json) を常に有効にする
+#
+# 引数:
+#   $1: settings.json のパス
+#   $2: ログ表示用の説明
+#
+ensure_claude_project_mcp_servers_enabled() {
+    local settings_file="$1"
+    local description="${2:-Claude Code 設定}"
+
+    if [[ ! -f "${settings_file}" ]]; then
+        log_warn "${description}ファイルが見つからないため、enableAllProjectMcpServers を設定できません: ${settings_file}"
+        return 0
+    fi
+
+    if python3 - "${settings_file}" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+data = json.loads(path.read_text(encoding="utf-8"))
+
+if data.get("enableAllProjectMcpServers") is True:
+    sys.exit(0)
+
+data["enableAllProjectMcpServers"] = True
+path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+PY
+    then
+        log_info "${description}で enableAllProjectMcpServers=true を保証しました"
+    else
+        log_warn "${description}の JSON 更新に失敗しました（手動確認が必要です）: ${settings_file}"
+    fi
 }
 
 # =============================================================================
@@ -661,6 +747,9 @@ main() {
     echo ""
 
     setup_claude_code_global
+    echo ""
+
+    setup_claude_code_xdg
     echo ""
 
     setup_codex_cli

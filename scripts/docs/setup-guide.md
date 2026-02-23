@@ -173,6 +173,8 @@ bash scripts/setup/reinit-ai-configs.sh --backup-only
 - `.claude/CLAUDE.md` - カスタム指示（日本語設定など）
 - `.claude/commands/` - カスタムコマンド
 - `.claude/agents/` - サブエージェント（タスク特化型AIエージェント）
+- `.mcp.json` - Claude CLI のプロジェクトスコープ MCP 設定（任意、各リポジトリで管理）
+- `~/.claude/settings.json` / `~/.config/claude-code/settings.json` - Claude CLI のグローバル設定（`enableAllProjectMcpServers` を含む）
 
 **主な設定項目**:
 ```json
@@ -194,6 +196,11 @@ bash scripts/setup/reinit-ai-configs.sh --backup-only
 - `mcpServers`: プロジェクトに必要なMCPサーバーを選択
 - `permissions.allow`: 自動承認する操作を追加
 - `permissions.ask`: 確認が必要な操作を追加
+
+**`.mcp.json` 運用（Claude CLI）**:
+- `claude` コマンドでサブリポジトリ配下の MCP を使う場合は、そのリポジトリ直下に `.mcp.json` を配置します
+- `init-ai-configs.sh` は Claude のグローバル設定に `enableAllProjectMcpServers: true` を設定するため、`.mcp.json` を置いたプロジェクトで MCP を有効化しやすくなります
+- `.mcp.json` 自体はプロジェクト固有のため、必要なディレクトリごとに作成・管理してください
 
 **サブエージェント**:
 
