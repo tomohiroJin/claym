@@ -17,7 +17,8 @@ scripts/
 │   ├── common.sh        # セットアップスクリプト共通ライブラリ
 │   ├── init-ai-configs.sh
 │   ├── reinit-ai-configs.sh
-│   └── copy-template-to-local.sh
+│   ├── copy-template-to-local.sh
+│   └── link-ai-configs.sh
 └── test/                # テスト実行スクリプト
     └── run-setup-tests.sh
 
@@ -26,7 +27,8 @@ tests/
 │   ├── test_helper.bash
 │   ├── init-ai-configs.bats
 │   ├── reinit-ai-configs.bats
-│   └── copy-template-to-local.bats
+│   ├── copy-template-to-local.bats
+│   └── link-ai-configs.bats
 └── templates/           # テンプレート品質テスト
     ├── template_test_helper.bash
     ├── template-existence.bats
@@ -163,6 +165,15 @@ bash scripts/setup/copy-template-to-local.sh all
 
 # ヘルプ表示
 bash scripts/setup/copy-template-to-local.sh --help
+```
+
+### `link-ai-configs.sh`
+
+Git ルートが分かれたサブプロジェクトに、親プロジェクトの AI 設定をシンボリックリンクします。
+
+```bash
+# 複数パスにまとめてリンクを作成
+bash scripts/setup/link-ai-configs.sh local/project-a local/project-b
 ```
 
 **ワークフロー**:
