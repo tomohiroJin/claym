@@ -50,6 +50,7 @@ RESTORE_MODE=false
 RESTORE_TIMESTAMP=""
 DRY_RUN=false
 VERBOSE=false
+readonly CLAUDE_XDG_REL_DIR=".config/claude-code"
 
 # ログ関数は common.sh で定義されています
 
@@ -78,6 +79,8 @@ AI拡張機能 設定再生成スクリプト
   - .claude/CLAUDE.md
   - ~/.claude/settings.json（グローバル）
   - ~/.claude/CLAUDE.md（グローバル）
+  - ~/.config/claude-code/settings.json（XDG）
+  - ~/.config/claude-code/CLAUDE.md（XDG）
   - .claude/skills/（Agent Skills）
   - .agents/skills/（Agent Skills: Codex/Gemini 共用）
   - ~/.codex/config.toml
@@ -169,6 +172,8 @@ create_backup() {
         "${PROJECT_ROOT}/.claude/CLAUDE.md"
         "${HOME}/.claude/settings.json"
         "${HOME}/.claude/CLAUDE.md"
+        "${HOME}/${CLAUDE_XDG_REL_DIR}/settings.json"
+        "${HOME}/${CLAUDE_XDG_REL_DIR}/CLAUDE.md"
         "${HOME}/.codex/config.toml"
         "${PROJECT_ROOT}/AGENTS.md"
         "${HOME}/.codex/AGENTS.md"
@@ -293,7 +298,7 @@ restore_backup() {
             local target_dir=""
 
             # パスの復元先を決定（ホームディレクトリ配下のツール設定）
-            if [[ "${rel_path_clean}" == .codex/* || "${rel_path_clean}" == .claude/* || "${rel_path_clean}" == .gemini/* ]]; then
+            if [[ "${rel_path_clean}" == .codex/* || "${rel_path_clean}" == .claude/* || "${rel_path_clean}" == .gemini/* || "${rel_path_clean}" == ${CLAUDE_XDG_REL_DIR}/* ]]; then
                 target_dir="${HOME}/${rel_path_clean}"
             else
                 target_dir="${PROJECT_ROOT}/${rel_path_clean}"
@@ -320,7 +325,7 @@ restore_backup() {
             local target_file=""
 
             # パスの復元先を決定（ホームディレクトリ配下のツール設定）
-            if [[ "${rel_path}" == .codex/* || "${rel_path}" == .claude/* || "${rel_path}" == .gemini/* ]]; then
+            if [[ "${rel_path}" == .codex/* || "${rel_path}" == .claude/* || "${rel_path}" == .gemini/* || "${rel_path}" == ${CLAUDE_XDG_REL_DIR}/* ]]; then
                 target_file="${HOME}/${rel_path}"
             else
                 target_file="${PROJECT_ROOT}/${rel_path}"
@@ -365,6 +370,8 @@ regenerate_configs() {
         "${PROJECT_ROOT}/.claude/CLAUDE.md"
         "${HOME}/.claude/CLAUDE.md"
         "${HOME}/.claude/settings.json"
+        "${HOME}/${CLAUDE_XDG_REL_DIR}/settings.json"
+        "${HOME}/${CLAUDE_XDG_REL_DIR}/CLAUDE.md"
         "${HOME}/.codex/config.toml"
         "${PROJECT_ROOT}/AGENTS.md"
         "${HOME}/.codex/AGENTS.md"
