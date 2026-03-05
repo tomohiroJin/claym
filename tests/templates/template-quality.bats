@@ -41,8 +41,16 @@ load 'template_test_helper'
     check_files_non_empty "${CODEX_PROMPTS_DIR}" "*.md"
 }
 
+@test "Codex インストラクション（MD）が非空である" {
+    check_files_non_empty "${CODEX_INSTRUCTIONS_DIR}" "*.md"
+}
+
 @test "Gemini コマンド（MD）が非空である" {
     check_files_non_empty "${GEMINI_COMMANDS_DIR}" "*.md"
+}
+
+@test "Gemini ルール（MD）が非空である" {
+    check_files_non_empty "${GEMINI_RULES_DIR}" "*.md"
 }
 
 @test "メイン設定ファイルが非空である" {
@@ -100,6 +108,44 @@ load 'template_test_helper'
 
     for rule in "${rules[@]}"; do
         local file="${CLAUDE_RULES_DIR}/${rule}.md"
+        if [[ -f "$file" ]]; then
+            if ! check_markdown_has_headings "$file"; then
+                all_valid=false
+            fi
+        else
+            echo "# ファイルが見つかりません: ${file}" >&3
+            all_valid=false
+        fi
+    done
+
+    [[ "$all_valid" == "true" ]]
+}
+
+@test "Codex インストラクションが正しい Markdown 構造を持つ" {
+    local instructions=("coding-style" "git-workflow" "testing" "security")
+    local all_valid=true
+
+    for instr in "${instructions[@]}"; do
+        local file="${CODEX_INSTRUCTIONS_DIR}/${instr}.md"
+        if [[ -f "$file" ]]; then
+            if ! check_markdown_has_headings "$file"; then
+                all_valid=false
+            fi
+        else
+            echo "# ファイルが見つかりません: ${file}" >&3
+            all_valid=false
+        fi
+    done
+
+    [[ "$all_valid" == "true" ]]
+}
+
+@test "Gemini ルールが正しい Markdown 構造を持つ" {
+    local rules=("coding-style" "git-workflow" "testing" "security")
+    local all_valid=true
+
+    for rule in "${rules[@]}"; do
+        local file="${GEMINI_RULES_DIR}/${rule}.md"
         if [[ -f "$file" ]]; then
             if ! check_markdown_has_headings "$file"; then
                 all_valid=false

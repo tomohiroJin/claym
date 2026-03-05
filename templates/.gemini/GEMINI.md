@@ -34,6 +34,15 @@
 - ライブラリの仕様は最新ドキュメントで確認する
 - エラーの原因が不明な場合は、複数の可能性を提示する
 
+## ルール参照
+
+作業開始時に以下のルールファイルを `@` 参照で読んでください：
+
+- `@.gemini/rules/coding-style.md` — コーディングスタイル規約
+- `@.gemini/rules/git-workflow.md` — Git ワークフロー規約
+- `@.gemini/rules/security.md` — セキュリティ規約
+- `@.gemini/rules/testing.md` — テスト規約
+
 ## コード品質基準
 
 ### 共通原則
@@ -100,6 +109,76 @@ Conventional Commits に準拠:
 
 ### ブランチ命名
 - `feature/<機能名>` / `fix/<バグ名>` / `refactor/<対象>`
+
+## MCP ツール活用指針
+
+### serena（シンボリック操作）
+- コードの構造理解には `get_symbols_overview` → `find_symbol` の順で使用
+- シンボル単位の編集には `replace_symbol_body` を優先
+- 参照の追跡には `find_referencing_symbols` を使用
+
+### context7（ドキュメント参照）
+- ライブラリの使い方が不明な場合に `resolve-library-id` → `query-docs` で確認
+- 公式ドキュメントの最新情報を取得
+
+### filesystem（ファイル操作）
+- 非コードファイル（設定、ドキュメント等）の読み書きに使用
+- ディレクトリ構造の確認に使用
+
+### playwright（ブラウザ操作）
+- Web アプリケーションのテスト・デバッグに使用
+- スクリーンショットの取得やフォーム操作に活用
+
+## Agent Skills
+
+`.agents/skills/` に共通スキル定義があります。`/prompts:skill <スキル名>` で呼び出せます。
+
+| スキル名 | 説明 |
+|---------|------|
+| `api-design` | REST API の設計ベストプラクティスに従って API を設計・実装 |
+| `code-review` | 構造化されたコードレビューを実施 |
+| `debug-systematically` | 体系的なデバッグ手法で問題を特定・解決 |
+| `documentation-first` | ドキュメント駆動開発で仕様を先に作成 |
+| `git-workflow` | Git のベストプラクティスに従った操作 |
+| `refactor-safely` | テストで保護された安全なリファクタリング |
+| `search-first` | コードを書く前に既存パターンを調査 |
+| `security-review` | OWASP Top 10 を中心としたセキュリティレビュー |
+| `tdd-workflow` | TDD の Red-Green-Refactor サイクルで実装 |
+| `verification-loop` | ビルド・テスト・lint の検証サイクルを実行 |
+
+スキルを使う場合は `@.agents/skills/<スキル名>/SKILL.md` で手順を参照できます。
+
+## カスタムコマンド一覧
+
+`.gemini/commands/` に以下のコマンドが利用可能です：
+
+### 基本コマンド
+| コマンド | 説明 |
+|---------|------|
+| `plan` | 実装計画の作成 |
+| `build-fix` | ビルドエラーの修正 |
+| `review` | コードレビューの実施 |
+| `refactor` | リファクタリングの実施 |
+| `test` | テストの生成 |
+| `code-gen` | コードの自動生成 |
+| `docs` | ドキュメントの生成 |
+| `checkpoint` | WIP コミットの作成 |
+| `tdd` | TDD サイクルの実行 |
+| `test-coverage` | テストカバレッジの分析 |
+| `yfinance` | 株価情報の取得 |
+
+### エージェントコマンド
+| コマンド | 説明 |
+|---------|------|
+| `agent-architect` | 設計・アーキテクチャレビュー |
+| `agent-docs-writer` | ドキュメント作成 |
+| `agent-security` | セキュリティレビュー |
+| `agent-test-gen` | テスト生成 |
+
+### スキル統合
+| コマンド | 説明 |
+|---------|------|
+| `skill` | 汎用スキル呼び出し |
 
 ## 例
 

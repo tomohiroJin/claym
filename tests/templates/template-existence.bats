@@ -61,14 +61,42 @@ load 'template_test_helper'
     check_files_exist "${CLAUDE_RULES_DIR}" ".md" "${rules[@]}"
 }
 
-@test "Codex プロンプト4個が存在する" {
-    local prompts=("plan" "build-fix" "review" "refactor")
+@test "Codex プロンプト16個が存在する" {
+    local prompts=(
+        "plan" "build-fix" "review" "refactor" "yfinance"
+        "test" "code-gen" "docs" "checkpoint" "tdd" "test-coverage"
+        "agent-architect" "agent-docs-writer" "agent-security" "agent-test-gen"
+        "skill"
+    )
     check_files_exist "${CODEX_PROMPTS_DIR}" ".md" "${prompts[@]}"
 }
 
-@test "Gemini コマンド5個が存在する" {
-    local commands=("plan" "build-fix" "review" "refactor" "test")
+@test "Codex instructions ディレクトリが存在する" {
+    assert_dir_exist "${CODEX_INSTRUCTIONS_DIR}"
+}
+
+@test "Codex インストラクション4個が存在する" {
+    local instructions=("coding-style" "git-workflow" "security" "testing")
+    check_files_exist "${CODEX_INSTRUCTIONS_DIR}" ".md" "${instructions[@]}"
+}
+
+@test "Gemini コマンド16個が存在する" {
+    local commands=(
+        "plan" "build-fix" "review" "refactor" "test" "yfinance"
+        "code-gen" "docs" "checkpoint" "tdd" "test-coverage"
+        "agent-architect" "agent-docs-writer" "agent-security" "agent-test-gen"
+        "skill"
+    )
     check_files_exist "${GEMINI_COMMANDS_DIR}" ".md" "${commands[@]}"
+}
+
+@test "Gemini rules ディレクトリが存在する" {
+    assert_dir_exist "${GEMINI_RULES_DIR}"
+}
+
+@test "Gemini ルール4個が存在する" {
+    local rules=("coding-style" "git-workflow" "security" "testing")
+    check_files_exist "${GEMINI_RULES_DIR}" ".md" "${rules[@]}"
 }
 
 # ==============================================================================
