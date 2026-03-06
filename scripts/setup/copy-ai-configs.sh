@@ -18,6 +18,7 @@
 #   - .codex/
 #   - .gemini/
 #   - AGENTS.md
+#   - .mcp.json（settings.local.json から自動生成）
 #
 # 除外:
 #   - .claude/settings.local.json（ローカル専用の許可ルールを含むため）
@@ -56,6 +57,9 @@ readonly -a AI_CONFIG_ITEMS=(".claude" ".codex" ".gemini" "AGENTS.md")
 # .claude ディレクトリからコピー除外するファイル（相対パス）
 readonly -a CLAUDE_EXCLUSIONS=("settings.local.json")
 
+# .mcp.json の生成元となる設定ファイル（相対パス）
+readonly MCP_SOURCE_FILE=".claude/settings.local.json"
+
 # フラグ
 FORCE=false
 DRY_RUN=false
@@ -79,6 +83,7 @@ Usage: bash scripts/setup/copy-ai-configs.sh [--force] [--dry-run] <project_path
   - .codex/
   - .gemini/
   - AGENTS.md
+  - .mcp.json（settings.local.json から自動生成）
 
 Options:
   --force       既存があっても上書きする（デフォルトはスキップ＆警告）
@@ -219,6 +224,63 @@ copy_item() {
     COPY_COUNT=$((COPY_COUNT + 1))
 }
 
+# .mcp.json を生成してコピー先に配置
+#
+# ソースの .claude/settings.local.json から mcpServers を抽出し、
+# ${workspaceFolder} をターゲットの絶対パスに置換して .mcp.json を生成する。
+#
+# 引数:
+#   $1: コピー先ルートディレクトリ（絶対パス）
+#
+generate_mcp_json() {
+    local target_root="$1"
+    local source_file="${SOURCE_ROOT}/${MCP_SOURCE_FILE}"
+    local target_file="${target_root}/.mcp.json"
+
+    # 生成元が存在しない場合はスキップ
+    if [[ ! -f "${source_file}" ]]; then
+        log_debug ".mcp.json の生成元が見つかりません: ${source_file}"
+        return 0
+    fi
+
+    # jq が必要
+    if ! command -v jq &>/dev/null; then
+        log_warn "jq が見つからないため .mcp.json の生成をスキップします"
+        return 0
+    fi
+
+    # 既存チェック（--force でない場合）
+    if [[ -e "${target_file}" ]]; then
+        if [[ "${FORCE}" == "true" ]]; then
+            if [[ "${DRY_RUN}" != "true" ]]; then
+                rm -f "${target_file}"
+                log_debug "既存を削除しました: ${target_file}"
+            fi
+        else
+            log_warn "既に存在するためスキップしました: ${target_file}"
+            SKIP_COUNT=$((SKIP_COUNT + 1))
+            return 0
+        fi
+    fi
+
+    if [[ "${DRY_RUN}" == "true" ]]; then
+        log_success "[DRY-RUN] コピー対象: ${target_file}"
+        COPY_COUNT=$((COPY_COUNT + 1))
+        return 0
+    fi
+
+    # mcpServers を抽出し、${workspaceFolder} を置換、各サーバーに env:{} を追加
+    jq --arg target "${target_root}" \
+        '{ mcpServers: (.mcpServers | to_entries | map(
+            .value.args = [.value.args[] | gsub("\\$\\{workspaceFolder\\}"; $target)]
+            | .value.env = (.value.env // {})
+        ) | from_entries) }' \
+        "${source_file}" > "${target_file}"
+
+    log_success ".mcp.json を生成しました: ${target_file}"
+    COPY_COUNT=$((COPY_COUNT + 1))
+}
+
 # 4アイテムをループしてコピー
 #
 # 引数:
@@ -240,6 +302,9 @@ copy_ai_configs() {
     for item in "${AI_CONFIG_ITEMS[@]}"; do
         copy_item "${target_root}" "${item}"
     done
+
+    # .mcp.json の生成
+    generate_mcp_json "${target_root}"
 }
 
 # コピー結果サマリの表示

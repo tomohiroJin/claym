@@ -4,6 +4,7 @@
 # テスト対象:
 # - AI設定のコピー（.claude, .codex, .gemini, AGENTS.md）
 # - .claude/settings.local.json の除外
+# - .mcp.json の自動生成（パス置換・permissions 除外）
 # - --force による上書き
 # - --dry-run による確認のみモード
 # - 既存ファイルがある場合のスキップ
@@ -39,7 +40,21 @@ setup() {
     mkdir -p "${SOURCE_ROOT}/.gemini/commands"
 
     echo "# CLAUDE.md" > "${SOURCE_ROOT}/.claude/CLAUDE.md"
-    echo '{"permissions": {}}' > "${SOURCE_ROOT}/.claude/settings.local.json"
+    cat > "${SOURCE_ROOT}/.claude/settings.local.json" << 'SETTINGS'
+{
+  "mcpServers": {
+    "serena": {
+      "command": "uv",
+      "args": ["run", "--project", "${workspaceFolder}"]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"]
+    }
+  },
+  "permissions": {"allow": ["Read"]}
+}
+SETTINGS
     echo "# コマンド1" > "${SOURCE_ROOT}/.claude/commands/review.md"
     echo "# ルール1" > "${SOURCE_ROOT}/.claude/rules/coding-style.md"
     echo "# Codex prompt" > "${SOURCE_ROOT}/.codex/prompts/default.md"
@@ -231,6 +246,93 @@ teardown() {
     assert_output --partial "--force"
     assert_output --partial "--dry-run"
 }
+
+# ==============================================================================
+# .mcp.json 生成のテスト
+# ==============================================================================
+
+@test "copy-ai-configs.sh: .mcp.json が生成される" {
+    run env AI_CONFIGS_SOURCE_ROOT="${SOURCE_ROOT}" bash "${COPY_SCRIPT}" "${TARGET_ROOT}"
+    assert_success
+
+    assert_file_exist "${TARGET_ROOT}/.mcp.json"
+}
+
+@test "copy-ai-configs.sh: .mcp.json の \${workspaceFolder} がターゲットパスに置換される" {
+    run env AI_CONFIGS_SOURCE_ROOT="${SOURCE_ROOT}" bash "${COPY_SCRIPT}" "${TARGET_ROOT}"
+    assert_success
+
+    # ${workspaceFolder} が残っていないことを確認
+    run grep -c 'workspaceFolder' "${TARGET_ROOT}/.mcp.json"
+    assert_output "0"
+
+    # ターゲットの絶対パスが含まれていることを確認
+    run grep -c "${TARGET_ROOT}" "${TARGET_ROOT}/.mcp.json"
+    # serena の args に1箇所
+    [[ "${output}" -ge 1 ]]
+}
+
+@test "copy-ai-configs.sh: .mcp.json に permissions が含まれない" {
+    run env AI_CONFIGS_SOURCE_ROOT="${SOURCE_ROOT}" bash "${COPY_SCRIPT}" "${TARGET_ROOT}"
+    assert_success
+
+    run grep -c 'permissions' "${TARGET_ROOT}/.mcp.json"
+    assert_output "0"
+}
+
+@test "copy-ai-configs.sh: .mcp.json の各サーバーに env が付与される" {
+    run env AI_CONFIGS_SOURCE_ROOT="${SOURCE_ROOT}" bash "${COPY_SCRIPT}" "${TARGET_ROOT}"
+    assert_success
+
+    # "env" キーがサーバー数（2つ）分あることを確認
+    run grep -c '"env"' "${TARGET_ROOT}/.mcp.json"
+    assert_output "2"
+}
+
+@test "copy-ai-configs.sh: 既存の .mcp.json はスキップされる" {
+    echo '{"existing": true}' > "${TARGET_ROOT}/.mcp.json"
+
+    run env AI_CONFIGS_SOURCE_ROOT="${SOURCE_ROOT}" bash "${COPY_SCRIPT}" "${TARGET_ROOT}"
+    assert_success
+    assert_output --partial "既に存在するためスキップしました"
+
+    # 既存の内容が保持されている
+    run grep -c 'existing' "${TARGET_ROOT}/.mcp.json"
+    assert_output "1"
+}
+
+@test "copy-ai-configs.sh: --force で .mcp.json も上書きされる" {
+    echo '{"existing": true}' > "${TARGET_ROOT}/.mcp.json"
+
+    run env AI_CONFIGS_SOURCE_ROOT="${SOURCE_ROOT}" bash "${COPY_SCRIPT}" --force "${TARGET_ROOT}"
+    assert_success
+
+    # 新しい内容に上書きされている
+    run grep -c 'mcpServers' "${TARGET_ROOT}/.mcp.json"
+    assert_output "1"
+    run grep -c 'existing' "${TARGET_ROOT}/.mcp.json"
+    assert_output "0"
+}
+
+@test "copy-ai-configs.sh: --dry-run で .mcp.json は生成されない" {
+    run env AI_CONFIGS_SOURCE_ROOT="${SOURCE_ROOT}" bash "${COPY_SCRIPT}" --dry-run "${TARGET_ROOT}"
+    assert_success
+
+    assert_file_not_exist "${TARGET_ROOT}/.mcp.json"
+}
+
+@test "copy-ai-configs.sh: settings.local.json がない場合 .mcp.json 生成をスキップする" {
+    rm "${SOURCE_ROOT}/.claude/settings.local.json"
+
+    run env AI_CONFIGS_SOURCE_ROOT="${SOURCE_ROOT}" bash "${COPY_SCRIPT}" "${TARGET_ROOT}"
+    assert_success
+
+    assert_file_not_exist "${TARGET_ROOT}/.mcp.json"
+}
+
+# ==============================================================================
+# その他
+# ==============================================================================
 
 @test "copy-ai-configs.sh: シンタックスエラーがない" {
     run bash -n "${COPY_SCRIPT}"
