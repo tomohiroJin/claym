@@ -12,7 +12,7 @@ collect_mcp_list() {
 }
 
 check_mcp_registrations() {
-  local required=(serena playwright markitdown imagesorcery filesystem)
+  local required=(serena playwright markitdown imagesorcery filesystem sequential-thinking memory git)
   local optional=(context7)
   local summary=()
   local cli

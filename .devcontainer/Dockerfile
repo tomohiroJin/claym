@@ -193,7 +193,9 @@ RUN npm install -g \
     yq \
     qtrn \
     # モダン CLI ツール
-    tldr
+    tldr \
+    # v0.3.0: 段階的思考プロセスMCP（事前インストールで初回起動を高速化）
+    @modelcontextprotocol/server-sequential-thinking@latest
 
 # Playwright のブラウザ本体とシステム依存関係を事前取得して、
 # MCP の初回利用時の待ち時間をなくします。--with-deps フラグは、

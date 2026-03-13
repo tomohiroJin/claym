@@ -152,5 +152,8 @@ git config --global diff.colorMoved default
 | context7 (CLI) | ドキュメント検索 MCP（npx 経由で起動） | `npx -y @upstash/context7-mcp --help` |
 | mcp-github | GitHub 操作用 MCP | `uvx mcp-github --help` |
 | firecrawl | Web クローリング MCP | `npx -y firecrawl-mcp --help` |
+| sequential-thinking | 段階的思考プロセスをサポート | `npx -y @modelcontextprotocol/server-sequential-thinking` |
+| memory | ナレッジグラフによる情報永続化 | `npx -y @modelcontextprotocol/server-memory` |
+| mcp-server-git | Git リポジトリ操作 | `uvx mcp-server-git --repository .` |
 
 > それぞれのツールはコンテナ内ですぐに利用できます。バージョン確認や詳細オプションは `--help` で確認してください。

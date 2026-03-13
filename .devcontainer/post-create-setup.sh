@@ -158,6 +158,36 @@ register_github() {
     uvx mcp-github
 }
 
+register_sequential_thinking() {
+  if ! $HAVE_NPX; then
+    warn "npx が見つからないため Sequential Thinking MCP 登録をスキップしました。"
+    return
+  fi
+  mcp_register_command_all "sequential-thinking" \
+    npx -y @modelcontextprotocol/server-sequential-thinking
+}
+
+register_memory() {
+  if ! $HAVE_NPX; then
+    warn "npx が見つからないため Memory MCP 登録をスキップしました。"
+    return
+  fi
+  local memory_dir="${ROOT}/local/memory-bank"
+  mkdir -p "$memory_dir"
+  mcp_register_env_command_all "memory" \
+    "MEMORY_FILE_PATH=${memory_dir}/memory.json" \
+    npx -y @modelcontextprotocol/server-memory
+}
+
+register_git() {
+  if ! $HAVE_UV; then
+    warn "uv が見つからないため Git MCP 登録をスキップしました。"
+    return
+  fi
+  mcp_register_command_all "git" \
+    uvx mcp-server-git --repository "$ROOT"
+}
+
 register_firecrawl() {
   if [[ -z "${FIRECRAWL_API_KEY:-}" ]]; then
     info "FIRECRAWL_API_KEY が未設定のため Firecrawl MCP は登録しません。"
@@ -177,6 +207,9 @@ register_markitdown
 register_imagesorcery
 register_filesystem
 register_context7
+register_sequential_thinking
+register_memory
+register_git
 register_github
 register_firecrawl
 

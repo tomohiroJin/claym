@@ -2,18 +2,18 @@
 
 ## Phase 1: MCP 追加 + ENABLE_TOOL_SEARCH
 
-- [ ] `.devcontainer/Dockerfile` — npm グローバルに `@modelcontextprotocol/server-sequential-thinking` を追加
-- [ ] `.devcontainer/post-create-setup.sh` — 3 つの MCP 登録関数を追加（sequential-thinking, memory, git）
-- [ ] `.devcontainer/post-create-setup.sh` — register 呼び出しリストに 3 関数を追加
-- [ ] `.claude/settings.local.json` — `enableToolSearch: true` を追加
-- [ ] `.claude/settings.local.json` — 3 MCP 定義を追加（sequential-thinking, memory, git）
-- [ ] `.claude/settings.local.json` — permissions.allow に 3 MCP の権限を追加
-- [ ] `.gemini/settings.json` — 3 MCP 定義を追加
-- [ ] `templates/.codex/config.toml.example` — 3 MCP 定義を追加
-- [ ] `templates/.claude/settings.local.json.example` — 上記と同期更新
-- [ ] `templates/.gemini/settings.json.example` — 上記と同期更新
-- [ ] `scripts/health/checks/mcp.sh` — required 配列に 3 MCP を追加
-- [ ] `docs/container-tooling.md` — 「バンドル済み MCP サーバー」テーブルに 3 MCP を追加
+- [x] `.devcontainer/Dockerfile` — npm グローバルに `@modelcontextprotocol/server-sequential-thinking` を追加
+- [x] `.devcontainer/post-create-setup.sh` — 3 つの MCP 登録関数を追加（sequential-thinking, memory, git）
+- [x] `.devcontainer/post-create-setup.sh` — register 呼び出しリストに 3 関数を追加
+- [x] `.claude/settings.local.json` — `enableToolSearch: true` を追加
+- [x] `.claude/settings.local.json` — 3 MCP 定義を追加（sequential-thinking, memory, git）
+- [x] `.claude/settings.local.json` — permissions.allow に 3 MCP の権限を追加
+- [x] `.gemini/settings.json` — 3 MCP 定義を追加
+- [x] `templates/.codex/config.toml.example` — 3 MCP 定義を追加
+- [x] `templates/.claude/settings.local.json.example` — 上記と同期更新
+- [x] `templates/.gemini/settings.json.example` — 上記と同期更新
+- [x] `scripts/health/checks/mcp.sh` — required 配列に 3 MCP を追加
+- [x] `docs/container-tooling.md` — 「バンドル済み MCP サーバー」テーブルに 3 MCP を追加
 
 ## Phase 2: CLI ツール拡充
 
