@@ -17,15 +17,15 @@
 
 ## Phase 2: CLI ツール拡充
 
-- [ ] `.devcontainer/Dockerfile` — APT ブロックに direnv, graphviz, chafa を追加
-- [ ] `.devcontainer/Dockerfile` — バイナリ DL ブロックに just, difftastic, dust, sd, watchexec, duckdb, qsv を追加
-- [ ] `.devcontainer/Dockerfile` — npm グローバルに @mermaid-js/mermaid-cli を追加
-- [ ] `.devcontainer/Dockerfile` — zshrc に direnv フックを追加
-- [ ] `scripts/health/checks/cli-tools.sh` — check_modern_cli_tools にツール追加
-- [ ] `scripts/health/checks/cli-tools.sh` — check_modern_cli_versions にバージョンチェック追加
-- [ ] `scripts/health/checks/cli-tools.sh` — check_shell_aliases に direnv hook 追加
-- [ ] `docs/container-tooling.md` — 新ツールの情報を追加
-- [ ] `README.md` — ツール一覧セクションを更新
+- [x] `.devcontainer/Dockerfile` — APT ブロックに direnv, graphviz, chafa を追加
+- [x] `.devcontainer/Dockerfile` — バイナリ DL ブロックに just, difftastic, dust, sd, watchexec, duckdb, qsv を追加
+- [x] `.devcontainer/Dockerfile` — npm グローバルに @mermaid-js/mermaid-cli を追加
+- [x] `.devcontainer/Dockerfile` — zshrc に direnv フックを追加
+- [x] `scripts/health/checks/cli-tools.sh` — check_modern_cli_tools にツール追加
+- [x] `scripts/health/checks/cli-tools.sh` — check_modern_cli_versions にバージョンチェック追加
+- [x] `scripts/health/checks/cli-tools.sh` — check_shell_aliases に direnv hook 追加
+- [x] `docs/container-tooling.md` — 新ツールの情報を追加
+- [x] `README.md` — ツール一覧セクションを更新
 
 ## Phase 3: GPU 対応 — ローカル LLM
 

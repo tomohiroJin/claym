@@ -29,19 +29,21 @@ Claym プロジェクトでは、AI エージェント（Claude Code / Codex CLI
 - uv（Python プロジェクトの高速ランタイム）
 - Git / Git LFS / curl / wget / jq など基本ツール
 - **ベーシック CLI**: vim, less, nano, bash-completion, man-db, manpages, iproute2, net-tools, procps, psmisc, rsync, zip, openssh-client など
-- **モダン CLI**: ripgrep, fd, bat, fzf, tree, zoxide, eza, tldr, git-delta, btop, hyperfine, ncdu, cloc
+- **モダン CLI**: ripgrep, fd, bat, fzf, tree, zoxide, eza, tldr, git-delta, btop, hyperfine, ncdu, cloc, direnv, just, difftastic, graphviz, duckdb, dust, sd, watchexec, qsv, chafa, mermaid-cli
 - フォントと X 関連ライブラリを追加し、Playwright/Chromium と ImageSorcery に対応
 
 ### 2.1.1 インストール済みツールの概要
 
 コンテナにはデータ分析・ログ解析・ネットワーク診断など、業務でよく使う CLI とライブラリがまとまって導入されています。詳細な一覧は [docs/container-tooling.md](docs/container-tooling.md) にカテゴリ別の表としてまとめています。ここでは代表的なカテゴリのみ挙げます。
 
-- **データ分析**: pandas / csvkit / Jupyter
+- **データ分析**: pandas / csvkit / Jupyter / duckdb / qsv
 - **ログ解析**: GoAccess / lnav / yq
 - **Web・API 連携**: HTTPie / requests / BeautifulSoup4
 - **画像・動画処理**: ImageMagick / FFmpeg / libwebp
 - **ネットワーク診断**: ping / dig / traceroute / mtr
 - **Git/GitHub 補助**: gh / git-extras / tig
+- **タスクランナー・ビルド**: just / direnv / watchexec
+- **ダイアグラム生成**: graphviz / mermaid-cli
 
 ### 2.2 プリインストール済み AI CLI
 

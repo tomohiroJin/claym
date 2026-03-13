@@ -114,7 +114,11 @@ RUN set -eux; \
     btop \
     hyperfine \
     ncdu \
-    cloc; \
+    cloc \
+    # v0.3.0: 追加CLIツール
+    direnv \
+    graphviz \
+    chafa; \
     mkdir -p /etc/apt/keyrings; \
     curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
     | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg >/dev/null; \
@@ -194,6 +198,8 @@ RUN npm install -g \
     qtrn \
     # モダン CLI ツール
     tldr \
+    # v0.3.0: ダイアグラム生成（Playwright の Chromium を再利用）
+    @mermaid-js/mermaid-cli@latest \
     # v0.3.0: 段階的思考プロセスMCP（事前インストールで初回起動を高速化）
     @modelcontextprotocol/server-sequential-thinking@latest
 
@@ -293,7 +299,37 @@ RUN set -eux; \
     # git-delta v0.18.2
     curl -sLO "https://github.com/dandavison/delta/releases/download/0.18.2/delta-0.18.2-x86_64-unknown-linux-musl.tar.gz"; \
     tar -xzf delta-*.tar.gz --strip-components=1 -C /usr/local/bin delta-0.18.2-x86_64-unknown-linux-musl/delta; \
-    rm delta-*.tar.gz
+    rm delta-*.tar.gz; \
+    # v0.3.0: just (タスクランナー)
+    curl -sLO "https://github.com/casey/just/releases/download/1.36.0/just-1.36.0-x86_64-unknown-linux-musl.tar.gz"; \
+    tar -xzf just-*.tar.gz -C /usr/local/bin just; \
+    rm just-*.tar.gz; \
+    # v0.3.0: difftastic (構文認識diff)
+    curl -sLO "https://github.com/Wilfred/difftastic/releases/download/0.62.0/difft-x86_64-unknown-linux-gnu.tar.gz"; \
+    tar -xzf difft-*.tar.gz -C /usr/local/bin; \
+    rm difft-*.tar.gz; \
+    # v0.3.0: dust (ディスク使用量可視化)
+    curl -sLO "https://github.com/bootandy/dust/releases/download/v1.1.1/dust-v1.1.1-x86_64-unknown-linux-musl.tar.gz"; \
+    tar -xzf dust-*.tar.gz --strip-components=1 -C /usr/local/bin dust-v1.1.1-x86_64-unknown-linux-musl/dust; \
+    rm dust-*.tar.gz; \
+    # v0.3.0: sd (sed代替)
+    curl -sLO "https://github.com/chmln/sd/releases/download/v1.0.0/sd-v1.0.0-x86_64-unknown-linux-musl.tar.gz"; \
+    tar -xzf sd-*.tar.gz -C /usr/local/bin sd; \
+    rm sd-*.tar.gz; \
+    # v0.3.0: watchexec (ファイル監視)
+    curl -sLO "https://github.com/watchexec/watchexec/releases/download/v2.2.0/watchexec-2.2.0-x86_64-unknown-linux-musl.tar.xz"; \
+    tar -xJf watchexec-*.tar.xz --strip-components=1 -C /usr/local/bin watchexec-2.2.0-x86_64-unknown-linux-musl/watchexec; \
+    rm watchexec-*.tar.xz; \
+    # v0.3.0: duckdb (組み込みSQL分析)
+    curl -sLO "https://github.com/duckdb/duckdb/releases/download/v1.1.3/duckdb_cli-linux-amd64.zip"; \
+    unzip -o duckdb_cli-linux-amd64.zip -d /usr/local/bin; \
+    rm duckdb_cli-linux-amd64.zip; \
+    # v0.3.0: qsv (CSV高速処理)
+    curl -sLO "https://github.com/jqnatividad/qsv/releases/download/0.135.0/qsv-0.135.0-x86_64-unknown-linux-gnu.zip"; \
+    unzip -o qsv-*.zip -d /tmp/qsv-extract; \
+    cp /tmp/qsv-extract/qsv /usr/local/bin/qsv; \
+    chmod +x /usr/local/bin/qsv; \
+    rm -rf qsv-*.zip /tmp/qsv-extract
 
 # Rust 製 CLI ツール（APT に統一）: btop/hyperfine/ncdu/cloc は上の apt ブロックで導入済み
 
@@ -315,6 +351,8 @@ RUN su vscode -c 'sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/mas
     && echo 'alias top="btop"' >> /home/vscode/.zshrc \
     && echo 'eval "$(zoxide init zsh)"' >> /home/vscode/.zshrc \
     && echo 'alias cd="z"' >> /home/vscode/.zshrc \
+    && echo '# v0.3.0: direnv フック（.envrc の自動読み込み）' >> /home/vscode/.zshrc \
+    && echo 'eval "$(direnv hook zsh)"' >> /home/vscode/.zshrc \
     && chown vscode:vscode /home/vscode/.zshrc
 
 # Git delta の設定

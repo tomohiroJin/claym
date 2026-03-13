@@ -2,7 +2,7 @@
 # モダン CLI ツール関連のチェック
 
 check_modern_cli_tools() {
-  local tools=(zoxide eza tldr delta)
+  local tools=(zoxide eza tldr delta direnv just difft dust sd watchexec duckdb qsv chafa mmdc dot)
   local missing=()
   local tool
   for tool in "${tools[@]}"; do
@@ -25,6 +25,16 @@ check_modern_cli_versions() {
     "eza --version"
     "tldr --version"
     "delta --version"
+    "direnv --version"
+    "just --version"
+    "difft --version"
+    "dust --version"
+    "sd --version"
+    "watchexec --version"
+    "duckdb --version"
+    "qsv --version"
+    "chafa --version"
+    "mmdc --version"
   )
   local outputs=()
   local cmd
@@ -70,6 +80,7 @@ check_shell_aliases() {
     "alias find="
     "alias top="
     "zoxide init"
+    "direnv hook"
   )
   local missing_aliases=()
   local alias_pattern
