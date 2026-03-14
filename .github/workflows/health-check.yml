@@ -20,6 +20,7 @@ jobs:
       - name: Run setup scripts tests in dev container
         uses: devcontainers/ci@v0.3
         with:
+          configFile: .devcontainer/cpu/devcontainer.json
           runCmd: |
             # セットアップスクリプトのテストを実行
             bash scripts/test/run-setup-tests.sh all
@@ -27,6 +28,7 @@ jobs:
       - name: Run health check in dev container
         uses: devcontainers/ci@v0.3
         with:
+          configFile: .devcontainer/cpu/devcontainer.json
           runCmd: |
             scripts/health/check-environment.sh --json > health-check-result.json
             cat health-check-result.json

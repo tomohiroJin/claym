@@ -94,6 +94,7 @@ check_test_files() {
                 "${TEMPLATE_TESTS_DIR}/cross-tool-consistency.bats"
                 "${TEMPLATE_TESTS_DIR}/template-genericity.bats"
                 "${TEMPLATE_TESTS_DIR}/init-script-integration.bats"
+                "${TEMPLATE_TESTS_DIR}/skill-quality.bats"
             )
             ;;
         "all")
@@ -107,6 +108,7 @@ check_test_files() {
                 "${TEMPLATE_TESTS_DIR}/cross-tool-consistency.bats"
                 "${TEMPLATE_TESTS_DIR}/template-genericity.bats"
                 "${TEMPLATE_TESTS_DIR}/init-script-integration.bats"
+                "${TEMPLATE_TESTS_DIR}/skill-quality.bats"
             )
             ;;
     esac
