@@ -57,4 +57,10 @@
 - [x] L1: config.toml.example — プレースホルダー置換の注意コメントを強化
 - [x] L2: gpu-setup.md — nvidia-container-toolkit 公式ドキュメントリンクを追加
 - [x] M5: gpu-setup.md / README.md — `OLLAMA_HOST` の値を host:port 形式に統一
-- [x] M6: devcontainer.json に `--gpus=all` をデフォルト追加、ドキュメントから devcontainer.local.json による GPU 設定案内を削除
+- [x] M6: devcontainer.local.json による GPU 設定が機能しない問題を特定
+- [x] M7: GPU/CPU 別 devcontainer 構成に分離（gpu/ と cpu/ サブディレクトリ）
+  - [x] `.devcontainer/gpu/devcontainer.json` を作成（--gpus=all あり）
+  - [x] `.devcontainer/cpu/devcontainer.json` を作成（--gpus=all なし）
+  - [x] `.devcontainer/devcontainer.json`（ルート）を削除
+  - [x] docs/gpu-setup.md を GPU/CPU 選択方式に更新
+  - [x] README.md を更新

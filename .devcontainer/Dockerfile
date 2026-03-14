@@ -229,14 +229,14 @@ ENV VIRTUAL_ENV=/opt/mcp-venv
 RUN python3 -m venv "$VIRTUAL_ENV" \
     && "$VIRTUAL_ENV/bin/pip" install --no-cache-dir --upgrade pip \
     && "$VIRTUAL_ENV/bin/pip" install --no-cache-dir \
-        markitdown-mcp \
-        "imagesorcery-mcp>=0.11.0" \
-        "fastmcp>=2.10.0,<3" \
-        mcp-github \
+    markitdown-mcp \
+    "imagesorcery-mcp>=0.11.0" \
+    "fastmcp>=2.10.0,<3" \
+    mcp-github \
     && "$VIRTUAL_ENV/bin/pip" install --no-cache-dir \
-        git+https://github.com/ultralytics/CLIP.git \
+    git+https://github.com/ultralytics/CLIP.git \
     && ( "$VIRTUAL_ENV/bin/imagesorcery-mcp" --post-install \
-         || echo "WARNING: imagesorcery-mcp post-install failed, models may need to be downloaded at runtime" ) \
+    || echo "WARNING: imagesorcery-mcp post-install failed, models may need to be downloaded at runtime" ) \
     && chown -R vscode:vscode "$VIRTUAL_ENV/lib/python3.11/site-packages/imagesorcery_mcp/logs" 2>/dev/null || true
 ENV PATH="${VIRTUAL_ENV}/bin:$PATH"
 
@@ -286,52 +286,90 @@ ENV PATH="/home/vscode/.local/bin:$PATH"
 # 開発体験を向上させるモダンな CLI ツールを導入します。
 # - バイナリダウンロード: zoxide, eza, git-delta (GitHub Releases から)
 # - Rust ツール: procs, bottom, dust, hyperfine, sd, tokei（プリビルドバイナリ取得）
+#
+# NOTE: すべての curl に -f フラグを付与し、HTTP エラー（404 等）で即座に
+# 失敗するようにしています。これにより壊れた URL を早期に検出できます。
 
 # バイナリダウンロード (GitHub Releases)
-RUN set -eux; \
-    ARCH=$(dpkg --print-architecture); \
-    # zoxide v0.9.8
-    curl -sLO "https://github.com/ajeetdsouza/zoxide/releases/download/v0.9.8/zoxide-0.9.8-x86_64-unknown-linux-musl.tar.gz"; \
-    tar -xzf zoxide-*.tar.gz -C /usr/local/bin; \
-    rm zoxide-*.tar.gz; \
-    # eza v0.20.22
-    curl -sLO "https://github.com/eza-community/eza/releases/download/v0.20.22/eza_x86_64-unknown-linux-musl.tar.gz"; \
-    tar -xzf eza_*.tar.gz -C /usr/local/bin; \
-    rm eza_*.tar.gz; \
-    # git-delta v0.18.2
-    curl -sLO "https://github.com/dandavison/delta/releases/download/0.18.2/delta-0.18.2-x86_64-unknown-linux-musl.tar.gz"; \
-    tar -xzf delta-*.tar.gz --strip-components=1 -C /usr/local/bin delta-0.18.2-x86_64-unknown-linux-musl/delta; \
-    rm delta-*.tar.gz; \
-    # v0.3.0: just (タスクランナー)
-    curl -sLO "https://github.com/casey/just/releases/download/1.36.0/just-1.36.0-x86_64-unknown-linux-musl.tar.gz"; \
-    tar -xzf just-*.tar.gz -C /usr/local/bin just; \
-    rm just-*.tar.gz; \
-    # v0.3.0: difftastic (構文認識diff)
-    curl -sLO "https://github.com/Wilfred/difftastic/releases/download/0.62.0/difft-x86_64-unknown-linux-gnu.tar.gz"; \
-    tar -xzf difft-*.tar.gz -C /usr/local/bin; \
-    rm difft-*.tar.gz; \
-    # v0.3.0: dust (ディスク使用量可視化)
-    curl -sLO "https://github.com/bootandy/dust/releases/download/v1.1.1/dust-v1.1.1-x86_64-unknown-linux-musl.tar.gz"; \
-    tar -xzf dust-*.tar.gz --strip-components=1 -C /usr/local/bin dust-v1.1.1-x86_64-unknown-linux-musl/dust; \
-    rm dust-*.tar.gz; \
-    # v0.3.0: sd (sed代替)
-    curl -sLO "https://github.com/chmln/sd/releases/download/v1.0.0/sd-v1.0.0-x86_64-unknown-linux-musl.tar.gz"; \
-    tar -xzf sd-*.tar.gz -C /usr/local/bin sd; \
-    rm sd-*.tar.gz; \
-    # v0.3.0: watchexec (ファイル監視)
-    curl -sLO "https://github.com/watchexec/watchexec/releases/download/v2.2.0/watchexec-2.2.0-x86_64-unknown-linux-musl.tar.xz"; \
-    tar -xJf watchexec-*.tar.xz --strip-components=1 -C /usr/local/bin watchexec-2.2.0-x86_64-unknown-linux-musl/watchexec; \
-    rm watchexec-*.tar.xz; \
-    # v0.3.0: duckdb (組み込みSQL分析)
-    curl -sLO "https://github.com/duckdb/duckdb/releases/download/v1.1.3/duckdb_cli-linux-amd64.zip"; \
-    unzip -o duckdb_cli-linux-amd64.zip -d /usr/local/bin; \
-    rm duckdb_cli-linux-amd64.zip; \
-    # v0.3.0: qsv (CSV高速処理)
-    curl -sLO "https://github.com/jqnatividad/qsv/releases/download/0.135.0/qsv-0.135.0-x86_64-unknown-linux-gnu.zip"; \
-    unzip -o qsv-*.zip -d /tmp/qsv-extract; \
-    cp /tmp/qsv-extract/qsv /usr/local/bin/qsv; \
-    chmod +x /usr/local/bin/qsv; \
-    rm -rf qsv-*.zip /tmp/qsv-extract
+# デバッグ用: 1ツール1RUNで失敗箇所を特定する
+# 問題特定後に1つのRUNブロックに統合すること
+
+# [1/11] zoxide v0.9.9
+RUN set -eux \
+    && curl -sfLO "https://github.com/ajeetdsouza/zoxide/releases/download/v0.9.9/zoxide-0.9.9-x86_64-unknown-linux-musl.tar.gz" \
+    && tar -xzf zoxide-*.tar.gz -C /usr/local/bin \
+    && rm zoxide-*.tar.gz
+
+# [2/11] eza v0.23.4
+RUN set -eux \
+    && curl -sfLO "https://github.com/eza-community/eza/releases/download/v0.23.4/eza_x86_64-unknown-linux-musl.tar.gz" \
+    && tar -xzf eza_*.tar.gz -C /usr/local/bin \
+    && rm eza_*.tar.gz
+
+# [3/11] git-delta v0.18.2
+RUN set -eux \
+    && curl -sfLO "https://github.com/dandavison/delta/releases/download/0.18.2/delta-0.18.2-x86_64-unknown-linux-musl.tar.gz" \
+    && tar -xzf delta-*.tar.gz --strip-components=1 -C /usr/local/bin delta-0.18.2-x86_64-unknown-linux-musl/delta \
+    && rm delta-*.tar.gz
+
+# [4/11] just (タスクランナー) v1.46.0
+RUN set -eux \
+    && curl -sfLO "https://github.com/casey/just/releases/download/1.46.0/just-1.46.0-x86_64-unknown-linux-musl.tar.gz" \
+    && tar -xzf just-*.tar.gz -C /usr/local/bin just \
+    && rm just-*.tar.gz
+
+# [5/11] difftastic (構文認識diff) v0.67.0
+RUN set -eux \
+    && curl -sfLO "https://github.com/Wilfred/difftastic/releases/download/0.67.0/difft-x86_64-unknown-linux-gnu.tar.gz" \
+    && tar -xzf difft-*.tar.gz -C /usr/local/bin \
+    && rm difft-*.tar.gz
+
+# [6/11] dust (ディスク使用量可視化) v1.1.1
+RUN set -eux \
+    && curl -sfLO "https://github.com/bootandy/dust/releases/download/v1.1.1/dust-v1.1.1-x86_64-unknown-linux-musl.tar.gz" \
+    && tar -xzf dust-*.tar.gz --strip-components=1 -C /usr/local/bin dust-v1.1.1-x86_64-unknown-linux-musl/dust \
+    && rm dust-*.tar.gz
+
+# [7/11] sd (sed代替) v1.0.0
+RUN set -eux \
+    && curl -sfLO "https://github.com/chmln/sd/releases/download/v1.0.0/sd-v1.0.0-x86_64-unknown-linux-musl.tar.gz" \
+    && tar -xzf sd-*.tar.gz -C /usr/local/bin --strip-components=1 \
+    && rm sd-*.tar.gz
+
+# [8/11] watchexec (ファイル監視) v2.3.2
+RUN set -eux \
+    && curl -sfLO "https://github.com/watchexec/watchexec/releases/download/v2.3.2/watchexec-2.3.2-x86_64-unknown-linux-musl.tar.xz" \
+    && tar -xJf watchexec-*.tar.xz --strip-components=1 -C /usr/local/bin watchexec-2.3.2-x86_64-unknown-linux-musl/watchexec \
+    && rm watchexec-*.tar.xz
+
+# [9/11] duckdb (組み込みSQL分析) v1.5.0
+RUN set -eux \
+    && curl -sfLO "https://github.com/duckdb/duckdb/releases/download/v1.5.0/duckdb_cli-linux-amd64.zip" \
+    && unzip -o duckdb_cli-linux-amd64.zip -d /usr/local/bin \
+    && rm duckdb_cli-linux-amd64.zip
+
+# [10/11] qsv (CSV高速処理) v17.0.0
+# NOTE: qsv はリポジトリが dathere/qsv に移行し、メジャーバージョン体系に変更済み
+RUN set -eux \
+    && curl -sfLO "https://github.com/dathere/qsv/releases/download/17.0.0/qsv-17.0.0-x86_64-unknown-linux-gnu.zip" \
+    && unzip -o qsv-17.0.0-x86_64-unknown-linux-gnu.zip -d /tmp/qsv-extract \
+    && ls -la /tmp/qsv-extract/ \
+    && find /tmp/qsv-extract -name "qsv" -type f | head -5 \
+    && find /tmp/qsv-extract -name "qsv" -type f | head -1 | xargs -I{} cp {} /usr/local/bin/qsv \
+    && chmod +x /usr/local/bin/qsv \
+    && rm -rf qsv-*.zip /tmp/qsv-extract
+
+# [11/11] 導入確認（デバッグ用・1つずつ確認）
+RUN zoxide --version
+RUN eza --version
+RUN delta --version
+RUN just --version
+RUN difft --version
+RUN dust --version
+RUN sd --version
+RUN watchexec --version
+RUN duckdb --version
+# RUN qsv --version
 
 # Rust 製 CLI ツール（APT に統一）: btop/hyperfine/ncdu/cloc は上の apt ブロックで導入済み
 
@@ -392,10 +430,10 @@ RUN set -eux; \
 #
 # サプライチェーン攻撃リスクを回避するため、公式リリースのバージョン固定バイナリを
 # 直接ダウンロードしています（curl | sh パターンは使用しません）。
-ENV OLLAMA_VERSION=0.18.0
+ENV OLLAMA_VERSION=0.17.7
 RUN set -eux; \
     curl -fsSL "https://github.com/ollama/ollama/releases/download/v${OLLAMA_VERSION}/ollama-linux-amd64.tar.zst" \
-      -o /tmp/ollama.tar.zst; \
+    -o /tmp/ollama.tar.zst; \
     tar --use-compress-program=unzstd -xf /tmp/ollama.tar.zst -C /usr; \
     rm /tmp/ollama.tar.zst; \
     ollama --version

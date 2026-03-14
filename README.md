@@ -274,7 +274,12 @@ bash scripts/setup/init-ai-configs.sh
 
 ### 5.3 GPU / Ollama の設定
 
-`devcontainer.json` にはデフォルトで `--gpus=all` が含まれており、NVIDIA GPU 搭載環境ではそのまま GPU アクセラレーションが利用可能です。GPU がない環境でコンテナ起動に失敗する場合は、`runArgs` から `"--gpus=all"` を削除してください。
+Dev Container は GPU 版と CPU 版の 2 構成を用意しています。VS Code でコンテナを開く際に選択ダイアログが表示されます。
+
+| 構成 | 用途 | `--gpus=all` |
+|------|------|:------------:|
+| **Claym AI Dev (GPU)** | NVIDIA GPU 搭載の Linux / WSL2 環境 | あり |
+| **Claym AI Dev (CPU)** | macOS / GPU なし環境 | なし |
 
 OS 別の詳細なセットアップ手順は [docs/gpu-setup.md](docs/gpu-setup.md) を参照してください。
 

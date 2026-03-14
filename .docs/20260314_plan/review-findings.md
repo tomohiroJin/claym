@@ -32,4 +32,33 @@
 | # | 指摘 | 対象ファイル | 対応方針 |
 |---|------|------------|---------|
 | M5 | `OLLAMA_HOST` の値がドキュメント（URL 形式）とスクリプト（host:port 形式）で不整合 | `docs/gpu-setup.md`, `README.md` | ドキュメント側を host:port 形式に統一 |
-| M6 | `devcontainer.local.json` による GPU 設定は VS Code Dev Container では自動マージされない | `devcontainer.json`, `docs/gpu-setup.md`, `README.md` | `--gpus=all` を `devcontainer.json` にデフォルトで追加し、GPU なし環境向けの対処をコメントで案内 |
+| M6 | `devcontainer.local.json` による GPU 設定は VS Code Dev Container では自動マージされない | `devcontainer.json`, `docs/gpu-setup.md`, `README.md` | GPU/CPU 別の devcontainer 構成に分離（下記 M7 で対応） |
+| M7 | `--gpus=all` をデフォルト有効にすると macOS / GPU なし環境でコンテナ起動不可 | `.devcontainer/` | GPU/CPU 別の devcontainer を用意し、VS Code の選択ダイアログで切り替え |
+
+## M7: GPU/CPU 別 devcontainer 設計
+
+### ディレクトリ構成
+
+```
+.devcontainer/
+  Dockerfile              # 共通（変更なし）
+  post-create-setup.sh    # 共通（変更なし）
+  post-start.sh           # 共通（変更なし）
+  scripts/                # 共通（変更なし）
+  gpu/
+    devcontainer.json     # GPU 版（--gpus=all あり）
+  cpu/
+    devcontainer.json     # CPU 版（--gpus=all なし）
+```
+
+### DRY 原則の維持
+
+- **Dockerfile**: 1つで共通。gpu/cpu 両方から `../Dockerfile` を参照
+- **スクリプト**: post-create-setup.sh / post-start.sh は絶対パスまたはワークスペースルートからの相対パスで参照しており変更不要
+- **devcontainer.json の差分**: `name` と `runArgs` の `--gpus=all` 有無のみ
+- **同期の担保**: 各ファイル先頭に「共通設定を変更する場合は gpu/cpu 両方を更新すること」とコメントで明記
+
+### VS Code の動作
+
+`.devcontainer/devcontainer.json`（ルート）を削除し、サブディレクトリのみにすることで、
+VS Code が「Dev Container を開く」時に GPU/CPU を選択するダイアログを表示する。

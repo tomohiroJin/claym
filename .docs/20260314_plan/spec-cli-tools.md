@@ -81,12 +81,20 @@
     unzip -o duckdb_cli-linux-amd64.zip -d /usr/local/bin; \
     rm duckdb_cli-linux-amd64.zip; \
     # v0.3.0: qsv (CSV高速処理)
-    curl -sLO "https://github.com/jqnatividad/qsv/releases/download/0.135.0/qsv-0.135.0-x86_64-unknown-linux-gnu.zip"; \
+    curl -sfLO "https://github.com/dathere/qsv/releases/download/0.135.0/qsv-0.135.0-x86_64-unknown-linux-gnu.zip"; \
     unzip -o qsv-*.zip -d /tmp/qsv-extract; \
     cp /tmp/qsv-extract/qsv /usr/local/bin/qsv; \
     chmod +x /usr/local/bin/qsv; \
     rm -rf qsv-*.zip /tmp/qsv-extract
 ```
+
+##### 修正前
+
+curl -sLO "https://github.com/jqnatividad/qsv/releases/download/0.135.0/qsv-0.135.0-x86_64-unknown-linux-gnu.zip"
+
+##### 修正後（例：リポジトリを dathere に変更 + curl に -f を追加）
+
+curl -sfLO "https://github.com/dathere/qsv/releases/download/0.135.0/qsv-0.135.0-x86_64-unknown-linux-gnu.zip"
 
 注意: 既存の `rm delta-*.tar.gz` の末尾にセミコロン + バックスラッシュを追加して継続する。
 
