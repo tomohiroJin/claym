@@ -22,7 +22,7 @@
 - [x] `.devcontainer/Dockerfile` — npm グローバルに @mermaid-js/mermaid-cli を追加
 - [x] `.devcontainer/Dockerfile` — zshrc に direnv フックを追加
 - [x] `scripts/health/checks/cli-tools.sh` — check_modern_cli_tools にツール追加
-- [x] `scripts/health/checks/cli-tools.sh` — check_modern_cli_versions にバージョンチェック追加
+- [x] `scripts/health/checks/cli-tools.sh` — check_modern_cli_versions にバージョンチェック追加（※ dot は標準エラー出力のため対応不可、コメントで記載）
 - [x] `scripts/health/checks/cli-tools.sh` — check_shell_aliases に direnv hook 追加
 - [x] `docs/container-tooling.md` — 新ツールの情報を追加
 - [x] `README.md` — ツール一覧セクションを更新

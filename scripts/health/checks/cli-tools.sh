@@ -35,6 +35,9 @@ check_modern_cli_versions() {
     "qsv --version"
     "chafa --version"
     "mmdc --version"
+    # 注: dot (graphviz) は -V でバージョンを標準エラーに出力するため、
+    # 現在のバージョン取得ロジック（stdout のみキャプチャ）では対応不可。
+    # dot の存在確認は check_modern_cli_tools で実施済み。
   )
   local outputs=()
   local cmd
