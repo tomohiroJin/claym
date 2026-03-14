@@ -20,11 +20,13 @@
     "onAutoForward": "notify",      // "openBrowser" にすると自動でブラウザを開く
     "protocol": "http"
   },
-  // 追加権限（Playwright 等用）
+  // 追加権限（Playwright 等用）+ GPU パススルー
+  // GPU がない環境でコンテナ起動に失敗する場合は "--gpus=all" を削除してください
   "runArgs": [
     "--cap-add=SYS_ADMIN",
     "--security-opt=seccomp=unconfined",
-    "--shm-size=1g"
+    "--shm-size=1g",
+    "--gpus=all"
   ],
 
   // 認証トークン（あれば利用、無ければそのまま起動）

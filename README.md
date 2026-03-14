@@ -274,18 +274,7 @@ bash scripts/setup/init-ai-configs.sh
 
 ### 5.3 GPU / Ollama の設定
 
-GPU を利用してローカル LLM を実行する場合は、`devcontainer.local.json` に `--gpus=all` を追加してコンテナを再ビルドしてください。
-
-```json
-{
-  "runArgs": [
-    "--cap-add=SYS_ADMIN",
-    "--security-opt=seccomp=unconfined",
-    "--shm-size=1g",
-    "--gpus=all"
-  ]
-}
-```
+`devcontainer.json` にはデフォルトで `--gpus=all` が含まれており、NVIDIA GPU 搭載環境ではそのまま GPU アクセラレーションが利用可能です。GPU がない環境でコンテナ起動に失敗する場合は、`runArgs` から `"--gpus=all"` を削除してください。
 
 OS 別の詳細なセットアップ手順は [docs/gpu-setup.md](docs/gpu-setup.md) を参照してください。
 

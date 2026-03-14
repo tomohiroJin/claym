@@ -46,23 +46,9 @@ sudo nvidia-ctk runtime configure --runtime=docker
 sudo systemctl restart docker
 ```
 
-#### devcontainer.local.json の設定
+#### devcontainer.json の設定
 
-プロジェクトルートに `.devcontainer/devcontainer.local.json` を作成します：
-
-```json
-{
-  "runArgs": [
-    "--cap-add=SYS_ADMIN",
-    "--security-opt=seccomp=unconfined",
-    "--shm-size=1g",
-    "--gpus=all"
-  ],
-  "remoteEnv": {
-    "OLLAMA_HOST": "127.0.0.1:11434"
-  }
-}
-```
+`devcontainer.json` にはデフォルトで `--gpus=all` が含まれています。GPU がない環境でコンテナ起動に失敗する場合は、`runArgs` から `"--gpus=all"` を削除してください。
 
 #### 動作確認
 
@@ -102,23 +88,9 @@ GPU 情報が表示されれば、WSL2 から GPU にアクセスできていま
 2. **Resources > WSL Integration** で使用する WSL ディストリビューションを有効化
 3. Docker Desktop を再起動
 
-#### devcontainer.local.json の設定
+#### devcontainer.json の設定
 
-Linux と同じ設定を使用します：
-
-```json
-{
-  "runArgs": [
-    "--cap-add=SYS_ADMIN",
-    "--security-opt=seccomp=unconfined",
-    "--shm-size=1g",
-    "--gpus=all"
-  ],
-  "remoteEnv": {
-    "OLLAMA_HOST": "127.0.0.1:11434"
-  }
-}
-```
+Linux と同じく、`devcontainer.json` にデフォルトで `--gpus=all` が含まれています。追加設定は不要です。
 
 #### 動作確認
 
@@ -152,15 +124,17 @@ brew install ollama
 ollama serve
 ```
 
-**devcontainer.local.json の設定:**
+**コンテナ側の設定:**
 
-```json
-{
-  "remoteEnv": {
-    "OLLAMA_HOST": "host.docker.internal:11434"
-  }
-}
+macOS では GPU パススルーが利用できないため、`devcontainer.json` の `runArgs` から `"--gpus=all"` を削除してください。
+また、ホスト側の Ollama に接続するため、`OLLAMA_HOST` 環境変数を設定します：
+
+```bash
+# ホスト側のシェルプロファイル（~/.zshrc 等）に追加
+export OLLAMA_HOST="host.docker.internal:11434"
 ```
+
+設定後、コンテナを再接続すると `devcontainer.json` の `remoteEnv` 経由で自動的に伝搬されます。
 
 **動作確認:**
 
@@ -216,33 +190,13 @@ ollama rm <モデル名>
 
 > **注意**: モデルのダウンロードにはストレージ容量とネットワーク帯域が必要です。コンテナのディスク容量に余裕があることを確認してください。
 
-## devcontainer.local.json のサンプル
+## デフォルト設定
 
-### GPU あり（Linux / Windows WSL2）
+`devcontainer.json` にはデフォルトで `--gpus=all` が含まれています。
 
-```json
-{
-  "runArgs": [
-    "--cap-add=SYS_ADMIN",
-    "--security-opt=seccomp=unconfined",
-    "--shm-size=1g",
-    "--gpus=all"
-  ],
-  "remoteEnv": {
-    "OLLAMA_HOST": "127.0.0.1:11434"
-  }
-}
-```
-
-### GPU なし / macOS（ホスト Ollama 接続）
-
-```json
-{
-  "remoteEnv": {
-    "OLLAMA_HOST": "host.docker.internal:11434"
-  }
-}
-```
+- **GPU あり（Linux / Windows WSL2）**: 追加設定は不要です。そのままコンテナをビルドしてください。
+- **GPU なし**: コンテナ起動に失敗する場合は `devcontainer.json` の `runArgs` から `"--gpus=all"` を削除してください。
+- **macOS（ホスト Ollama 接続）**: `--gpus=all` を削除し、ホスト側の環境変数に `OLLAMA_HOST=host.docker.internal:11434` を設定してください。
 
 ## トラブルシューティング
 
@@ -250,7 +204,7 @@ ollama rm <モデル名>
 
 1. **ホスト側でドライバを確認**: `nvidia-smi` がホスト側で動作するか確認してください
 2. **nvidia-container-toolkit の確認**: `nvidia-ctk --version` で存在を確認してください
-3. **devcontainer.local.json の確認**: `--gpus=all` が `runArgs` に含まれているか確認してください
+3. **devcontainer.json の確認**: `--gpus=all` が `runArgs` に含まれているか確認してください
 4. **コンテナの再ビルド**: 設定変更後は **Dev Containers: Rebuild Container** を実行してください
 
 ### Ollama サーバが起動しない

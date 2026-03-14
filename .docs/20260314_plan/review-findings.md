@@ -32,3 +32,4 @@
 | # | 指摘 | 対象ファイル | 対応方針 |
 |---|------|------------|---------|
 | M5 | `OLLAMA_HOST` の値がドキュメント（URL 形式）とスクリプト（host:port 形式）で不整合 | `docs/gpu-setup.md`, `README.md` | ドキュメント側を host:port 形式に統一 |
+| M6 | `devcontainer.local.json` による GPU 設定は VS Code Dev Container では自動マージされない | `devcontainer.json`, `docs/gpu-setup.md`, `README.md` | `--gpus=all` を `devcontainer.json` にデフォルトで追加し、GPU なし環境向けの対処をコメントで案内 |
