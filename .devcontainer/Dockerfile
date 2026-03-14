@@ -382,6 +382,14 @@ RUN set -eux; \
     git clone --depth 1 https://github.com/bats-core/bats-file.git /usr/local/lib/bats-file
 
 # ----------------------------------------------------------------------------
+# v0.3.0: Ollama CLI のインストール（ローカル LLM 用）
+#
+# GPU ホストでローカル LLM を実行するための Ollama CLI を導入します。
+# GPU を使用する場合は devcontainer.local.json に "--gpus=all" を追加してください。
+# 詳細は docs/gpu-setup.md を参照してください。
+RUN curl -fsSL https://ollama.com/install.sh | sh
+
+# ----------------------------------------------------------------------------
 # 補助スクリプトの配置
 #
 # post-create-setup.sh は AI CLI への MCP 登録を自動化します。

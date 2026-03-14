@@ -29,19 +29,19 @@
 
 ## Phase 3: GPU 対応 — ローカル LLM
 
-- [ ] `.devcontainer/Dockerfile` — Ollama CLI インストールを追加
-- [ ] `.devcontainer/devcontainer.json` — remoteEnv に OLLAMA_HOST を追加
-- [ ] `scripts/gpu/start-ollama.sh` — GPU 検出 + Ollama 起動スクリプトを新規作成
-- [ ] `docs/gpu-setup.md` — OS 別 GPU セットアップガイドを新規作成
-  - [ ] Linux セクション（nvidia-container-toolkit）
-  - [ ] Windows (WSL2) セクション（WSL2 + Docker Desktop）
-  - [ ] macOS セクション（CPU モード + ホスト Ollama 接続）
-  - [ ] 共通セクション（Ollama の使い方、モデル一覧、トラブルシューティング）
-- [ ] `scripts/health/checks/cli-tools.sh` — Ollama ヘルスチェックを追加
-- [ ] `README.md` — GPU セクションを追加（docs/gpu-setup.md へのリンク）
+- [x] `.devcontainer/Dockerfile` — Ollama CLI インストールを追加
+- [x] `.devcontainer/devcontainer.json` — remoteEnv に OLLAMA_HOST を追加
+- [x] `scripts/gpu/start-ollama.sh` — GPU 検出 + Ollama 起動スクリプトを新規作成
+- [x] `docs/gpu-setup.md` — OS 別 GPU セットアップガイドを新規作成
+  - [x] Linux セクション（nvidia-container-toolkit）
+  - [x] Windows (WSL2) セクション（WSL2 + Docker Desktop）
+  - [x] macOS セクション（CPU モード + ホスト Ollama 接続）
+  - [x] 共通セクション（Ollama の使い方、モデル一覧、トラブルシューティング）
+- [x] `scripts/health/checks/cli-tools.sh` — Ollama ヘルスチェックを追加
+- [x] `README.md` — GPU セクションを追加（docs/gpu-setup.md へのリンク）
 
 ## 横断タスク
 
-- [ ] `.gitignore` — `local/memory-bank/` が除外されていることを確認（`local/` で既にカバー）
-- [ ] 既存テスト通過確認 — `bash scripts/test/run-setup-tests.sh all` で 91 テスト通過
-- [ ] README.md — バージョン表記を v0.3.0 に更新、最終更新日を更新
+- [x] `.gitignore` — `local/memory-bank/` が除外されていることを確認（`local/` で既にカバー）
+- [x] 既存テスト通過確認 — `bash scripts/test/run-setup-tests.sh all` で 108 テスト通過
+- [x] README.md — バージョン表記を v0.3.0 に更新、最終更新日を更新

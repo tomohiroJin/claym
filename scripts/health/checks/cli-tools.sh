@@ -117,7 +117,18 @@ check_git_delta_config() {
   set_result "PASS" "Git configured to use delta" ""
 }
 
+check_ollama_installed() {
+  if ! have ollama; then
+    set_result "WARN" "Ollama CLI not found" "Rebuild container to install Ollama"
+    return
+  fi
+  local version
+  version=$(ollama --version 2>/dev/null | head -n1 || true)
+  set_result "PASS" "Ollama CLI installed ($version)" ""
+}
+
 register_check "modern-cli-tools" "Modern CLI tools" true true check_modern_cli_tools
 register_check "modern-cli-versions" "Modern CLI versions" false false check_modern_cli_versions
 register_check "shell-aliases" "Shell aliases" false false check_shell_aliases
 register_check "git-delta-config" "Git delta config" false false check_git_delta_config
+register_check "ollama-installed" "Ollama CLI" false false check_ollama_installed
