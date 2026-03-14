@@ -26,3 +26,9 @@
 |---|------|------------|---------|
 | L1 | Codex テンプレートのハードコードパス `/workspaces/YOUR_PROJECT_NAME` | `templates/.codex/config.toml.example` | 置換が必要な旨のコメントを強化 |
 | L2 | gpu-setup.md の nvidia-container-toolkit セクションに公式ドキュメントリンクなし | `docs/gpu-setup.md` | NVIDIA 公式ドキュメントへのリンクを追加 |
+
+### 2nd レビュー追加指摘（2026-03-14）
+
+| # | 指摘 | 対象ファイル | 対応方針 |
+|---|------|------------|---------|
+| M5 | `OLLAMA_HOST` の値がドキュメント（URL 形式）とスクリプト（host:port 形式）で不整合 | `docs/gpu-setup.md`, `README.md` | ドキュメント側を host:port 形式に統一 |

@@ -6,7 +6,7 @@
 - **Ollama CLI のみ Dockerfile に追加**: `curl -fsSL https://ollama.com/install.sh | sh`
 - **GPU 利用時**: ユーザーが `devcontainer.local.json` で `--gpus all` を `runArgs` に追加
 - **起動スクリプト**: `scripts/gpu/start-ollama.sh` で GPU 検出 → `ollama serve` を起動
-- **接続先**: `OLLAMA_HOST` 環境変数で制御（デフォルト: `http://localhost:11434`）
+- **接続先**: `OLLAMA_HOST` 環境変数で制御（host:port 形式、デフォルト: `127.0.0.1:11434`）
 
 ## OS 別の GPU 対応状況
 
@@ -143,7 +143,7 @@ register_check "ollama-installed" "Ollama CLI" false false check_ollama_installe
     "--gpus=all"
   ],
   "remoteEnv": {
-    "OLLAMA_HOST": "http://localhost:11434"
+    "OLLAMA_HOST": "127.0.0.1:11434"
   }
 }
 ```
@@ -155,7 +155,7 @@ macOS ではコンテナ内で GPU を利用できないため、ホスト側で
 ```json
 {
   "remoteEnv": {
-    "OLLAMA_HOST": "http://host.docker.internal:11434"
+    "OLLAMA_HOST": "host.docker.internal:11434"
   }
 }
 ```
@@ -179,5 +179,5 @@ macOS ではコンテナ内で GPU を利用できないため、ホスト側で
 
 ### macOS
 1. ホスト側で `brew install ollama && ollama serve` を実行
-2. コンテナ内で `OLLAMA_HOST=http://host.docker.internal:11434 ollama list` が応答することを確認
+2. コンテナ内で `OLLAMA_HOST=host.docker.internal:11434 ollama list` が応答することを確認
 3. モデル実行テスト

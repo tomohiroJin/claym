@@ -104,7 +104,7 @@ Serena・Playwright・markitdown など主要な MCP サーバーを `post-creat
 - `GEMINI_API_KEY`
 - `GITHUB_TOKEN`
 - `FIRECRAWL_API_KEY`
-- `OLLAMA_HOST`（Ollama サーバの接続先、未設定時はデフォルト `http://localhost:11434`）
+- `OLLAMA_HOST`（Ollama サーバの接続先、host:port 形式。未設定時はデフォルト `127.0.0.1:11434`）
 
 ### 3.4 自動実行コマンド
 

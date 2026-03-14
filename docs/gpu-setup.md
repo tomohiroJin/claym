@@ -59,7 +59,7 @@ sudo systemctl restart docker
     "--gpus=all"
   ],
   "remoteEnv": {
-    "OLLAMA_HOST": "http://localhost:11434"
+    "OLLAMA_HOST": "127.0.0.1:11434"
   }
 }
 ```
@@ -115,7 +115,7 @@ Linux と同じ設定を使用します：
     "--gpus=all"
   ],
   "remoteEnv": {
-    "OLLAMA_HOST": "http://localhost:11434"
+    "OLLAMA_HOST": "127.0.0.1:11434"
   }
 }
 ```
@@ -157,7 +157,7 @@ ollama serve
 ```json
 {
   "remoteEnv": {
-    "OLLAMA_HOST": "http://host.docker.internal:11434"
+    "OLLAMA_HOST": "host.docker.internal:11434"
   }
 }
 ```
@@ -229,7 +229,7 @@ ollama rm <モデル名>
     "--gpus=all"
   ],
   "remoteEnv": {
-    "OLLAMA_HOST": "http://localhost:11434"
+    "OLLAMA_HOST": "127.0.0.1:11434"
   }
 }
 ```
@@ -239,7 +239,7 @@ ollama rm <モデル名>
 ```json
 {
   "remoteEnv": {
-    "OLLAMA_HOST": "http://host.docker.internal:11434"
+    "OLLAMA_HOST": "host.docker.internal:11434"
   }
 }
 ```
