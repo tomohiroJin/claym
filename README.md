@@ -1,6 +1,6 @@
 # Claym 開発コンテナ README
 
-Claym プロジェクトでは、AI エージェント（Claude Code / Codex CLI / Gemini CLI）をすぐに利用できる VS Code Dev Container を提供しています。Debian 12 (bookworm) をベースに、主要な MCP サーバーとモダンな CLI ツールをあらかじめセットアップ済みです。本書では現在のコンテナが備える機能と使い方をまとめます。
+Claym プロジェクトでは、AI エージェント（Claude Code / Codex CLI / Gemini CLI）をすぐに利用できる VS Code Dev Container を提供しています。Ubuntu 24.04 LTS をベースに、主要な MCP サーバーとモダンな CLI ツールをあらかじめセットアップ済みです。本書では現在のコンテナが備える機能と使い方をまとめます。
 
 ## 目次
 
@@ -15,7 +15,7 @@ Claym プロジェクトでは、AI エージェント（Claude Code / Codex CLI
 
 ## 1. コンテナ概要
 
-- **ベース OS**: Debian 12 (bookworm)（作業ディレクトリは `/workspaces/claym`）
+- **ベース OS**: Ubuntu 24.04 LTS（作業ディレクトリは `/workspaces/claym`）
 - **既定ユーザー**: `vscode`（UID 1000、パスワードなし sudo 権限あり） / シェル: Oh My Zsh
 - **目的**: AI 向け CLI と MCP サーバーを事前導入し、チャット開始までの初期設定を数分で完了させる
 - **利用想定**: VS Code Dev Containers 拡張での再現性ある開発、エージェント動作検証、MCP ベースの自動化

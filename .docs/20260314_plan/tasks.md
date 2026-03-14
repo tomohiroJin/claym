@@ -46,6 +46,30 @@
 - [x] 既存テスト通過確認 — `bash scripts/test/run-setup-tests.sh all` で 108 テスト通過
 - [x] README.md — バージョン表記を v0.3.0 に更新、最終更新日を更新
 
+## Phase 4: ベースイメージ移行 — debian:bookworm-slim → ubuntu:24.04
+
+詳細仕様: [spec-ubuntu-migration.md](spec-ubuntu-migration.md)
+
+### P0: ビルド直結
+- [x] `.devcontainer/Dockerfile` — `FROM debian:bookworm-slim` → `FROM ubuntu:24.04` に変更
+
+### P1: 動作不良リスク
+- [x] `.devcontainer/Dockerfile` — Python パス `python3.11` → `python3.12` に変更（imagesorcery ログディレクトリ）
+- [x] `.devcontainer/Dockerfile` — `libasound2` パッケージ名の確認・修正（`libasound2t64` の可能性）
+- [x] `.devcontainer/Dockerfile` — `bat`/`fd-find` パッケージ名とエイリアス設定の確認・修正
+
+### P2: ドキュメント更新
+- [x] `README.md` — ベース OS 記述を「Ubuntu 24.04 LTS」に更新
+- [x] `docs/container-tooling.md` — `batcat`/`fdfind` エイリアス説明の確認・更新
+
+### 検証
+- [x] コンテナビルド成功確認
+- [x] `qsv --version` 動作確認
+- [x] `bat`/`fd` 動作確認
+- [x] Python 3.12 + imagesorcery-mcp 動作確認
+- [x] 全ヘルスチェック通過（`bash scripts/health/checks/cli-tools.sh`）
+- [x] 全テスト通過（`bash scripts/test/run-setup-tests.sh all`）
+
 ## レビュー指摘事項の対応（[review-findings.md](review-findings.md)）
 
 - [x] H1: Dockerfile — Ollama インストールをバージョン固定バイナリ（v0.18.0）に変更

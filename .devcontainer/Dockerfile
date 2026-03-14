@@ -8,7 +8,7 @@
 # Oh My Zsh も含めています。使い方の詳細は README または devcontainer.json を参照してください。
 ##############################
 
-FROM debian:bookworm-slim
+FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 # 既定の作業ディレクトリとして /workspace を使用します。
@@ -65,7 +65,7 @@ RUN set -eux; \
     libgbm1 \
     libpango-1.0-0 \
     libpangocairo-1.0-0 \
-    libasound2 \
+    libasound2t64 \
     libx11-xcb1 \
     libxss1 \
     libxkbcommon0 \
@@ -147,9 +147,11 @@ RUN set -eux; \
     openssl; \
     rm -rf /var/lib/apt/lists/*
 
-# 非 root ユーザー（vscode）を作成し、パスワードなし sudo を許可します。
-# Claude Code YOLO モードは root 実行を拒否するため、非 root ユーザーが必要です。
-RUN groupadd --gid 1000 vscode \
+# Ubuntu 24.04 にはデフォルトで ubuntu ユーザー（UID/GID 1000）が存在するため、
+# 先に削除してから vscode ユーザーを作成する
+RUN userdel -r ubuntu 2>/dev/null || true \
+    && groupdel ubuntu 2>/dev/null || true \
+    && (groupadd --gid 1000 vscode 2>/dev/null || true) \
     && useradd --uid 1000 --gid 1000 -m -s /bin/zsh vscode \
     && echo "vscode ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/vscode \
     && chmod 0440 /etc/sudoers.d/vscode
@@ -237,7 +239,7 @@ RUN python3 -m venv "$VIRTUAL_ENV" \
     git+https://github.com/ultralytics/CLIP.git \
     && ( "$VIRTUAL_ENV/bin/imagesorcery-mcp" --post-install \
     || echo "WARNING: imagesorcery-mcp post-install failed, models may need to be downloaded at runtime" ) \
-    && chown -R vscode:vscode "$VIRTUAL_ENV/lib/python3.11/site-packages/imagesorcery_mcp/logs" 2>/dev/null || true
+    && chown -R vscode:vscode "$VIRTUAL_ENV/lib/python3.12/site-packages/imagesorcery_mcp/logs" 2>/dev/null || true
 ENV PATH="${VIRTUAL_ENV}/bin:$PATH"
 
 # ----------------------------------------------------------------------------

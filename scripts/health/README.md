@@ -8,7 +8,7 @@
 
 ルート README で説明している前提条件を低コストで検証します。
 
-- Debian 12 (bookworm) ベースとタイムゾーン設定の確認
+- Ubuntu 24.04 LTS ベースとタイムゾーン設定の確認
 - ワークスペースおよび ImageSorcery ログディレクトリがアクセス可能であることの確認
 - 主要 CLI (`claude`, `codex`, `gemini`, `uv`, `npx`, `npm`, `rg` など) と Python MCP コマンド (`markitdown-mcp`, `imagesorcery-mcp`, `mcp-github`) の存在チェック
 - モダン CLI ツール (`zoxide`, `eza`, `tldr`, `delta`) の存在とバージョン確認

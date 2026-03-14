@@ -126,8 +126,8 @@ test_quick_option() {
 test_system_basics_check() {
     local output
     output=$("$CHECK_SCRIPT" 2>&1 || true)
-    # "System basics" または "Debian" が出力に含まれることを確認
-    grep -qi "system.basics\|debian" <<<"$output"
+    # "System basics" または "Ubuntu" が出力に含まれることを確認
+    grep -qi "system.basics\|ubuntu" <<<"$output"
 }
 
 # テスト8: CLI 可用性チェックが実行されること

@@ -30,6 +30,13 @@ v0.2.0 で拡充した MCP サーバ群・データ分析ツール・モダン C
   - Windows: WSL2 経由で NVIDIA GPU 対応
   - macOS: GPU パススルー非対応、CPU モードまたはホスト側 Ollama に接続
 
+### Phase 4: ベースイメージ移行 — debian:bookworm-slim → ubuntu:24.04（優先度: 高）
+
+- **背景**: Dockerfile コメントは「Ubuntu 24.04」と記載されているが、実際のベースイメージは `debian:bookworm-slim`（glibc 2.36）
+- **直接的問題**: qsv 17.0.0 が glibc 2.38/2.39 を要求し、現環境で動作不可
+- **解決策**: `FROM ubuntu:24.04` に変更（glibc 2.39 搭載）
+- 詳細は [spec-ubuntu-migration.md](spec-ubuntu-migration.md) を参照
+
 ## 設計方針
 
 - docker-compose.yml は導入しない（構造変更最小）
@@ -65,4 +72,5 @@ v0.2.0 で拡充した MCP サーバ群・データ分析ツール・モダン C
 - [spec-mcp.md](spec-mcp.md) — Phase 1 の詳細
 - [spec-cli-tools.md](spec-cli-tools.md) — Phase 2 の詳細
 - [spec-gpu.md](spec-gpu.md) — Phase 3 の詳細
+- [spec-ubuntu-migration.md](spec-ubuntu-migration.md) — Phase 4 の詳細
 - [tasks.md](tasks.md) — 作業チェックリスト

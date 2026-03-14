@@ -10,8 +10,8 @@ check_system_basics() {
     version=$(grep '^VERSION_ID=' "$os_release" | cut -d'=' -f2- | tr -d '"')
   fi
 
-  if [[ "$os_name" != "Debian GNU/Linux" || "$version" != "12" ]]; then
-    set_result "FAIL" "Detected ${os_name:-unknown} ${version:-unknown}; expected Debian GNU/Linux 12" "Rebuild the dev container from the provided Dockerfile"
+  if [[ "$os_name" != "Ubuntu" || "$version" != "24.04" ]]; then
+    set_result "FAIL" "Detected ${os_name:-unknown} ${version:-unknown}; expected Ubuntu 24.04" "Rebuild the dev container from the provided Dockerfile"
     return
   fi
 
@@ -24,7 +24,7 @@ check_system_basics() {
     return
   fi
 
-  set_result "PASS" "Debian GNU/Linux 12 with timezone ${tz_value:-$expected_tz}" ""
+  set_result "PASS" "Ubuntu 24.04 with timezone ${tz_value:-$expected_tz}" ""
 }
 
 check_workspace_permissions() {
