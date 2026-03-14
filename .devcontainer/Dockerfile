@@ -118,7 +118,9 @@ RUN set -eux; \
     # v0.3.0: 追加CLIツール
     direnv \
     graphviz \
-    chafa; \
+    chafa \
+    # Ollama バイナリ展開に必要
+    zstd; \
     mkdir -p /etc/apt/keyrings; \
     curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
     | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg >/dev/null; \
@@ -199,9 +201,9 @@ RUN npm install -g \
     # モダン CLI ツール
     tldr \
     # v0.3.0: ダイアグラム生成（Playwright の Chromium を再利用）
-    @mermaid-js/mermaid-cli@latest \
+    @mermaid-js/mermaid-cli \
     # v0.3.0: 段階的思考プロセスMCP（事前インストールで初回起動を高速化）
-    @modelcontextprotocol/server-sequential-thinking@latest
+    @modelcontextprotocol/server-sequential-thinking
 
 # Playwright のブラウザ本体とシステム依存関係を事前取得して、
 # MCP の初回利用時の待ち時間をなくします。--with-deps フラグは、
@@ -387,7 +389,16 @@ RUN set -eux; \
 # GPU ホストでローカル LLM を実行するための Ollama CLI を導入します。
 # GPU を使用する場合は devcontainer.local.json に "--gpus=all" を追加してください。
 # 詳細は docs/gpu-setup.md を参照してください。
-RUN curl -fsSL https://ollama.com/install.sh | sh
+#
+# サプライチェーン攻撃リスクを回避するため、公式リリースのバージョン固定バイナリを
+# 直接ダウンロードしています（curl | sh パターンは使用しません）。
+ENV OLLAMA_VERSION=0.18.0
+RUN set -eux; \
+    curl -fsSL "https://github.com/ollama/ollama/releases/download/v${OLLAMA_VERSION}/ollama-linux-amd64.tar.zst" \
+      -o /tmp/ollama.tar.zst; \
+    tar --use-compress-program=unzstd -xf /tmp/ollama.tar.zst -C /usr; \
+    rm /tmp/ollama.tar.zst; \
+    ollama --version
 
 # ----------------------------------------------------------------------------
 # 補助スクリプトの配置

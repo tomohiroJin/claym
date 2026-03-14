@@ -45,3 +45,14 @@
 - [x] `.gitignore` — `local/memory-bank/` が除外されていることを確認（`local/` で既にカバー）
 - [x] 既存テスト通過確認 — `bash scripts/test/run-setup-tests.sh all` で 108 テスト通過
 - [x] README.md — バージョン表記を v0.3.0 に更新、最終更新日を更新
+
+## レビュー指摘事項の対応（[review-findings.md](review-findings.md)）
+
+- [x] H1: Dockerfile — Ollama インストールをバージョン固定バイナリ（v0.18.0）に変更
+- [x] H2: Dockerfile — npm パッケージの `@latest` タグを削除
+- [x] M1: start-ollama.sh — `OLLAMA_HOST` とヘルスチェック URL を分離
+- [x] M2: start-ollama.sh — `detect_gpu` 関数の副作用を排除
+- [x] M3: cli-tools.sh — `dot -V 2>&1` によるバージョン取得を追加
+- [x] M4: mcp.sh — `context7` が `optional` である理由をコメントで明記
+- [x] L1: config.toml.example — プレースホルダー置換の注意コメントを強化
+- [x] L2: gpu-setup.md — nvidia-container-toolkit 公式ドキュメントリンクを追加

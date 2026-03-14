@@ -31,18 +31,9 @@ fi
 OLLAMA_VERSION=$(ollama --version 2>/dev/null | head -n1 || echo "不明")
 info "Ollama CLI: ${OLLAMA_VERSION}"
 
-# --- GPU 検出 ---
-detect_gpu() {
-  if command -v nvidia-smi &>/dev/null; then
-    if nvidia-smi &>/dev/null; then
-      GPU_NAME=$(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | head -n1 || echo "不明")
-      GPU_MEMORY=$(nvidia-smi --query-gpu=memory.total --format=csv,noheader 2>/dev/null | head -n1 || echo "不明")
-      echo "detected"
-      return 0
-    fi
-  fi
-  echo "not_detected"
-  return 0
+# --- GPU 検出（戻り値のみ、副作用なし） ---
+is_gpu_available() {
+  command -v nvidia-smi &>/dev/null && nvidia-smi &>/dev/null
 }
 
 # --- オプション解析 ---
@@ -62,10 +53,10 @@ case "${1:-}" in
 esac
 
 # --- GPU 検出結果の表示 ---
-GPU_STATUS=$(detect_gpu)
-
-if [[ "$GPU_STATUS" == "detected" ]]; then
-  info "GPU を検出しました: ${GPU_NAME:-不明} (${GPU_MEMORY:-不明})"
+if is_gpu_available; then
+  GPU_NAME=$(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | head -n1 || echo "不明")
+  GPU_MEMORY=$(nvidia-smi --query-gpu=memory.total --format=csv,noheader 2>/dev/null | head -n1 || echo "不明")
+  info "GPU を検出しました: ${GPU_NAME} (${GPU_MEMORY})"
   RUN_MODE="gpu"
 else
   warn "GPU が検出されませんでした。"
@@ -80,7 +71,7 @@ fi
 
 # --check モードの場合はここで終了
 if [[ "$MODE" == "check" ]]; then
-  if [[ "$GPU_STATUS" == "detected" ]]; then
+  if [[ "$RUN_MODE" == "gpu" ]]; then
     info "GPU チェック完了: GPU が利用可能です"
   else
     warn "GPU チェック完了: GPU は利用できません（CPU モードで動作可能）"
@@ -98,15 +89,18 @@ fi
 # --- Ollama サーバの起動 ---
 info "Ollama サーバを ${RUN_MODE} モードでバックグラウンド起動します..."
 
-OLLAMA_HOST="${OLLAMA_HOST:-http://localhost:11434}"
+# OLLAMA_HOST はバインドアドレス（host:port 形式）。
+# ヘルスチェック用の API URL とは分離する。
+OLLAMA_HOST="${OLLAMA_HOST:-127.0.0.1:11434}"
 export OLLAMA_HOST
+OLLAMA_API_URL="http://${OLLAMA_HOST}"
 
 nohup ollama serve > /tmp/ollama.log 2>&1 &
 OLLAMA_PID=$!
 
 # 起動待ち（最大10秒）
 for i in $(seq 1 10); do
-  if curl -s "${OLLAMA_HOST}/api/tags" &>/dev/null; then
+  if curl -s "${OLLAMA_API_URL}/api/tags" &>/dev/null; then
     info "Ollama サーバが起動しました (PID: ${OLLAMA_PID})"
     break
   fi

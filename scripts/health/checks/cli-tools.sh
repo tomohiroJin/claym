@@ -35,9 +35,7 @@ check_modern_cli_versions() {
     "qsv --version"
     "chafa --version"
     "mmdc --version"
-    # 注: dot (graphviz) は -V でバージョンを標準エラーに出力するため、
-    # 現在のバージョン取得ロジック（stdout のみキャプチャ）では対応不可。
-    # dot の存在確認は check_modern_cli_tools で実施済み。
+    "dot -V"
   )
   local outputs=()
   local cmd
@@ -47,7 +45,7 @@ check_modern_cli_versions() {
       outputs+=("$binary: <missing>")
       continue
     fi
-    if ! out=$(env LC_ALL=C $cmd 2>/dev/null | head -n1); then
+    if ! out=$(env LC_ALL=C $cmd 2>&1 | head -n1); then
       outputs+=("$binary: <unavailable>")
     else
       outputs+=("$binary: $out")
