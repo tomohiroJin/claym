@@ -115,7 +115,86 @@ Conventional Commits 準拠:
 - 外部入力は必ずバリデーション
 - ユーザー入力をクエリ文字列に直接連結しない
 
+## ルール参照
+
+作業開始時に以下のルールファイルを読んでください：
+
+- `.codex/instructions/coding-style.md` — コーディングスタイル規約
+- `.codex/instructions/git-workflow.md` — Git ワークフロー規約
+- `.codex/instructions/security.md` — セキュリティ規約
+- `.codex/instructions/testing.md` — テスト規約
+
+## MCP ツール活用指針
+
+### serena（シンボリック操作）
+- コードの構造理解には `get_symbols_overview` → `find_symbol` の順で使用
+- シンボル単位の編集には `replace_symbol_body` を優先
+- 参照の追跡には `find_referencing_symbols` を使用
+
+### context7（ドキュメント参照）
+- ライブラリの使い方が不明な場合に `resolve-library-id` → `query-docs` で確認
+- 公式ドキュメントの最新情報を取得
+
+### filesystem（ファイル操作）
+- 非コードファイル（設定、ドキュメント等）の読み書きに使用
+- ディレクトリ構造の確認に使用
+
+### playwright（ブラウザ操作）
+- Web アプリケーションのテスト・デバッグに使用
+- スクリーンショットの取得やフォーム操作に活用
+
+## Agent Skills
+
+`.agents/skills/` に共通スキル定義があります。`/prompts:skill <スキル名>` で呼び出せます。
+
+| スキル名 | 説明 |
+|---------|------|
+| `api-design` | REST API の設計ベストプラクティスに従って API を設計・実装 |
+| `code-review` | 構造化されたコードレビューを実施 |
+| `debug-systematically` | 体系的なデバッグ手法で問題を特定・解決 |
+| `documentation-first` | ドキュメント駆動開発で仕様を先に作成 |
+| `git-workflow` | Git のベストプラクティスに従った操作 |
+| `refactor-safely` | テストで保護された安全なリファクタリング |
+| `search-first` | コードを書く前に既存パターンを調査 |
+| `security-review` | OWASP Top 10 を中心としたセキュリティレビュー |
+| `tdd-workflow` | TDD の Red-Green-Refactor サイクルで実装 |
+| `verification-loop` | ビルド・テスト・lint の検証サイクルを実行 |
+
+## カスタムプロンプト一覧
+
+`.codex/prompts/` に以下のプロンプトが利用可能です：
+
+### 基本コマンド
+| プロンプト | 説明 |
+|-----------|------|
+| `plan` | 実装計画の作成 |
+| `build-fix` | ビルドエラーの修正 |
+| `review` | コードレビューの実施 |
+| `refactor` | リファクタリングの実施 |
+| `test` | テストの生成 |
+| `code-gen` | コードの自動生成 |
+| `docs` | ドキュメントの生成 |
+| `checkpoint` | WIP コミットの作成 |
+| `tdd` | TDD サイクルの実行 |
+| `test-coverage` | テストカバレッジの分析 |
+| `yfinance` | 株価情報の取得 |
+
+### エージェントプロンプト
+| プロンプト | 説明 |
+|-----------|------|
+| `agent-architect` | 設計・アーキテクチャレビュー |
+| `agent-docs-writer` | ドキュメント作成 |
+| `agent-security` | セキュリティレビュー |
+| `agent-test-gen` | テスト生成 |
+
+### スキル統合
+| プロンプト | 説明 |
+|-----------|------|
+| `skill` | 汎用スキル呼び出し |
+
 ## 参考資料
 
 <!-- プロジェクトに応じて適宜変更してください -->
 - プロジェクトドキュメント: `docs/`
+- ルールファイル: `.codex/instructions/`
+- スキル定義: `.agents/skills/`

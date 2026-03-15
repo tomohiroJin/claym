@@ -79,12 +79,13 @@ check_test_files() {
     local test_files=()
 
     case "${test_target}" in
-        "setup"|"init"|"reinit"|"copy"|"link")
+        "setup"|"init"|"reinit"|"copy"|"link"|"copy-ai")
             test_files=(
                 "${SETUP_TESTS_DIR}/init-ai-configs.bats"
                 "${SETUP_TESTS_DIR}/reinit-ai-configs.bats"
                 "${SETUP_TESTS_DIR}/copy-template-to-local.bats"
                 "${SETUP_TESTS_DIR}/link-ai-configs.bats"
+                "${SETUP_TESTS_DIR}/copy-ai-configs.bats"
             )
             ;;
         "templates")
@@ -103,6 +104,7 @@ check_test_files() {
                 "${SETUP_TESTS_DIR}/reinit-ai-configs.bats"
                 "${SETUP_TESTS_DIR}/copy-template-to-local.bats"
                 "${SETUP_TESTS_DIR}/link-ai-configs.bats"
+                "${SETUP_TESTS_DIR}/copy-ai-configs.bats"
                 "${TEMPLATE_TESTS_DIR}/template-existence.bats"
                 "${TEMPLATE_TESTS_DIR}/template-quality.bats"
                 "${TEMPLATE_TESTS_DIR}/cross-tool-consistency.bats"
@@ -152,6 +154,9 @@ run_tests() {
         "link")
             bats "${SETUP_TESTS_DIR}/link-ai-configs.bats"
             ;;
+        "copy-ai")
+            bats "${SETUP_TESTS_DIR}/copy-ai-configs.bats"
+            ;;
         "setup")
             bats "${SETUP_TESTS_DIR}"/*.bats
             ;;
@@ -181,7 +186,8 @@ TARGET:
   reinit      reinit-ai-configs.sh のテストを実行
   copy        copy-template-to-local.sh のテストを実行
   link        link-ai-configs.sh のテストを実行
-  setup       セットアップテストをすべて実行（init + reinit + copy + link）
+  copy-ai     copy-ai-configs.sh のテストを実行
+  setup       セットアップテストをすべて実行（init + reinit + copy + link + copy-ai）
   templates   テンプレート品質テストを実行（存在確認・品質・一貫性・汎用性・init統合）
   all         すべてのテストを実行（デフォルト）
 
@@ -218,7 +224,7 @@ main() {
                 show_usage
                 exit 0
                 ;;
-            init|reinit|copy|link|setup|templates|all)
+            init|reinit|copy|link|copy-ai|setup|templates|all)
                 test_target="$1"
                 shift
                 ;;

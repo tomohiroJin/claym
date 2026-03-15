@@ -414,6 +414,9 @@ setup_codex_cli() {
 
     # カスタムプロンプトをセットアップ
     setup_codex_prompts "${codex_project_dir}" "${codex_dir}"
+
+    # インストラクション（ルール）をセットアップ
+    setup_codex_instructions "${codex_project_dir}" "${codex_dir}"
 }
 
 # Codex CLI の設定ファイルを作成してプロジェクトパスを置換
@@ -515,6 +518,62 @@ setup_codex_prompts() {
     fi
 }
 
+# Codex CLI のインストラクション（ルール）をセットアップ
+#
+# 引数:
+#   $1: プロジェクトルート側の Codex ディレクトリ
+#   $2: ホームディレクトリ側の Codex ディレクトリ
+#
+setup_codex_instructions() {
+    local codex_project_dir="$1"
+    local codex_home_dir="$2"
+    local project_instructions_dir="${codex_project_dir}/instructions"
+    local home_instructions_dir="${codex_home_dir}/instructions"
+    local official_instructions="${TEMPLATES_DIR}/.codex/instructions"
+    local local_instructions="${TEMPLATES_LOCAL_DIR}/.codex/instructions"
+
+    if [[ ! -d "${official_instructions}" && ! -d "${local_instructions}" ]]; then
+        log_debug "Codex CLI インストラクションのテンプレートが見つかりません（スキップ）"
+        return 0
+    fi
+
+    # プロジェクト共有用
+    if [[ ! -d "${project_instructions_dir}" ]]; then
+        merge_template_directories \
+            ".codex/instructions" \
+            "${TEMPLATES_DIR}" \
+            "${TEMPLATES_LOCAL_DIR}" \
+            "${PROJECT_ROOT}"
+
+        if [[ -d "${project_instructions_dir}" ]]; then
+            local shared_count
+            shared_count=$(count_files_in_directory "${project_instructions_dir}" "*.md")
+            log_success "Codex CLI インストラクション（共有）を作成しました: ${project_instructions_dir}"
+            log_info "共有インストラクション数: ${shared_count} 個"
+        fi
+    else
+        log_info "Codex CLI インストラクション（共有）は既に存在します（スキップ）"
+    fi
+
+    # 個人用
+    if [[ ! -d "${home_instructions_dir}" ]]; then
+        merge_template_directories \
+            ".codex/instructions" \
+            "${TEMPLATES_DIR}" \
+            "${TEMPLATES_LOCAL_DIR}" \
+            "${HOME}"
+
+        if [[ -d "${home_instructions_dir}" ]]; then
+            local personal_count
+            personal_count=$(count_files_in_directory "${home_instructions_dir}" "*.md")
+            log_success "Codex CLI インストラクション（個人）を作成しました: ${home_instructions_dir}"
+            log_info "個人インストラクション数: ${personal_count} 個"
+        fi
+    else
+        log_info "Codex CLI インストラクション（個人）は既に存在します（スキップ）"
+    fi
+}
+
 # =============================================================================
 # GEMINI 設定
 # =============================================================================
@@ -543,6 +602,9 @@ setup_gemini() {
 
     # カスタムコマンドをセットアップ
     setup_gemini_commands "${commands_dir}"
+
+    # ルールファイルをセットアップ
+    setup_gemini_rules "${gemini_dir}/rules"
 }
 
 # GEMINI のカスタムコマンドディレクトリをセットアップ
@@ -570,6 +632,34 @@ setup_gemini_commands() {
         fi
     else
         log_info "GEMINI カスタムコマンドは既に存在します（スキップ）"
+    fi
+}
+
+# GEMINI のルールファイルをセットアップ
+#
+# 引数:
+#   $1: ルールディレクトリパス
+#
+setup_gemini_rules() {
+    local rules_dir="$1"
+
+    if [[ ! -d "${rules_dir}" ]]; then
+        merge_template_directories \
+            ".gemini/rules" \
+            "${TEMPLATES_DIR}" \
+            "${TEMPLATES_LOCAL_DIR}" \
+            "${PROJECT_ROOT}"
+
+        if [[ -d "${rules_dir}" ]]; then
+            local rule_count
+            rule_count=$(count_files_in_directory "${rules_dir}" "*.md")
+            log_success "GEMINI ルールファイルを作成しました: ${rules_dir}"
+            log_info "利用可能なルール: ${rule_count} 個"
+        else
+            log_debug "GEMINI ルールファイルをコピーできませんでした（テンプレート未検出）"
+        fi
+    else
+        log_info "GEMINI ルールファイルは既に存在します（スキップ）"
     fi
 }
 
