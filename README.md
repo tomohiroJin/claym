@@ -71,12 +71,14 @@ Serena・Playwright・markitdown など主要な MCP サーバーを `post-creat
 - **Serena**: コードベース解析・編集 (uv経由)
 - **Filesystem**: ファイル操作 (npx経由)
 - **Playwright**: ブラウザ自動化 (npx経由)
-- **Fetch**: Web検索・ページ取得 (uvx経由)
-- **Context7**: ドキュメント検索 (npm global)
+- **Context7**: ドキュメント検索 (npx経由)
 - **markitdown**: ドキュメント変換 (pip経由)
 - **imagesorcery**: 画像処理 (pip経由)
+- **sequential-thinking**: 段階的思考プロセスをサポート (npx経由)
+- **memory**: ナレッジグラフによる情報永続化 (npx経由)
+- **git**: Git リポジトリ操作 (uvx経由)
 - **GitHub**: GitHub API統合 (uvx経由、`GITHUB_TOKEN`必須)
-- **Firecrawl**: Webスクレイピング (npm global、`FIRECRAWL_API_KEY`必須)
+- **Firecrawl**: Webスクレイピング (npx経由、`FIRECRAWL_API_KEY`必須)
 
 > `GITHUB_TOKEN` / `FIRECRAWL_API_KEY` が未設定の場合は登録をスキップし、警告だけ表示します。
 
@@ -465,4 +467,4 @@ bash /workspaces/claym/scripts/setup/init-ai-configs.sh
 ---
 
 **バージョン**: v0.3.0
-**最終更新**: 2026-03-14
+**最終更新**: 2026-03-15

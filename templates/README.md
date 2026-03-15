@@ -52,7 +52,7 @@ scripts/
 | レベル | 配置先 | 用途 | MCP サーバー |
 |--------|--------|------|-------------|
 | プロジェクト | `.claude/`, `.gemini/` | プロジェクト固有の設定 | serena, filesystem + 汎用6つ |
-| ユーザー | `~/.claude/`, `~/.config/claude-code/`, `~/.gemini/` | コンテナ全体の汎用設定 | 汎用6つ（playwright, markitdown, imagesorcery, context7, github, fetch） |
+| ユーザー | `~/.claude/`, `~/.config/claude-code/`, `~/.gemini/` | コンテナ全体の汎用設定 | 汎用サーバー群（playwright, markitdown, imagesorcery, context7, github, sequential-thinking, memory, git） |
 
 ユーザーレベル設定により、プロジェクトディレクトリ外から CLI を起動しても日本語設定や MCP サーバーが利用可能になります。
 
@@ -411,31 +411,36 @@ bash scripts/test/run-setup-tests.sh templates
 |-----------|------|--------|
 | serena | コードベース解析・編集 | 必須 |
 | filesystem | ファイル操作 | 必須 |
-| fetch | Web検索・ページ取得 | 推奨 |
-| github | GitHub API 統合 | 推奨 |
 | playwright | ブラウザ自動化 | 推奨 |
 | context7 | ドキュメント検索 | 推奨 |
+| github | GitHub API 統合 | 推奨 |
+| sequential-thinking | 段階的思考プロセス | 推奨 |
+| memory | ナレッジグラフ情報永続化 | 推奨 |
+| git | Git リポジトリ操作 | 推奨 |
 | markitdown | ドキュメント変換 | オプション |
 | imagesorcery | 画像処理 | オプション |
+| firecrawl | Web スクレイピング | オプション |
 
 ### MCPサーバーのインストール
 
 ```bash
 # Serena (Python)
-uv tool install serena
-
-# Fetch (Python)
-uvx mcp-server-fetch
+uv run --directory /opt/serena serena start-mcp-server --project $PWD
 
 # Playwright (Node.js)
-npm install -g @playwright/mcp
+npx @playwright/mcp@latest
 
-# GitHub (Python)
+# GitHub (Python、GITHUB_TOKEN 必須)
 uvx mcp-github
 
 # その他のNode.jsサーバー
-npx @modelcontextprotocol/server-filesystem
-npx @upstash/context7-mcp
+npx -y @modelcontextprotocol/server-filesystem "$PWD"
+npx -y @upstash/context7-mcp
+npx -y @modelcontextprotocol/server-sequential-thinking
+npx -y @modelcontextprotocol/server-memory
+
+# Git (Python)
+uvx mcp-server-git --repository .
 ```
 
 ## 🛡️ セキュリティ
@@ -545,8 +550,8 @@ diff templates/.claude/settings.local.json.example .claude/settings.local.json
 ## 📞 サポート
 
 - **Issue**: [GitHub Issues](https://github.com/tomohiroJin/claym/issues)
-- **ドキュメント**: [docs/spec/](../docs/spec/)
-- **FAQ**: [docs/guides/](../docs/guides/)
+- **ドキュメント**: [docs/](../docs/)
+- **スクリプトガイド**: [scripts/README.md](../scripts/README.md)
 
 ## 📄 ライセンス
 
@@ -559,5 +564,6 @@ diff templates/.claude/settings.local.json.example .claude/settings.local.json
 ---
 
 **作成日**: 2025-10-18
-**バージョン**: 1.0.0
+**最終更新**: 2026-03-15
+**バージョン**: 1.1.0
 **メンテナ**: Claude Code

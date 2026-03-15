@@ -22,7 +22,9 @@ Claude Code で使用する MCP サーバーの設定です。
 | imagesorcery | 画像処理 | `imagesorcery-mcp` |
 | github | GitHub API統合 | `uvx mcp-github` |
 | context7 | ドキュメント検索 | `npx -y @upstash/context7-mcp` |
-| fetch | Web検索・ページ取得 | `uvx mcp-server-fetch` |
+| sequential-thinking | 段階的思考プロセス | `npx -y @modelcontextprotocol/server-sequential-thinking` |
+| memory | ナレッジグラフ情報永続化 | `npx -y @modelcontextprotocol/server-memory` |
+| git | Git リポジトリ操作 | `uvx mcp-server-git --repository .` |
 
 ### permissions セクション
 
@@ -53,7 +55,9 @@ Claude Code の操作権限を制御します。
 - Filesystem: `list_directory`, `directory_tree`, `read_text_file`
 - GitHub: 全操作 (`*`)
 - Playwright: 全操作 (`*`)
-- Fetch: 全操作 (`*`)
+- Sequential Thinking: 全操作 (`*`)
+- Memory: 全操作 (`*`)
+- Git: 全操作 (`*`)
 
 **Web検索**:
 - `WebSearch`
@@ -232,8 +236,8 @@ which npx
 
 1. サーバーが正しくインストールされているか確認：
 ```bash
-uvx mcp-server-fetch --help
 npx @playwright/mcp@latest --help
+uvx mcp-server-git --help
 ```
 
 2. VSCode Developer Tools でログを確認：
@@ -247,4 +251,4 @@ npx @playwright/mcp@latest --help
 
 ---
 
-**更新日**: 2025-10-19
+**更新日**: 2026-03-15
