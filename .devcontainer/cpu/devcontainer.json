@@ -1,11 +1,14 @@
 {
-  // Claym 開発コンテナ構成（VS Code 用）
-  "name": "Claym AI Dev Environment",
+  // Claym 開発コンテナ構成 — CPU 版（GPU パススルーなし）
+  //
+  // ※ 共通設定を変更する場合は gpu/devcontainer.json も同時に更新してください。
+  //   差分は name と runArgs の "--gpus=all" のみです。
+  "name": "Claym AI Dev (CPU)",
 
-  // コンテナビルド
+  // コンテナビルド（共通 Dockerfile を参照）
   "build": {
-    "dockerfile": "Dockerfile",
-    "context": ".."
+    "dockerfile": "../Dockerfile",
+    "context": "../.."
   },
 
   // ポート転送
@@ -16,8 +19,7 @@
     "1455": { "label": "codex-oauth", "protocol": "http" }
   },
   "otherPortsAttributes": {
-    // ポートを検出したら自動で転送（通知だけでもOK）
-    "onAutoForward": "notify",      // "openBrowser" にすると自動でブラウザを開く
+    "onAutoForward": "notify",
     "protocol": "http"
   },
   // 追加権限（Playwright 等用）
@@ -33,7 +35,8 @@
     "OPENAI_API_KEY": "${localEnv:OPENAI_API_KEY}",
     "GEMINI_API_KEY": "${localEnv:GEMINI_API_KEY}",
     "GITHUB_TOKEN": "${localEnv:GITHUB_TOKEN}",
-    "FIRECRAWL_API_KEY": "${localEnv:FIRECRAWL_API_KEY}"
+    "FIRECRAWL_API_KEY": "${localEnv:FIRECRAWL_API_KEY}",
+    "OLLAMA_HOST": "${localEnv:OLLAMA_HOST}"
   },
 
   // VS Code の拡張と設定（重複を整理済み）
@@ -116,12 +119,11 @@
   // コンテナ内ユーザー
   "remoteUser": "vscode",
 
-  // Git 等のホスト依存設定は devcontainer.local.json で指定
   "mounts": [],
 
   // 初回：safe.directory 登録 → gh auth login（トークンがある場合）→ MCP 自動登録 → AI設定初期化（CLAUDE.md等）
   "postCreateCommand": "set -e; if [ -n \"$GITHUB_TOKEN\" ]; then echo \"$GITHUB_TOKEN\" | gh auth login --with-token || true; fi; sudo git config --system --add safe.directory ${containerWorkspaceFolder} || true; bash /usr/local/bin/post-create-setup.sh || true; bash ${containerWorkspaceFolder}/scripts/setup/init-ai-configs.sh || true",
 
-  // 起動毎：ワークスペースや imagesorcery ログの権限設定、Serena 用ディレクトリ調整、start-serena.sh が存在する場合のみ起動
+  // 起動毎：ワークスペースや imagesorcery ログの権限設定、Serena 用ディレクトリ調整
   "postStartCommand": "bash .devcontainer/post-start.sh"
 }

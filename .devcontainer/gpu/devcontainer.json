@@ -1,0 +1,130 @@
+{
+  // Claym 開発コンテナ構成 — GPU 版（NVIDIA GPU パススルー有効）
+  //
+  // ※ 共通設定を変更する場合は cpu/devcontainer.json も同時に更新してください。
+  //   差分は name と runArgs の "--gpus=all" のみです。
+  "name": "Claym AI Dev (GPU)",
+
+  // コンテナビルド（共通 Dockerfile を参照）
+  "build": {
+    "dockerfile": "../Dockerfile",
+    "context": "../.."
+  },
+
+  // ポート転送
+  "forwardPorts": [24282, 9323, 1455],
+  "portsAttributes": {
+    "24282": { "label": "Serena MCP dashboard", "onAutoForward": "silent" },
+    "9323": { "label": "Playwright MCP UI", "onAutoForward": "openBrowser" },
+    "1455": { "label": "codex-oauth", "protocol": "http" }
+  },
+  "otherPortsAttributes": {
+    "onAutoForward": "notify",
+    "protocol": "http"
+  },
+  // 追加権限（Playwright 等用）+ NVIDIA GPU パススルー
+  "runArgs": [
+    "--cap-add=SYS_ADMIN",
+    "--security-opt=seccomp=unconfined",
+    "--shm-size=1g",
+    "--gpus=all"
+  ],
+
+  // 認証トークン（あれば利用、無ければそのまま起動）
+  "remoteEnv": {
+    "ANTHROPIC_API_KEY": "${localEnv:ANTHROPIC_API_KEY}",
+    "OPENAI_API_KEY": "${localEnv:OPENAI_API_KEY}",
+    "GEMINI_API_KEY": "${localEnv:GEMINI_API_KEY}",
+    "GITHUB_TOKEN": "${localEnv:GITHUB_TOKEN}",
+    "FIRECRAWL_API_KEY": "${localEnv:FIRECRAWL_API_KEY}",
+    "OLLAMA_HOST": "${localEnv:OLLAMA_HOST}"
+  },
+
+  // VS Code の拡張と設定（重複を整理済み）
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        // AI アシスト
+        "anthropic.claude-code",
+        "openai.chatgpt",
+        // Git / GitHub
+        "eamodio.gitlens",
+        "github.vscode-pull-request-github",
+        "GitHub.vscode-github-actions",
+        "waderyan.gitblame",
+        // Markdown
+        "yzhang.markdown-all-in-one",
+        "shd101wyy.markdown-preview-enhanced",
+        "bierner.markdown-mermaid",
+        // 品質・整形
+        "streetsidesoftware.code-spell-checker",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-python.python",
+        "ms-python.pylint",
+        "ms-python.black-formatter",
+        // Playwright
+        "ms-playwright.playwright",
+        // コラボ
+        "ms-vsliveshare.vsliveshare",
+        // v0.2.0 追加仕様2: HTTP/API/OpenAPI
+        "humao.rest-client",
+        "42Crunch.vscode-openapi",
+        "redhat.vscode-yaml",
+        // v0.2.0 追加仕様2: ログ・データ視覚支援
+        "mechatroner.rainbow-csv",
+        "emilast.LogFileHighlighter",
+        // v0.2.0 追加仕様2: シェル/コンフィグ編集の品質
+        "timonwong.shellcheck",
+        "foxundermoon.shell-format",
+        "tamasfe.even-better-toml",
+        // v0.2.0 追加仕様2: コンテナ・体裁
+        "EditorConfig.EditorConfig"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "editor.formatOnSave": true,
+        "python.formatting.provider": "black",
+        "python.linting.pylintEnabled": true,
+        "python.analysis.typeCheckingMode": "basic",
+        "git.autofetch": true,
+        // v0.2.0 追加仕様2: HTTP/REST
+        "rest-client.environmentVariables": {
+          "$shared": {
+            "baseUrl": "http://localhost:3000"
+          }
+        },
+        "rest-client.previewResponsePanelTakeFocus": false,
+        // v0.2.0 追加仕様2: YAML（GitHub Actions / OpenAPI）
+        "yaml.format.enable": true,
+        "yaml.validation": true,
+        "yaml.schemas": {
+          "https://json.schemastore.org/github-workflow.json": "**/.github/workflows/*",
+          "https://raw.githubusercontent.com/OAI/OpenAPI-Specification/main/schemas/v3.0/schema.json": [
+            "**/openapi.yaml",
+            "**/openapi.yml"
+          ]
+        },
+        // v0.2.0 追加仕様2: Markdown
+        "markdown.preview.breaks": true,
+        "markdown.extension.toc.orderedList": false,
+        // v0.2.0 追加仕様2: Shell/品質
+        "shellformat.flags": "-i 2 -ci",
+        "shellcheck.customArgs": ["--severity=warning"],
+        // v0.2.0 追加仕様2: CSV
+        "rainbow-csv.separator.guess": true
+      }
+    }
+  },
+
+  // コンテナ内ユーザー
+  "remoteUser": "vscode",
+
+  "mounts": [],
+
+  // 初回：safe.directory 登録 → gh auth login（トークンがある場合）→ MCP 自動登録 → AI設定初期化（CLAUDE.md等）
+  "postCreateCommand": "set -e; if [ -n \"$GITHUB_TOKEN\" ]; then echo \"$GITHUB_TOKEN\" | gh auth login --with-token || true; fi; sudo git config --system --add safe.directory ${containerWorkspaceFolder} || true; bash /usr/local/bin/post-create-setup.sh || true; bash ${containerWorkspaceFolder}/scripts/setup/init-ai-configs.sh || true",
+
+  // 起動毎：ワークスペースや imagesorcery ログの権限設定、Serena 用ディレクトリ調整
+  "postStartCommand": "bash .devcontainer/post-start.sh"
+}

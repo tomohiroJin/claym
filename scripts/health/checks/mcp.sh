@@ -12,7 +12,8 @@ collect_mcp_list() {
 }
 
 check_mcp_registrations() {
-  local required=(serena playwright markitdown imagesorcery filesystem)
+  local required=(serena playwright markitdown imagesorcery filesystem sequential-thinking memory git)
+  # context7 は API キー（UPSTASH）に依存するため optional 扱い
   local optional=(context7)
   local summary=()
   local cli

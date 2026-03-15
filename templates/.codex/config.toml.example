@@ -75,6 +75,24 @@ args = ["-y", "@upstash/context7-mcp"]
 command = "uvx"
 args = ["mcp-server-fetch"]
 
+# Sequential Thinking: 段階的思考プロセス
+[mcp_servers.sequential-thinking]
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+
+# Memory: ナレッジグラフ（ワークスペース内に永続化）
+# 注意: MEMORY_FILE_PATH の YOUR_PROJECT_NAME を実際のプロジェクト名に置換してください
+[mcp_servers.memory]
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-memory"]
+env = { MEMORY_FILE_PATH = "/workspaces/YOUR_PROJECT_NAME/local/memory-bank/memory.json" }
+
+# Git: リポジトリ操作
+# 注意: --repository の YOUR_PROJECT_NAME を実際のプロジェクト名に置換してください
+[mcp_servers.git]
+command = "uvx"
+args = ["mcp-server-git", "--repository", "/workspaces/YOUR_PROJECT_NAME"]
+
 # SSE (Server-Sent Events) トランスポート設定例
 # [mcp_servers.remote_server]
 # transport = "sse"

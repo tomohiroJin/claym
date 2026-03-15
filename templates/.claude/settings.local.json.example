@@ -1,4 +1,5 @@
 {
+  "enableToolSearch": true,
   "mcpServers": {
     "serena": {
       "command": "uv",
@@ -54,6 +55,31 @@
       "args": [
         "mcp-server-fetch"
       ]
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ]
+    },
+    "memory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ],
+      "env": {
+        "MEMORY_FILE_PATH": "${workspaceFolder}/local/memory-bank/memory.json"
+      }
+    },
+    "git": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-git",
+        "--repository",
+        "${workspaceFolder}"
+      ]
     }
   },
   "permissions": {
@@ -90,6 +116,9 @@
       "mcp__github__*",
       "mcp__playwright__*",
       "mcp__fetch__*",
+      "mcp__sequential_thinking__*",
+      "mcp__memory__*",
+      "mcp__git__*",
       "WebSearch"
     ],
     "deny": [],

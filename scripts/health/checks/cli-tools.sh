@@ -2,7 +2,7 @@
 # モダン CLI ツール関連のチェック
 
 check_modern_cli_tools() {
-  local tools=(zoxide eza tldr delta)
+  local tools=(zoxide eza tldr delta direnv just difft dust sd watchexec duckdb qsv chafa mmdc dot)
   local missing=()
   local tool
   for tool in "${tools[@]}"; do
@@ -25,6 +25,17 @@ check_modern_cli_versions() {
     "eza --version"
     "tldr --version"
     "delta --version"
+    "direnv --version"
+    "just --version"
+    "difft --version"
+    "dust --version"
+    "sd --version"
+    "watchexec --version"
+    "duckdb --version"
+    "qsv --version"
+    "chafa --version"
+    "mmdc --version"
+    "dot -V"
   )
   local outputs=()
   local cmd
@@ -34,7 +45,7 @@ check_modern_cli_versions() {
       outputs+=("$binary: <missing>")
       continue
     fi
-    if ! out=$(env LC_ALL=C $cmd 2>/dev/null | head -n1); then
+    if ! out=$(env LC_ALL=C $cmd 2>&1 | head -n1); then
       outputs+=("$binary: <unavailable>")
     else
       outputs+=("$binary: $out")
@@ -70,6 +81,7 @@ check_shell_aliases() {
     "alias find="
     "alias top="
     "zoxide init"
+    "direnv hook"
   )
   local missing_aliases=()
   local alias_pattern
@@ -106,7 +118,18 @@ check_git_delta_config() {
   set_result "PASS" "Git configured to use delta" ""
 }
 
+check_ollama_installed() {
+  if ! have ollama; then
+    set_result "WARN" "Ollama CLI not found" "Rebuild container to install Ollama"
+    return
+  fi
+  local version
+  version=$(ollama --version 2>/dev/null | head -n1 || true)
+  set_result "PASS" "Ollama CLI installed ($version)" ""
+}
+
 register_check "modern-cli-tools" "Modern CLI tools" true true check_modern_cli_tools
 register_check "modern-cli-versions" "Modern CLI versions" false false check_modern_cli_versions
 register_check "shell-aliases" "Shell aliases" false false check_shell_aliases
 register_check "git-delta-config" "Git delta config" false false check_git_delta_config
+register_check "ollama-installed" "Ollama CLI" false false check_ollama_installed
