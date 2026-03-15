@@ -8,11 +8,17 @@
 scripts/
 ├── docs/                # スクリプト関連ドキュメント
 │   ├── setup-guide.md   # セットアップガイド（詳細な使い方）
+│   ├── subagents-guide.md        # サブエージェント詳細ガイド
+│   ├── subagents-examples.md     # サブエージェント使用例
 │   └── test-refactoring-report.md  # テストリファクタリングレポート
+├── gpu/                 # GPU / Ollama 関連スクリプト
+│   └── start-ollama.sh  # Ollama 起動スクリプト（GPU 検出付き）
 ├── health/              # ヘルスチェック関連スクリプト
 │   ├── checks/          # 各種チェック実装
 │   ├── lib/             # ヘルスチェック共通ライブラリ
 │   └── README.md        # ヘルスチェックの詳細ドキュメント
+├── lib/                 # 共通ヘルパーライブラリ
+│   └── logging.sh       # ログ出力関数
 ├── setup/               # セットアップ関連スクリプト
 │   ├── common.sh        # セットアップスクリプト共通ライブラリ
 │   ├── init-ai-configs.sh
