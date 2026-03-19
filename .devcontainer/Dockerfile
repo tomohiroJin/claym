@@ -8,7 +8,7 @@
 # Oh My Zsh も含めています。使い方の詳細は README または devcontainer.json を参照してください。
 ##############################
 
-FROM ubuntu:24.04
+FROM --platform=linux/amd64 ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 # 既定の作業ディレクトリとして /workspace を使用します。
@@ -322,7 +322,7 @@ RUN set -eux \
 
 # [5/11] difftastic (構文認識diff) v0.67.0
 RUN set -eux \
-    && curl -sfLO "https://github.com/Wilfred/difftastic/releases/download/0.67.0/difft-x86_64-unknown-linux-gnu.tar.gz" \
+    && curl -sfLO "https://github.com/Wilfred/difftastic/releases/download/0.67.0/difft-x86_64-unknown-linux-musl.tar.gz" \
     && tar -xzf difft-*.tar.gz -C /usr/local/bin \
     && rm difft-*.tar.gz
 
