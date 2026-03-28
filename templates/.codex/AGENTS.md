@@ -110,3 +110,8 @@ CLI ごとのパス: `.claude/rules/` / `.codex/instructions/` / `.gemini/rules/
 | `scenario-scenario-conventions.md` | シナリオ設計規約 |
 | `seo-seo-best-practices.md` | SEO ベストプラクティス |
 | `stock-investment-discipline.md` | 投資規律チェックリスト |
+
+## スキル・コマンド
+
+- **スキル**: `.agents/skills/` — 共通スキル定義
+- **コマンド**: `.codex/prompts/` — `/prompts:<コマンド名>` で呼び出し可能
