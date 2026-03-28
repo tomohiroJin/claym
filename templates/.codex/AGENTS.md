@@ -101,8 +101,12 @@ CLI ごとのパス: `.claude/rules/` / `.codex/instructions/` / `.gemini/rules/
 | `testing.md` | テストパターン・カバレッジ目標 |
 | `agent-config-agent-md-conventions.md` | Agent.md 設計規約 |
 
-### ドメイン拡張ルール（必要に応じて追加）
+### ドメイン拡張ルール（全 CLI に配置済み）
 
 | ファイル | 内容 |
 |---------|------|
-| `<ドメイン名>-<規約名>.md` | <!-- ドメイン固有の規約 --> |
+| `design-ui-ux-principles.md` | UI/UX デザイン原則チェックリスト |
+| `research-research-methodology.md` | リサーチ方法論チェックリスト |
+| `scenario-scenario-conventions.md` | シナリオ設計規約 |
+| `seo-seo-best-practices.md` | SEO ベストプラクティス |
+| `stock-investment-discipline.md` | 投資規律チェックリスト |
