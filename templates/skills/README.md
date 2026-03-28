@@ -30,6 +30,8 @@ init スクリプトにより、以下のパスにスキルがコピーされま
 | `debug-systematically` | 体系的デバッグ手法 |
 | `documentation-first` | ドキュメント駆動開発 |
 | `git-workflow` | コミット・ブランチ・PR のベストプラクティス |
+| `generate-agent-md` | プロジェクト解析 → CLAUDE.md / AGENTS.md / GEMINI.md 一括生成 |
+| `audit-agent-md` | 既存 Agent.md の品質監査・改善提案 |
 
 ## SKILL.md フォーマット
 

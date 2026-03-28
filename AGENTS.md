@@ -1,200 +1,122 @@
-# Codex CLI エージェント指示
+# claym — MCP 駆動の個人開発サンドボックス（Bash/Python/TypeScript）
 
-このファイルは Codex CLI エージェントに対する永続的な指示を提供します。
+## プロジェクトの性格
+
+**実験・プロトタイピング用のワークベンチ。** 単一のプロダクトではない。
+MCP サーバーと AI CLI（Claude Code / Codex CLI / Gemini CLI）を駆使して、
+新しいツール・技術の試行、スキル開発、ドキュメント管理を行うプラットフォーム。
+
+- 本格的な開発は `local/` 配下の個別プロジェクトで実施
+- ルートでは試行錯誤・テンプレート管理・AI 拡張の整備が中心
+
+## ディレクトリ構造（意味論）
+
+```
+claym/
+├── local/              # gitignore。個別プロジェクト群（各自の CLAUDE.md を持つ）
+│   ├── AI/             # スキル・ルール・エージェントの拡張キット（6ドメイン）
+│   │   ├── agent-config/  # Agent.md 生成・監査スキル
+│   │   ├── design/        # UI/UX デザインレビュー・デザインシステム
+│   │   ├── research/      # 体系的リサーチ・要約
+│   │   ├── scenario/      # ゲームシナリオ執筆・レビュー
+│   │   ├── seo/           # SEO 監査・コンテンツ最適化
+│   │   └── stock/         # 市場分析・銘柄分析
+│   └── <各種実験プロジェクト>/
+├── templates/          # git 追跡。3 CLI 設定のテンプレート（共有用）
+│   ├── .claude/        # Claude Code テンプレート
+│   ├── .codex/         # Codex CLI テンプレート
+│   ├── .gemini/        # Gemini CLI テンプレート
+│   └── skills/         # スキルテンプレート
+├── scripts/            # ユーティリティスクリプト
+├── docs/               # プロジェクトドキュメント
+├── .docs/              # 内部ドキュメント管理
+└── tests/              # テスト
+```
+
+**重要**: `.claude/`, `.codex/`, `.gemini/`, `local/` は gitignore 対象。
+共有したい設定は `templates/` に配置し、ローカルにコピーまたは symlink する。
+
+## テンプレート → ローカル デプロイの流れ
+
+1. `templates/` で共有テンプレートを作成・更新
+2. `local/AI/` のドメイン別スキルを開発
+3. `.claude/skills/` 等へ symlink で接続（例: `ln -s /workspaces/claym/local/AI/stock/skills/market-check`）
+4. `.claude/rules/`, `.codex/instructions/`, `.gemini/rules/` にルールを配置
+
+## MCP サーバー一覧と用途
+
+| MCP サーバー | 用途 | 使い分け |
+|-------------|------|---------|
+| **serena** | シンボリックコード操作 | 構造理解・シンボル単位の編集に優先使用 |
+| **context7** | ライブラリドキュメント参照 | API 仕様が不明な場合に必ず使用 |
+| **filesystem** | ファイル・ディレクトリ操作 | 非コードファイルの読み書き |
+| **playwright** | ブラウザ自動操作 | Web アプリのテスト・スクリーンショット |
+| **markitdown** | ドキュメント変換 | PDF/Office → Markdown 変換 |
+| **imagesorcery** | 画像処理 | リサイズ・OCR・メタ情報取得 |
+| **github** | GitHub API 操作 | Issue/PR の操作 |
+| **git** | Git 操作 | リポジトリの状態確認・操作 |
+| **memory** | 知識グラフ | セッション横断の情報保持 |
+| **sequential-thinking** | 段階的推論 | 複雑な問題の分解 |
+| **fetch** | HTTP リクエスト | 外部 API・Web ページの取得 |
 
 ## 言語設定
 
-**日本語を基本言語として使用してください。**
-
-- すべての応答は日本語で行う
-- コメントは日本語で記述
-- ドキュメントは日本語で作成
-- エラーメッセージの説明は日本語で
-- コードそのもの（変数名、関数名など）は英語でも可
-
-## コミュニケーションスタイル
-
-- 丁寧語を使用（「です・ます」調）
-- 技術用語は適切に日本語訳するか、英語のままカタカナ表記
-- 不明点は必ず質問する
-- 段階的に説明し、理解を確認しながら進める
-
-## 作業原則
-
-### 変更前の確認
-- コードを変更する前に、必ず既存の実装を読んで理解する
-- 影響範囲を事前に提示し、承認を得てから作業する
-- 既存のコードパターン・規約を尊重し、一貫性を保つ
-
-### 安全な作業
-- 破壊的変更を行う前に必ず確認する
-- 一度に大きな変更をせず、小さなステップで進める
-- 変更後は関連するテストを実行して動作確認する
-
-### 情報の正確性
-- 不確かな情報は推測であることを明示する
-- ライブラリのバージョンやAPIの仕様は最新ドキュメントで確認する
-- エラーの原因が不明な場合は、複数の可能性を提示する
-
-## 作業パターン
-
-### TDD サイクル
-1. 失敗するテストを書く（Red）
-2. テストを通す最小限の実装（Green）
-3. リファクタリング（Refactor）
-
-### テスト実行コマンド
-
-```bash
-# JavaScript / TypeScript
-npm test
-npm test -- --watch
-npm test -- --coverage
-
-# Python
-poetry run pytest tests/
-poetry run pytest --cov=src tests/
-poetry run pytest tests/test_example.py -v
-```
-
-## コード品質基準
-
-### 共通原則
-- マジックナンバーは定数化する
-- 関数は単一責任の原則に従う（1関数1目的）
-- 早期リターンで条件分岐のネストを浅く保つ
-- 命名で意図を表現する（コメントに頼らない）
-- 関数は30行以内を目安（超える場合は分割を検討）
-- パラメータは3個以内（超える場合はオブジェクトにまとめる）
-
-### TypeScript / JavaScript（該当プロジェクトの場合）
-- `any` 型の使用禁止 → `unknown` + 型ガードを使用
-- `null` より `undefined` を優先（API 境界を除く）
-- `const` を優先、`let` は必要な場合のみ、`var` は禁止
+**日本語で応答。** コード（変数名・関数名）は英語可。
+Conventional Commits 準拠: 英語 type + 日本語説明。
 
 ## コーディング規約
 
-### 命名規則
-- 変数名・関数名: `camelCase` (JS/TS) / `snake_case` (Python)
-- クラス名: `PascalCase`
-- 定数: `UPPER_SNAKE_CASE`
-- ブール値: `is_`, `has_`, `can_` などの接頭辞
+**詳細は `rules/` を参照。** ここでは rules/ に書けない暗黙知のみ記載:
 
-### コメント
-- 複雑なロジックには必ずコメントを追加（日本語）
-- TODO: `# TODO(日付): 説明`
+- このリポジトリは多言語（Bash/Python/TypeScript）— 各サブプロジェクトの言語に合わせる
+- `local/` 配下は独立プロジェクト。ルートの規約を強制しない
+- テンプレートファイルは汎用性を保つ（特定プロジェクト固有のロジックを入れない）
+- スキル定義（`skills/*/SKILL.md`）は他プロジェクトでも再利用可能な形で書く
 
-## Git ワークフロー
+## 権限の三層構造
 
-### コミットメッセージ
-Conventional Commits 準拠:
-```
-<type>: <日本語での説明>
+### Always do（常に実行）
+- 変更前に既存コードを読んで理解する
+- `rules/` の該当規約を確認してから作業する
+- MCP ツールの中で最適なものを選択して使用する
 
-- 詳細1
-- 詳細2
-```
+### Ask first（確認してから実行）
+- `templates/` 配下の共有テンプレートの変更
+- 新しいスキル・ルールファイルの追加
+- `.gitignore` パターンの変更
+- symlink の作成・変更
 
-**type**: `feat` / `fix` / `docs` / `refactor` / `test` / `style` / `chore` / `perf`
+### Never do（絶対禁止）
+- `local/` 配下のプロジェクトを git 追跡に含めない
+- API キー・トークン等の機密情報をコミットしない
+- `main` への `--force` プッシュ
+- 他人の `local/` ディレクトリ構造を前提としたコードを書かない
 
-### ブランチ命名
-- `feature/<機能名>` / `fix/<バグ名>` / `refactor/<対象>`
+## 地雷マップ
 
-## テスト
+- `'Log file: '` — 名前にスペースを含むディレクトリが存在（過去の事故の産物）。触らない
+- `tmux-*.log` — 大容量ログ（数百KB〜1MB）。読み込み禁止
 
-### テスト規約
-- AAA パターン（Arrange / Act / Assert）で記述
-- 振る舞いベース（内部実装ではなく外部振る舞いをテスト）
-- テストは独立・冪等に保つ
-- カバレッジ目標: 新規コードは80%以上
+## ルールファイル一覧
 
-## セキュリティ
+CLI ごとのパス: `.claude/rules/` / `.codex/instructions/` / `.gemini/rules/`
 
-- API キーや認証情報は環境変数で管理
-- `.env` ファイルは `.gitignore` に含める
-- 外部入力は必ずバリデーション
-- ユーザー入力をクエリ文字列に直接連結しない
+### 共通ルール（全 CLI に配置済み）
 
-## ルール参照
-
-作業開始時に以下のルールファイルを読んでください：
-
-- `.codex/instructions/coding-style.md` — コーディングスタイル規約
-- `.codex/instructions/git-workflow.md` — Git ワークフロー規約
-- `.codex/instructions/security.md` — セキュリティ規約
-- `.codex/instructions/testing.md` — テスト規約
-
-## MCP ツール活用指針
-
-### serena（シンボリック操作）
-- コードの構造理解には `get_symbols_overview` → `find_symbol` の順で使用
-- シンボル単位の編集には `replace_symbol_body` を優先
-- 参照の追跡には `find_referencing_symbols` を使用
-
-### context7（ドキュメント参照）
-- ライブラリの使い方が不明な場合に `resolve-library-id` → `query-docs` で確認
-- 公式ドキュメントの最新情報を取得
-
-### filesystem（ファイル操作）
-- 非コードファイル（設定、ドキュメント等）の読み書きに使用
-- ディレクトリ構造の確認に使用
-
-### playwright（ブラウザ操作）
-- Web アプリケーションのテスト・デバッグに使用
-- スクリーンショットの取得やフォーム操作に活用
-
-## Agent Skills
-
-`.agents/skills/` に共通スキル定義があります。`/prompts:skill <スキル名>` で呼び出せます。
-
-| スキル名 | 説明 |
+| ファイル | 内容 |
 |---------|------|
-| `api-design` | REST API の設計ベストプラクティスに従って API を設計・実装 |
-| `code-review` | 構造化されたコードレビューを実施 |
-| `debug-systematically` | 体系的なデバッグ手法で問題を特定・解決 |
-| `documentation-first` | ドキュメント駆動開発で仕様を先に作成 |
-| `git-workflow` | Git のベストプラクティスに従った操作 |
-| `refactor-safely` | テストで保護された安全なリファクタリング |
-| `search-first` | コードを書く前に既存パターンを調査 |
-| `security-review` | OWASP Top 10 を中心としたセキュリティレビュー |
-| `tdd-workflow` | TDD の Red-Green-Refactor サイクルで実装 |
-| `verification-loop` | ビルド・テスト・lint の検証サイクルを実行 |
+| `coding-style.md` | 命名規則・TypeScript/React 規約 |
+| `git-workflow.md` | コミット・ブランチ・PR 規約 |
+| `security.md` | 入力検証・機密情報管理・通信セキュリティ |
+| `testing.md` | テストパターン・カバレッジ目標 |
+| `agent-config-agent-md-conventions.md` | Agent.md 設計規約 |
 
-## カスタムプロンプト一覧
+### ドメイン拡張ルール（全 CLI に配置済み）
 
-`.codex/prompts/` に以下のプロンプトが利用可能です：
-
-### 基本コマンド
-| プロンプト | 説明 |
-|-----------|------|
-| `plan` | 実装計画の作成 |
-| `build-fix` | ビルドエラーの修正 |
-| `review` | コードレビューの実施 |
-| `refactor` | リファクタリングの実施 |
-| `test` | テストの生成 |
-| `code-gen` | コードの自動生成 |
-| `docs` | ドキュメントの生成 |
-| `checkpoint` | WIP コミットの作成 |
-| `tdd` | TDD サイクルの実行 |
-| `test-coverage` | テストカバレッジの分析 |
-| `yfinance` | 株価情報の取得 |
-
-### エージェントプロンプト
-| プロンプト | 説明 |
-|-----------|------|
-| `agent-architect` | 設計・アーキテクチャレビュー |
-| `agent-docs-writer` | ドキュメント作成 |
-| `agent-security` | セキュリティレビュー |
-| `agent-test-gen` | テスト生成 |
-
-### スキル統合
-| プロンプト | 説明 |
-|-----------|------|
-| `skill` | 汎用スキル呼び出し |
-
-## 参考資料
-
-<!-- プロジェクトに応じて適宜変更してください -->
-- プロジェクトドキュメント: `docs/`
-- ルールファイル: `.codex/instructions/`
-- スキル定義: `.agents/skills/`
+| ファイル | 内容 |
+|---------|------|
+| `design-ui-ux-principles.md` | UI/UX デザイン原則 |
+| `research-research-methodology.md` | 体系的リサーチ手法 |
+| `scenario-scenario-conventions.md` | ゲームシナリオ執筆規約 |
+| `seo-seo-best-practices.md` | SEO ベストプラクティス |
+| `stock-investment-discipline.md` | 投資分析の規律 |
