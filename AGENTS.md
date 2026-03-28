@@ -59,11 +59,6 @@ claym/
 | **sequential-thinking** | 段階的推論 | 複雑な問題の分解 |
 | **fetch** | HTTP リクエスト | 外部 API・Web ページの取得 |
 
-## 言語設定
-
-**日本語で応答。** コード（変数名・関数名）は英語可。
-Conventional Commits 準拠: 英語 type + 日本語説明。
-
 ## コーディング規約
 
 **詳細は `rules/` を参照。** ここでは rules/ に書けない暗黙知のみ記載:
