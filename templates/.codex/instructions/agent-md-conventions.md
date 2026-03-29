@@ -36,10 +36,12 @@ AI CLI（Claude Code / Codex CLI / Gemini CLI）のコンテキストファイ�
 
 ## 4. 統一管理の原則
 
-- **AGENTS.md を正本**とし、CLAUDE.md と GEMINI.md は symlink で統一
-- ツール固有の差分が必要な場合のみ個別ファイルに分離
+- **AGENTS.md を正本**とし、各 CLI の読み込み方式に応じて参照する
+  - Claude Code: プロジェクトルートに `CLAUDE.md → AGENTS.md` の symlink を配置
+  - Codex CLI: `AGENTS.md` を直接読み込み（`project_doc_fallback_filenames` で設定）
+  - Gemini CLI: `GEMINI.md` 内で `@AGENTS.md` インポート（symlink は非対応）
+- CLI 固有の差分は `.claude/CLAUDE.md`, `.gemini/GEMINI.md` に分離
 - `.gemini/settings.json` の `context.fileName` に `["AGENTS.md", "GEMINI.md"]` を設定
-- `.codex/config.toml` の `project_doc_fallback_filenames` に `["CLAUDE.md"]` を設定
 
 ---
 

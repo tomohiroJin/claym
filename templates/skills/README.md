@@ -11,10 +11,11 @@
 
 init スクリプトにより、以下のパスにスキルがコピーされます:
 
-| ツール | パス |
-|--------|------|
-| Claude Code | `.claude/skills/<name>/SKILL.md` |
-| Codex CLI / Gemini CLI | `.agents/skills/<name>/SKILL.md` |
+| ツール | パス | 形式 |
+|--------|------|------|
+| Claude Code | `.claude/skills/<name>/SKILL.md` | YAML フロントマター付き Markdown |
+| Codex CLI | `.codex/prompts/<name>.md` | フロントマター除去済み Markdown |
+| Gemini CLI | `.gemini/commands/<name>.md` | フロントマター除去済み Markdown |
 
 ## 収録スキル一覧
 
