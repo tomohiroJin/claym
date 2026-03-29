@@ -196,3 +196,7 @@ bash scripts/test/run-setup-tests.sh all
 ```
 
 テンプレートファイルを追加・変更した場合は、必ずテストを実行してください。
+
+## 参考ドキュメント
+
+- [3CLI 階層構造と境界動作ガイド](../docs/3cli-hierarchy-guide.md) — 各 CLI の境界動作、local/ サブプロジェクトのセットアップ手順
