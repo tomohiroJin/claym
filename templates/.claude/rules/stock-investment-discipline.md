@@ -1,3 +1,9 @@
+---
+description: 投資規律チェックリスト
+alwaysApply: false
+paths: **/stock/**, **/investment/**, **/finance/**, **/market/**
+---
+
 # 投資規律チェックリスト
 
 > 個人利用の自己責任ツール。売買前に必ず確認すること。

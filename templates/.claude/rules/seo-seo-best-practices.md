@@ -1,3 +1,9 @@
+---
+description: SEO ベストプラクティスチェックリスト
+alwaysApply: false
+paths: **/*.html, **/seo/**, **/pages/**, **/meta/**
+---
+
 # SEOベストプラクティス チェックリスト
 
 SEO施策の判断基準を3段階で整理したものです。

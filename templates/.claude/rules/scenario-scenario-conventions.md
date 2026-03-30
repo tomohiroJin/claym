@@ -1,3 +1,9 @@
+---
+description: シナリオ設計規約（ゲームシナリオの設計・執筆）
+alwaysApply: false
+paths: **/scenario/**, **/story/**, **/dialogue/**
+---
+
 # シナリオ設計規約
 
 ゲームシナリオの設計・執筆における規約とチェックリスト。

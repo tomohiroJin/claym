@@ -1,3 +1,9 @@
+---
+description: Agent.md 設計規約（CLAUDE.md/AGENTS.md/GEMINI.md の設計時に適用）
+alwaysApply: false
+paths: **/{CLAUDE,AGENTS,GEMINI}.md, .claude/**, .codex/**, .gemini/**, templates/**
+---
+
 # Agent.md 設計規約
 
 AI CLI（Claude Code / Codex CLI / Gemini CLI）のコンテキストファイル設計時に常に適用する規約。

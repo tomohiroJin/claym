@@ -1,3 +1,9 @@
+---
+description: コーディングスタイル規約（命名規則・TypeScript/React 規約）
+alwaysApply: false
+paths: **/*.{ts,tsx,js,jsx,py,sh,bash}
+---
+
 # コーディングスタイル規約
 
 以下はプロジェクトの技術スタックに応じて適用してください。

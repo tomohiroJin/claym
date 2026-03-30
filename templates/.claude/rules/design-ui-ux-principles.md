@@ -1,3 +1,9 @@
+---
+description: UI/UX デザイン原則チェックリスト
+alwaysApply: false
+paths: **/*.{css,scss,html,tsx,jsx,svelte,vue}, **/design/**, **/ui/**, **/components/**
+---
+
 # UI/UXデザイン原則チェックリスト
 
 デザインの品質を担保するための簡潔なチェックリストです。

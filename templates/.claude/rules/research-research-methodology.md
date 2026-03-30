@@ -1,3 +1,9 @@
+---
+description: リサーチ方法論チェックリスト（SIFT・CRAAP テスト）
+alwaysApply: false
+paths: **/research/**, **/docs/**/*.md
+---
+
 # リサーチ方法論チェックリスト
 
 調査作業で常に参照する簡潔なルール集です。

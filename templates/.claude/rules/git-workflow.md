@@ -1,3 +1,9 @@
+---
+description: Git ワークフロー規約（コミット・ブランチ・PR）
+alwaysApply: false
+paths: .gitignore, **/.gitignore
+---
+
 # Git ワークフロー規約
 
 ## コミットメッセージ

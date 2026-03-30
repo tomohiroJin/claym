@@ -1,3 +1,9 @@
+---
+description: テスト規約（テストパターン・カバレッジ目標）
+alwaysApply: false
+paths: **/*.test.{ts,tsx,js,jsx}, **/test_*.py, **/*_test.{go,rs}, **/tests/**, **/__tests__/**
+---
+
 # テスト規約
 
 以下はプロジェクトの技術スタックに応じて適用してください。
