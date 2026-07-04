@@ -54,33 +54,13 @@ Claym プロジェクトでは、AI エージェント（Claude Code / Codex CLI
 
 ### 2.3 プリインストール済み AI CLI
 
-Claude Code / Codex CLI / Gemini CLI の 3 種類を最初から利用できます。詳細な説明と代表コマンドは [docs/container-tooling.md](docs/container-tooling.md#プリインストール済み-ai-cli) を参照してください。
-
-
-| CLI | インストール場所 | コマンド例 |
-|-----|-----------------|-----------|
-| Claude Code | `/usr/bin/claude` | `claude --version` |
-| Codex CLI | `/usr/bin/codex` | `codex --help` |
-| Gemini CLI | `/usr/bin/gemini` | `gemini --help` |
+Claude Code / Codex CLI / Gemini CLI の 3 種類を最初から利用できます。インストール場所・代表コマンド・詳細な説明は [docs/container-tooling.md](docs/container-tooling.md#プリインストール済み-ai-cli) を参照してください（一覧の正本はそちら）。
 
 ### 2.4 バンドル済み MCP サーバー
 
-Serena・Playwright・markitdown など主要な MCP サーバーを `post-create-setup.sh` で自動登録します。対応 CLI や起動例は [docs/container-tooling.md](docs/container-tooling.md#バンドル済み-mcp-サーバー) にまとめています。
+Serena・Playwright・markitdown など主要な MCP サーバーを `post-create-setup.sh` で自動登録します。サーバー一覧・対応 CLI・起動例は [docs/container-tooling.md](docs/container-tooling.md#バンドル済み-mcp-サーバー) を正本として参照してください。
 
-**主要MCPサーバー一覧**:
-- **Serena**: コードベース解析・編集 (uv経由)
-- **Filesystem**: ファイル操作 (npx経由)
-- **Playwright**: ブラウザ自動化 (npx経由)
-- **Context7**: ドキュメント検索 (npx経由)
-- **markitdown**: ドキュメント変換 (pip経由)
-- **imagesorcery**: 画像処理 (pip経由)
-- **sequential-thinking**: 段階的思考プロセスをサポート (npx経由)
-- **memory**: ナレッジグラフによる情報永続化 (npx経由)
-- **git**: Git リポジトリ操作 (uvx経由)
-- **GitHub**: GitHub API統合 (uvx経由、`GITHUB_TOKEN`必須)
-- **Firecrawl**: Webスクレイピング (npx経由、`FIRECRAWL_API_KEY`必須)
-
-> `GITHUB_TOKEN` / `FIRECRAWL_API_KEY` が未設定の場合は登録をスキップし、警告だけ表示します。
+> `GITHUB_TOKEN` / `FIRECRAWL_API_KEY` が未設定の場合、該当サーバー（GitHub / Firecrawl）は登録をスキップし、警告だけ表示します。
 
 ## 3. Dev Container の自動処理と VS Code 設定
 
@@ -324,7 +304,7 @@ git commit -m "Initial commit for local development"
 git push -u origin main
 ```
 
-詳細な使用方法については `local/README.md` を参照してください。
+詳細な使用方法については `local/` 配下の各プロジェクトの README を参照してください。
 
 ### 5.7 v0.2.0 追加仕様の運用Tips
 
