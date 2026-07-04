@@ -94,9 +94,9 @@ claym/
 
 ## ルールファイル一覧
 
-CLI ごとのパス: `.claude/rules/` / `.codex/instructions/` / `.gemini/rules/`
+CLI ごとのパス: `.claude/rules/` / `.codex/instructions/`（Gemini は利用停止。`.gemini/rules/` は残置のみ）
 
-### 共通ルール（全 CLI に配置済み）
+### 共通ルール（Claude / Codex に同期）
 
 | ファイル | 内容 |
 |---------|------|
@@ -106,7 +106,7 @@ CLI ごとのパス: `.claude/rules/` / `.codex/instructions/` / `.gemini/rules/
 | `testing.md` | テストパターン・カバレッジ目標 |
 | `agent-config-agent-md-conventions.md` | Agent.md 設計規約 |
 
-### ドメイン拡張ルール（全 CLI に配置済み）
+### ドメイン拡張ルール（Claude / Codex に同期）
 
 | ファイル | 内容 |
 |---------|------|
@@ -115,3 +115,11 @@ CLI ごとのパス: `.claude/rules/` / `.codex/instructions/` / `.gemini/rules/
 | `scenario-scenario-conventions.md` | ゲームシナリオ執筆規約 |
 | `seo-seo-best-practices.md` | SEO ベストプラクティス |
 | `stock-investment-discipline.md` | 投資分析の規律 |
+| `translation-translation-principles.md` | 英日翻訳の原則 |
+
+### プロジェクト限定ルール（Claude のみ・`local/` スコープ）
+
+| ファイル | 内容 |
+|---------|------|
+| `kamishibai-presentation.md` | 紙芝居動画の見せ方・掴みの鉄則 |
+| `kamishibai-production.md` | 紙芝居動画制作の必須ゲート |
