@@ -129,7 +129,7 @@ ln -s AGENTS.md GEMINI.md
 # .gemini/settings.json
 {
   "context": {
-    "fileName": ["AGENTS.md", "GEMINI.md"]
+    "fileName": ["AGENTS.md", ".gemini/GEMINI.md"]
   }
 }
 

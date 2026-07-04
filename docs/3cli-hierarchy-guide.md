@@ -213,7 +213,7 @@ cp /workspaces/claym/templates/.gemini/rules/*.md .gemini/rules/
 cat > .gemini/settings.json << 'EOF'
 {
   "context": {
-    "fileName": ["AGENTS.md", "GEMINI.md"]
+    "fileName": ["AGENTS.md", ".gemini/GEMINI.md"]
   }
 }
 EOF

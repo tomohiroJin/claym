@@ -41,7 +41,7 @@ AI CLI（Claude Code / Codex CLI / Gemini CLI）のコンテキストファイ�
   - Codex CLI: `AGENTS.md` を直接読み込み（`project_doc_fallback_filenames` で設定）
   - Gemini CLI: `GEMINI.md` 内で `@AGENTS.md` インポート（symlink は非対応）
 - CLI 固有の差分は `.claude/CLAUDE.md`, `.gemini/GEMINI.md` に分離
-- `.gemini/settings.json` の `context.fileName` に `["AGENTS.md", "GEMINI.md"]` を設定
+- `.gemini/settings.json` の `context.fileName` に `["AGENTS.md", ".gemini/GEMINI.md"]` を設定
 
 ---
 
