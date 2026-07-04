@@ -457,8 +457,8 @@ cp templates/.claude/commands/code-gen.md .claude/commands/
 ## 関連ドキュメント
 
 - [Claude Code 公式ドキュメント](https://docs.claude.com/en/docs/claude-code)
-- [spec.md](../../../docs/claude-code-extensible-config-spec.md) - 設計仕様書
-- [todo.md](../../../docs/claude-code-extensible-config-todo.md) - タスクリスト
+- [spec.md](../../../docs/archive/claude-code-extensible-config-spec.md) - 設計仕様書
+- [todo.md](../../../docs/archive/claude-code-extensible-config-todo.md) - タスクリスト
 - [templates/README.md](../../README.md) - テンプレート全体の説明
 
 ## サンプルコマンド集
