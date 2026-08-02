@@ -130,6 +130,20 @@ git config --global diff.colorMoved default
 | libwebp (cwebp) | WebP 形式の変換ツール | `cwebp input.png -o output.webp` |
 | Tesseract OCR | OCR エンジン（ImageSorcery のテキスト抽出にも利用） | `tesseract input.png output` |
 
+## 音声認識（ASR）・文字起こし
+
+音声を文字起こしする Whisper 系のツール群です。いずれも `/opt/mcp-venv` に導入されており、GPU（CUDA）が利用可能な構成では `compute_type="float16"` で高速推論できます。字幕タイミングの自動検出や TTS 音声の誤読検証には faster-whisper を推奨します。
+
+| 名前 | 概要 | 代表的なコマンド例 |
+| --- | --- | --- |
+| faster-whisper | Whisper を CTranslate2 で高速再実装（公式比 約4倍・省メモリ、単語タイムスタンプが正確）。CLI は持たず Python から利用 | `python -c "from faster_whisper import WhisperModel; m=WhisperModel('large-v3', device='cuda', compute_type='float16')"` |
+| openai-whisper | OpenAI 公式の Whisper 実装。`whisper` CLI で手軽に文字起こし | `whisper audio.mp3 --language Japanese --model large-v3 --output_format srt` |
+| CTranslate2 | faster-whisper のバックエンド推論エンジン（量子化・GPU 対応） | `python -c "import ctranslate2; print(ctranslate2.get_cuda_device_count())"` |
+| PyAV (av) | FFmpeg バインディング。faster-whisper の音声デコードに利用 | `python -c "import av; print(av.__version__)"` |
+| PyTorch / torchaudio | Whisper 系モデルの実行基盤（CUDA 対応ビルド） | `python -c "import torch; print(torch.cuda.is_available())"` |
+
+> 現行バージョン（2026-05-25 時点）: faster-whisper 1.2.1 / openai-whisper 20250625 / CTranslate2 4.7.2 / PyAV 17.0.1 / PyTorch 2.10.0+cu128
+
 ## Git / ネットワーク / セキュリティ
 
 | 名前 | 概要 | 代表的なコマンド例 |
@@ -194,3 +208,5 @@ Antigravity 分は `.devcontainer/scripts/helpers/antigravity_config_writer.py` 
 | mcp-server-git | Git リポジトリ操作 | `uvx mcp-server-git --repository .` |
 
 > それぞれのツールはコンテナ内ですぐに利用できます。バージョン確認や詳細オプションは `--help` で確認してください。
+
+> このほか、初期構成（Dockerfile）以降に追加された音声合成（VOICEVOX）・機械学習／画像生成（PyTorch・diffusers）・背景除去（rembg）などのソフトは `docs/added-tooling.md` にまとめています。
