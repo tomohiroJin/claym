@@ -200,8 +200,8 @@ test_codex_cli_installed() {
     command -v codex >/dev/null 2>&1
 }
 
-test_gemini_cli_installed() {
-    command -v gemini >/dev/null 2>&1
+test_antigravity_cli_installed() {
+    command -v agy >/dev/null 2>&1
 }
 
 # Node.js 環境
@@ -283,7 +283,7 @@ main() {
     log_info "AI CLI ツール"
     run_test "claude CLI インストール確認" test_claude_cli_installed
     run_test "codex CLI インストール確認" test_codex_cli_installed
-    run_test "gemini CLI インストール確認" test_gemini_cli_installed
+    run_test "Antigravity CLI (agy) インストール確認" test_antigravity_cli_installed
     echo ""
 
     # その他必須ツール

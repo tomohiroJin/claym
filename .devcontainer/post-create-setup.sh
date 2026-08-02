@@ -2,13 +2,15 @@
 # post-create-setup.sh
 # コンテナ作成直後に実行される初期化スクリプト。
 # 目的：
-#  - Claude Code CLI / Codex CLI / Gemini CLI に各種 MCP サーバを登録（冪等）
+#  - Claude Code CLI / Codex CLI / Antigravity CLI に各種 MCP サーバを登録（冪等）
 #  - （任意）API キーがある場合のみ GitHub MCP / Firecrawl MCP を登録
 #  - ワークスペースルートを基準に Filesystem / Serena を安全に稼働
 #
 # 注意：
-#  - Codex CLI / Gemini CLI への MCP 自動登録は、現状の CLI 仕様が変わりやすいため
+#  - Codex CLI / Antigravity CLI への MCP 自動登録は、現状の CLI 仕様が変わりやすいため
 #    必要に応じて本スクリプトを調整してください。
+#  - Antigravity CLI (agy) は `mcp add` を持たないため、
+#    ~/.gemini/config/mcp_config.json を直接更新します。
 #  - 何度実行しても致命的なエラーにならないようベストエフォートで進みます。
 
 set -Eeuo pipefail
@@ -216,10 +218,10 @@ register_firecrawl
 cat <<'EOF'
 
 ────────────────────────────────────────
-MCP 登録の初期設定が完了しました（Claude Code / Codex / Gemini 用）。
+MCP 登録の初期設定が完了しました（Claude Code / Codex / Antigravity 用）。
 
 ■ 使い始める
-  - 端末で `claude chat`、`codex`、または `gemini` を実行し、各 MCP が利用できるか確認してください。
+  - 端末で `claude`、`codex`、または `agy` を実行し、各 MCP が利用できるか確認してください。
   - API キーが未設定の場合は、ホスト側の環境変数に設定し
     Dev Container を再接続すると、remoteEnv 経由で渡されます。
 
@@ -230,10 +232,11 @@ MCP 登録の初期設定が完了しました（Claude Code / Codex / Gemini �
       `--context ide-assistant` を他のモードに変更可能です（Serena のドキュメント参照）。
 
 ■ 解除・再登録
-  - Claude: `claude mcp remove <name>`
-  - Codex:  `codex mcp remove <name>`
-  - Gemini:  `gemini mcp remove <name>`
-  - 再登録: 本スクリプトを再実行（重複は自動的に無視）
+  - Claude:      `claude mcp remove <name>`
+  - Codex:       `codex mcp remove <name>`
+  - Antigravity: ~/.gemini/config/mcp_config.json の mcpServers から該当キーを削除
+                 （または agy の対話画面で /mcp を実行）
+  - 再登録: 本スクリプトを再実行（既存エントリは上書き）
 
 ※ 各 CLI で MCP の動作に問題がある場合は、コンテナを再起動してから本スクリプトを再実行してください。
 ────────────────────────────────────────

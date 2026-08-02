@@ -2,7 +2,7 @@
 # Claym AI 開発用コンテナ向け Dockerfile
 #
 # このイメージは Ubuntu 24.04 LTS に、安定版の Node.js と Python を組み合わせて導入します。
-# さらに Anthropic の Claude Code CLI、OpenAI の Codex CLI、Google の Gemini CLI を
+# さらに Anthropic の Claude Code CLI、OpenAI の Codex CLI、Google の Antigravity CLI を
 # 事前インストールし、プロジェクトで使用する Model Context Protocol (MCP) サーバ群も
 # 同梱します。使いやすいシェル環境のために、モダンなコマンドラインツール群と
 # Oh My Zsh も含めています。使い方の詳細は README または devcontainer.json を参照してください。
@@ -174,8 +174,13 @@ ENV LANG=en_US.UTF-8 \
 # Node.js のインストール
 #
 # NodeSource から Node.js 22 を導入します。
-# このバージョンは Claude Code / Codex CLI / Gemini CLI の要件を満たします。
+# このバージョンは Codex CLI と各 MCP サーバの要件を満たします。
 # インストール後、警告回避のため npm を最新版へ更新します。
+#
+# NOTE: npm 12 以降は依存パッケージのライフサイクルスクリプト（postinstall 等）を
+# 既定でブロックします。ネイティブバイナリの配置を postinstall に依存する
+# パッケージは --allow-scripts で明示的に許可しないと壊れた状態で入るため、
+# 下の npm install -g では対象を列挙しています。
 
 RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get update \
@@ -186,14 +191,20 @@ RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
 # ----------------------------------------------------------------------------
 # グローバル Node.js ツールのインストール
 #
-# 3 つの AI CLI と複数の MCP サーバを導入します。
+# Codex CLI と複数の MCP サーバを導入します。
 # 安定した最新更新を得るためバージョンは @latest のままにしています。
 # バージョン固定が必要な場合は、@latest を特定のバージョン番号に置き換えてください。
+#
+# Claude Code と Antigravity CLI は npm 配布ではなく公式インストーラを使うため、
+# この一覧には含めません（後段の「AI CLI のインストール」ブロックを参照）。
+#
+# --allow-scripts: npm 12 の既定ブロックを解除する必要があるパッケージ。
+#   - puppeteer: @mermaid-js/mermaid-cli が使う Chrome を postinstall で取得
+#   - tldjs:     postinstall でドメインリストを生成
 
 RUN npm install -g \
-    @anthropic-ai/claude-code@latest \
+    --allow-scripts=puppeteer,tldjs \
     @openai/codex@latest \
-    @google/gemini-cli@latest \
     @playwright/mcp@latest \
     @modelcontextprotocol/server-filesystem@latest \
     firecrawl-mcp@latest \
@@ -281,6 +292,28 @@ RUN chown -R vscode:vscode /opt/serena
 
 # uv などユーザー領域にインストールされるツールのために ~/.local/bin を PATH に追加。
 ENV PATH="/home/vscode/.local/bin:$PATH"
+
+# ----------------------------------------------------------------------------
+# AI CLI のインストール
+#
+# Claude Code と Antigravity CLI は npm 配布をやめ、公式インストーラ（curl | bash）が
+# 正式な導入経路になりました。npm 経由だと以下の理由で機能しません:
+#   - Claude Code: postinstall でネイティブバイナリを配置するが npm 12 がブロックする
+#   - Gemini CLI: 2026-06-18 に個人アカウント向けの提供を終了し Antigravity CLI へ統合
+#
+# Claude Code は vscode ユーザーのホーム配下（~/.local/bin/claude）に導入します。
+# このパスに入れると Claude Code 自身のバックグラウンド自動更新が有効になります。
+# 実体は ~/.local/share/claude/versions/ 配下に置かれ、launcher が symlink になります。
+RUN su vscode -c 'export HOME=/home/vscode; curl -fsSL https://claude.ai/install.sh | bash' \
+    && /home/vscode/.local/bin/claude --version
+
+# Antigravity CLI（コマンド名 agy / Go 製）は Gemini CLI の後継です。
+# インストーラの -d でインストール先を指定できるため、全ユーザーから使えるよう
+# /usr/local/bin へ system-wide に配置します（ホームディレクトリに依存させない）。
+# 更新は `agy update` で行います。
+RUN curl -fsSL https://antigravity.google/cli/install.sh | bash -s -- -d /usr/local/bin \
+    && chmod 755 /usr/local/bin/agy \
+    && agy --version
 
 # ----------------------------------------------------------------------------
 # モダン CLI ツールのインストール

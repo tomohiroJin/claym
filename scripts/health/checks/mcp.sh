@@ -6,7 +6,20 @@ collect_mcp_list() {
   case "$cli" in
     claude) output=$(timeout 10 claude mcp list 2>/dev/null < /dev/null || true) ;;
     codex) output=$(timeout 10 codex mcp list 2>/dev/null < /dev/null || true) ;;
-    gemini) output=$(timeout 10 gemini mcp list 2>/dev/null < /dev/null || true) ;;
+    # Antigravity CLI は mcp サブコマンドを持たないため設定ファイルを直接読む
+    agy)
+      local config="${ANTIGRAVITY_MCP_CONFIG:-${HOME}/.gemini/config/mcp_config.json}"
+      if [[ -f "$config" ]]; then
+        output=$(python3 -c '
+import json, sys
+try:
+    with open(sys.argv[1], encoding="utf-8") as f:
+        print("\n".join(json.load(f).get("mcpServers", {})))
+except Exception:
+    pass
+' "$config" 2>/dev/null || true)
+      fi
+      ;;
   esac
   printf '%s' "$output"
 }
@@ -20,7 +33,7 @@ check_mcp_registrations() {
   local missing_global=()
   local warn_global=()
 
-  for cli in claude codex gemini; do
+  for cli in claude codex agy; do
     if ! have "$cli"; then
       warn_global+=("$cli (CLI missing)")
       continue
@@ -59,7 +72,7 @@ check_mcp_registrations() {
     set_result "WARN" "Warnings: ${warn_global[*]}" "Add optional MCPs if required for your workflow"
     return
   fi
-  set_result "PASS" "Claude, Codex, and Gemini MCP lists contain required entries" ""
+  set_result "PASS" "Claude, Codex, and Antigravity MCP lists contain required entries" ""
 }
 
 check_serena_ready() {

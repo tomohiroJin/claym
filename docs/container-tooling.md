@@ -145,11 +145,32 @@ git config --global diff.colorMoved default
 
 ## プリインストール済み AI CLI
 
-| CLI | 概要 | 代表的なコマンド例 |
-| --- | --- | --- |
-| Claude Code | Anthropic 製 AI CLI | `claude` |
-| Codex CLI | OpenAI ベースの CLI | `codex chat` |
-| Gemini CLI | Google Gemini 用 CLI | `gemini chat` |
+| CLI | 概要 | 代表的なコマンド例 | 導入経路 | 更新方法 |
+| --- | --- | --- | --- | --- |
+| Claude Code | Anthropic 製 AI CLI | `claude` | 公式インストーラ（`~/.local/bin/claude`） | 自動更新（`claude update` で即時） |
+| Codex CLI | OpenAI ベースの CLI | `codex` | npm グローバル | `npm i -g @openai/codex@latest` |
+| Antigravity CLI | Google 製 AI CLI（Gemini CLI の後継） | `agy` | 公式インストーラ（`/usr/local/bin/agy`） | `agy update` |
+
+### 導入経路が npm でない理由
+
+- **Claude Code**: npm 12 以降はライフサイクルスクリプトを既定でブロックする。
+  `@anthropic-ai/claude-code` はネイティブバイナリの配置を `postinstall` に依存しているため、
+  npm でグローバル導入すると `claude native binary not installed.` で起動できない。
+  公式も[ネイティブインストーラを推奨](https://code.claude.com/docs/en/setup)している。
+- **Antigravity CLI**: Gemini CLI は 2026-06-18 に個人アカウント向けの提供を終了し、
+  後継の Antigravity CLI（Go 製、コマンド名 `agy`）へ統合された。
+  配布は npm ではなく `curl | bash` のインストーラのみ。
+
+### MCP 登録方法の違い
+
+| CLI | 登録方法 |
+| --- | --- |
+| Claude Code | `claude mcp add <name> -- <command>` |
+| Codex CLI | `codex mcp add <name> <command>`（SSE は `~/.codex/config.toml` を直接編集） |
+| Antigravity CLI | `mcp add` 相当のサブコマンドは無い。`~/.gemini/config/mcp_config.json` の `mcpServers` を編集するか、対話画面で `/mcp` を実行 |
+
+`.devcontainer/post-create-setup.sh` が 3 CLI すべてに対して冪等に登録を行います。
+Antigravity 分は `.devcontainer/scripts/helpers/antigravity_config_writer.py` が JSON をマージ更新します。
 
 ## バンドル済み MCP サーバー
 
