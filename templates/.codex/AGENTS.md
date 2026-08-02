@@ -95,7 +95,7 @@ CLI ごとのパス: `.claude/rules/` / `.codex/instructions/` / `.gemini/rules/
 
 | ファイル | 内容 |
 |---------|------|
-| `coding-style.md` | 命名規則・TypeScript/React 規約 |
+| `coding-style.md` | 命名規則・言語別のコーディング規約 |
 | `git-workflow.md` | コミット・ブランチ・PR 規約 |
 | `security.md` | 入力検証・機密情報管理・通信セキュリティ |
 | `testing.md` | テストパターン・カバレッジ目標 |
