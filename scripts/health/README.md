@@ -10,12 +10,13 @@
 
 - Ubuntu 24.04 LTS ベースとタイムゾーン設定の確認
 - ワークスペースおよび ImageSorcery ログディレクトリがアクセス可能であることの確認
-- 主要 CLI (`claude`, `codex`, `gemini`, `uv`, `npx`, `npm`, `rg` など) と Python MCP コマンド (`markitdown-mcp`, `imagesorcery-mcp`, `mcp-github`) の存在チェック
+- 主要 CLI (`claude`, `codex`, `agy`, `uv`, `npx`, `npm`, `rg` など) と Python MCP コマンド (`markitdown-mcp`, `imagesorcery-mcp`, `mcp-github`) の存在チェック
 - モダン CLI ツール (`zoxide`, `eza`, `tldr`, `delta`) の存在とバージョン確認
 - シェルエイリアス設定（ll, cat, find 等）の確認
 - Git delta pager 設定の確認
 - CLI バージョン取得によるドリフト検知
-- Claude / Codex / Gemini に対する既定 MCP 登録の有無確認
+- Claude / Codex / Antigravity に対する既定 MCP 登録の有無確認
+  （Antigravity は `mcp` サブコマンドを持たないため `~/.gemini/config/mcp_config.json` を直接読む）
 - Serena・Playwright・Python 仮想環境（`/opt/mcp-venv` または `$VIRTUAL_ENV`）で管理される MCP 資産のスポットチェック
 - コンテナにエクスポートされている API キー一覧の表示
 - `safe.directory` 設定と ImageSorcery ログの参照可否の確認
@@ -81,7 +82,7 @@ bash scripts/health/test-container-basics.sh
 - シェル環境（.zshrc, エイリアス設定）
 - Git設定（delta pager, safe.directory）
 - Python MCP環境（仮想環境、MCP コマンド）
-- AI CLIツール（claude, codex, gemini）
+- AI CLIツール（claude, codex, agy）
 
 ### scripts/setup/test-init-ai-configs.sh
 

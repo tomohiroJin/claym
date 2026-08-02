@@ -2,7 +2,7 @@
 # Claym AI 開発用コンテナ向け Dockerfile
 #
 # このイメージは Ubuntu 24.04 LTS に、安定版の Node.js と Python を組み合わせて導入します。
-# さらに Anthropic の Claude Code CLI、OpenAI の Codex CLI、Google の Gemini CLI を
+# さらに Anthropic の Claude Code CLI、OpenAI の Codex CLI、Google の Antigravity CLI を
 # 事前インストールし、プロジェクトで使用する Model Context Protocol (MCP) サーバ群も
 # 同梱します。使いやすいシェル環境のために、モダンなコマンドラインツール群と
 # Oh My Zsh も含めています。使い方の詳細は README または devcontainer.json を参照してください。
@@ -140,7 +140,7 @@ RUN set -eux; \
     socat \
     lsof \
     whois \
-    # 構造化データ/整形（yqはnpm版を使用するためここでは除外）
+    # 構造化データ/整形（yq は apt 版が別実装のため GitHub Releases から導入。[11/13] を参照）
     miller \
     moreutils \
     # SSL（opensslは既存システムに含まれているが明示的に追加）
@@ -174,8 +174,13 @@ ENV LANG=en_US.UTF-8 \
 # Node.js のインストール
 #
 # NodeSource から Node.js 22 を導入します。
-# このバージョンは Claude Code / Codex CLI / Gemini CLI の要件を満たします。
+# このバージョンは Codex CLI と各 MCP サーバの要件を満たします。
 # インストール後、警告回避のため npm を最新版へ更新します。
+#
+# NOTE: npm 12 以降は依存パッケージのライフサイクルスクリプト（postinstall 等）を
+# 既定でブロックします。ネイティブバイナリの配置を postinstall に依存する
+# パッケージは --allow-scripts で明示的に許可しないと壊れた状態で入るため、
+# 下の npm install -g では対象を列挙しています。
 
 RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get update \
@@ -186,20 +191,25 @@ RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
 # ----------------------------------------------------------------------------
 # グローバル Node.js ツールのインストール
 #
-# 3 つの AI CLI と複数の MCP サーバを導入します。
+# Codex CLI と複数の MCP サーバを導入します。
 # 安定した最新更新を得るためバージョンは @latest のままにしています。
 # バージョン固定が必要な場合は、@latest を特定のバージョン番号に置き換えてください。
+#
+# Claude Code と Antigravity CLI は npm 配布ではなく公式インストーラを使うため、
+# この一覧には含めません（後段の「AI CLI のインストール」ブロックを参照）。
+# yq / qtrn も npm 上の同名パッケージが中身の無いプレースホルダだったため、
+# GitHub Releases のバイナリ導入へ移しました（後段の [11/13] [12/13] を参照）。
+#
+# --allow-scripts: npm 12 の既定ブロックを解除する必要があるパッケージ。
+#   - puppeteer: @mermaid-js/mermaid-cli が使う Chrome を postinstall で取得
+#   - tldjs:     postinstall でドメインリストを生成
 
 RUN npm install -g \
-    @anthropic-ai/claude-code@latest \
+    --allow-scripts=puppeteer,tldjs \
     @openai/codex@latest \
-    @google/gemini-cli@latest \
     @playwright/mcp@latest \
     @modelcontextprotocol/server-filesystem@latest \
     firecrawl-mcp@latest \
-    # v0.2.0: データ処理・金融分析ツール
-    yq \
-    qtrn \
     # モダン CLI ツール
     tldr \
     # v0.3.0: ダイアグラム生成（Playwright の Chromium を再利用）
@@ -283,6 +293,28 @@ RUN chown -R vscode:vscode /opt/serena
 ENV PATH="/home/vscode/.local/bin:$PATH"
 
 # ----------------------------------------------------------------------------
+# AI CLI のインストール
+#
+# Claude Code と Antigravity CLI は npm 配布をやめ、公式インストーラ（curl | bash）が
+# 正式な導入経路になりました。npm 経由だと以下の理由で機能しません:
+#   - Claude Code: postinstall でネイティブバイナリを配置するが npm 12 がブロックする
+#   - Gemini CLI: 2026-06-18 に個人アカウント向けの提供を終了し Antigravity CLI へ統合
+#
+# Claude Code は vscode ユーザーのホーム配下（~/.local/bin/claude）に導入します。
+# このパスに入れると Claude Code 自身のバックグラウンド自動更新が有効になります。
+# 実体は ~/.local/share/claude/versions/ 配下に置かれ、launcher が symlink になります。
+RUN su vscode -c 'export HOME=/home/vscode; curl -fsSL https://claude.ai/install.sh | bash' \
+    && /home/vscode/.local/bin/claude --version
+
+# Antigravity CLI（コマンド名 agy / Go 製）は Gemini CLI の後継です。
+# インストーラの -d でインストール先を指定できるため、全ユーザーから使えるよう
+# /usr/local/bin へ system-wide に配置します（ホームディレクトリに依存させない）。
+# 更新は `agy update` で行います。
+RUN curl -fsSL https://antigravity.google/cli/install.sh | bash -s -- -d /usr/local/bin \
+    && chmod 755 /usr/local/bin/agy \
+    && agy --version
+
+# ----------------------------------------------------------------------------
 # モダン CLI ツールのインストール
 #
 # 開発体験を向上させるモダンな CLI ツールを導入します。
@@ -296,61 +328,61 @@ ENV PATH="/home/vscode/.local/bin:$PATH"
 # デバッグ用: 1ツール1RUNで失敗箇所を特定する
 # 問題特定後に1つのRUNブロックに統合すること
 
-# [1/11] zoxide v0.9.9
+# [1/13] zoxide v0.9.9
 RUN set -eux \
     && curl -sfLO "https://github.com/ajeetdsouza/zoxide/releases/download/v0.9.9/zoxide-0.9.9-x86_64-unknown-linux-musl.tar.gz" \
     && tar -xzf zoxide-*.tar.gz -C /usr/local/bin \
     && rm zoxide-*.tar.gz
 
-# [2/11] eza v0.23.4
+# [2/13] eza v0.23.4
 RUN set -eux \
     && curl -sfLO "https://github.com/eza-community/eza/releases/download/v0.23.4/eza_x86_64-unknown-linux-musl.tar.gz" \
     && tar -xzf eza_*.tar.gz -C /usr/local/bin \
     && rm eza_*.tar.gz
 
-# [3/11] git-delta v0.18.2
+# [3/13] git-delta v0.18.2
 RUN set -eux \
     && curl -sfLO "https://github.com/dandavison/delta/releases/download/0.18.2/delta-0.18.2-x86_64-unknown-linux-musl.tar.gz" \
     && tar -xzf delta-*.tar.gz --strip-components=1 -C /usr/local/bin delta-0.18.2-x86_64-unknown-linux-musl/delta \
     && rm delta-*.tar.gz
 
-# [4/11] just (タスクランナー) v1.46.0
+# [4/13] just (タスクランナー) v1.46.0
 RUN set -eux \
     && curl -sfLO "https://github.com/casey/just/releases/download/1.46.0/just-1.46.0-x86_64-unknown-linux-musl.tar.gz" \
     && tar -xzf just-*.tar.gz -C /usr/local/bin just \
     && rm just-*.tar.gz
 
-# [5/11] difftastic (構文認識diff) v0.67.0
+# [5/13] difftastic (構文認識diff) v0.67.0
 RUN set -eux \
     && curl -sfLO "https://github.com/Wilfred/difftastic/releases/download/0.67.0/difft-x86_64-unknown-linux-musl.tar.gz" \
     && tar -xzf difft-*.tar.gz -C /usr/local/bin \
     && rm difft-*.tar.gz
 
-# [6/11] dust (ディスク使用量可視化) v1.1.1
+# [6/13] dust (ディスク使用量可視化) v1.1.1
 RUN set -eux \
     && curl -sfLO "https://github.com/bootandy/dust/releases/download/v1.1.1/dust-v1.1.1-x86_64-unknown-linux-musl.tar.gz" \
     && tar -xzf dust-*.tar.gz --strip-components=1 -C /usr/local/bin dust-v1.1.1-x86_64-unknown-linux-musl/dust \
     && rm dust-*.tar.gz
 
-# [7/11] sd (sed代替) v1.0.0
+# [7/13] sd (sed代替) v1.0.0
 RUN set -eux \
     && curl -sfLO "https://github.com/chmln/sd/releases/download/v1.0.0/sd-v1.0.0-x86_64-unknown-linux-musl.tar.gz" \
     && tar -xzf sd-*.tar.gz -C /usr/local/bin --strip-components=1 \
     && rm sd-*.tar.gz
 
-# [8/11] watchexec (ファイル監視) v2.3.2
+# [8/13] watchexec (ファイル監視) v2.3.2
 RUN set -eux \
     && curl -sfLO "https://github.com/watchexec/watchexec/releases/download/v2.3.2/watchexec-2.3.2-x86_64-unknown-linux-musl.tar.xz" \
     && tar -xJf watchexec-*.tar.xz --strip-components=1 -C /usr/local/bin watchexec-2.3.2-x86_64-unknown-linux-musl/watchexec \
     && rm watchexec-*.tar.xz
 
-# [9/11] duckdb (組み込みSQL分析) v1.5.0
+# [9/13] duckdb (組み込みSQL分析) v1.5.0
 RUN set -eux \
     && curl -sfLO "https://github.com/duckdb/duckdb/releases/download/v1.5.0/duckdb_cli-linux-amd64.zip" \
     && unzip -o duckdb_cli-linux-amd64.zip -d /usr/local/bin \
     && rm duckdb_cli-linux-amd64.zip
 
-# [10/11] qsv (CSV高速処理) v17.0.0
+# [10/13] qsv (CSV高速処理) v17.0.0
 # NOTE: qsv はリポジトリが dathere/qsv に移行し、メジャーバージョン体系に変更済み
 RUN set -eux \
     && curl -sfLO "https://github.com/dathere/qsv/releases/download/17.0.0/qsv-17.0.0-x86_64-unknown-linux-gnu.zip" \
@@ -361,7 +393,30 @@ RUN set -eux \
     && chmod +x /usr/local/bin/qsv \
     && rm -rf qsv-*.zip /tmp/qsv-extract
 
-# [11/11] 導入確認（デバッグ用・1つずつ確認）
+# [11/13] yq (YAML/JSON/XML プロセッサ) v4.53.3
+# NOTE: npm の "yq" は中身の無いプレースホルダ（v0.0.1）で bin を生成しないため、
+#       事実上インストールされていなかった。本家 mikefarah/yq のバイナリへ切り替える。
+#       apt の yq (3.1.0) は kislyuk 版（jq ラッパー）で構文が異なるため採用しない。
+RUN set -eux \
+    && curl -sfLO "https://github.com/mikefarah/yq/releases/download/v4.53.3/yq_linux_amd64.tar.gz" \
+    && tar -xzf yq_linux_amd64.tar.gz ./yq_linux_amd64 \
+    && mv yq_linux_amd64 /usr/local/bin/yq \
+    && chmod +x /usr/local/bin/yq \
+    && rm -f yq_linux_amd64.tar.gz
+
+# [12/13] qtrn (金融マーケットデータ CLI) v0.0.9
+# NOTE: npm の "qtrn" もプレースホルダ（v0.0.1）だったため GitHub Releases から導入する。
+#       upstream は 2020-05-30 を最後に更新が止まっており、Yahoo Finance API の
+#       仕様変更（2023 年の crumb/cookie 認証追加）に追随していない。
+#       バイナリ自体は動作するが、実データ取得に失敗する可能性がある点に注意。
+RUN set -eux \
+    && curl -sfLO "https://github.com/piquette/qtrn/releases/download/v0.0.9/qtrn_0.0.9_linux_amd64.tar.gz" \
+    && tar -xzf qtrn_0.0.9_linux_amd64.tar.gz qtrn \
+    && mv qtrn /usr/local/bin/qtrn \
+    && chmod +x /usr/local/bin/qtrn \
+    && rm -f qtrn_0.0.9_linux_amd64.tar.gz
+
+# [13/13] 導入確認（デバッグ用・1つずつ確認）
 RUN zoxide --version
 RUN eza --version
 RUN delta --version
@@ -371,6 +426,8 @@ RUN dust --version
 RUN sd --version
 RUN watchexec --version
 RUN duckdb --version
+RUN yq --version
+RUN qtrn --version
 # RUN qsv --version
 
 # Rust 製 CLI ツール（APT に統一）: btop/hyperfine/ncdu/cloc は上の apt ブロックで導入済み

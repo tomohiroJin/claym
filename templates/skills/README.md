@@ -11,10 +11,11 @@
 
 init スクリプトにより、以下のパスにスキルがコピーされます:
 
-| ツール | パス |
-|--------|------|
-| Claude Code | `.claude/skills/<name>/SKILL.md` |
-| Codex CLI / Gemini CLI | `.agents/skills/<name>/SKILL.md` |
+| ツール | パス | 形式 |
+|--------|------|------|
+| Claude Code | `.claude/skills/<name>/SKILL.md` | YAML フロントマター付き Markdown |
+| Codex CLI | `.codex/prompts/<name>.md` | フロントマター除去済み Markdown |
+| Gemini CLI | `.gemini/commands/<name>.md` | フロントマター除去済み Markdown |
 
 ## 収録スキル一覧
 
@@ -30,6 +31,18 @@ init スクリプトにより、以下のパスにスキルがコピーされま
 | `debug-systematically` | 体系的デバッグ手法 |
 | `documentation-first` | ドキュメント駆動開発 |
 | `git-workflow` | コミット・ブランチ・PR のベストプラクティス |
+| `generate-agent-md` | プロジェクト解析 → CLAUDE.md / AGENTS.md / GEMINI.md 一括生成 |
+| `audit-agent-md` | 既存 Agent.md の品質監査・改善提案 |
+| `design-review` | UI/UX デザインレビュー（ゲシュタルト原則・WCAG・配色） |
+| `design-system` | デザインシステム構築（カラートークン・タイポグラフィ・CSS変数） |
+| `deep-research` | 体系的リサーチ（SIFT・CRAAP・多段階調査） |
+| `summarize` | 構造化された要約生成（Map-Reduce・反復洗練・RAPTOR） |
+| `scenario-review` | ゲームシナリオ品質検証（フラグ矛盾・分岐到達可能性） |
+| `scenario-write` | ゲームシナリオ執筆支援（マクロ設計→ミクロ執筆） |
+| `seo-audit` | SEO 監査（18アンチパターン・Googleスパムポリシー） |
+| `seo-content` | SEO コンテンツ最適化（検索意図分析・E-E-A-T） |
+| `market-check` | 日次マーケットチェック（主要指標・ニュースソース） |
+| `stock-analysis` | 銘柄分析（ファンダメンタルズ・テクニカル・行動バイアス） |
 
 ## SKILL.md フォーマット
 

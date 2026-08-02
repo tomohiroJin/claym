@@ -1,569 +1,202 @@
-# VSCode AI拡張機能 設定テンプレート
+# AI CLI 設定テンプレート
 
-このディレクトリには、Claude Code、Codex CLI、GEMINI などの VSCode AI 拡張機能の
-標準的な設定テンプレートとプロンプトが含まれています。
+Claude Code / Codex CLI / Gemini CLI の設定・スキル・ルールのテンプレート集。
+`AGENTS.md` を正本とした 3CLI 統一管理を実現します。
 
-## 📁 ディレクトリ構造
+## ディレクトリ構造
 
 ```
 templates/
-├── .claude/                             # プロジェクトレベル Claude Code 設定
-│   ├── settings.local.json.example    # Claude Code 設定テンプレート
-│   ├── CLAUDE.md                       # Claude Code カスタム指示（日本語設定）
-│   ├── commands/                       # Claude Code カスタムコマンド
-│   │   └── *.md                        # コマンド定義ファイル
-│   └── agents/                         # Claude Code サブエージェント
-│       ├── code-reviewer.yaml          # コードレビュー専門家
-│       ├── test-generator.yaml         # テスト生成専門家
-│       └── documentation-writer.yaml   # ドキュメント作成専門家
-├── .claude-global/                      # ユーザーレベル Claude Code 設定（~/.claude/ / ~/.config/claude-code に展開）
-│   ├── settings.json.example          # グローバル設定（プロジェクト非依存 MCP・権限）
-│   └── CLAUDE.md                       # グローバルカスタム指示（日本語設定）
+├── .claude/
+│   ├── CLAUDE.md                    # 差分のみ（親の AGENTS.md を継承）
+│   ├── agents/                      # エージェント定義（13 YAML）
+│   │   ├── architect.yaml
+│   │   ├── build-error-resolver.yaml
+│   │   ├── code-reviewer.yaml
+│   │   ├── context-engineer.yaml
+│   │   ├── design-reviewer.yaml
+│   │   ├── documentation-writer.yaml
+│   │   ├── investment-analyst.yaml
+│   │   ├── planner.yaml
+│   │   ├── researcher.yaml
+│   │   ├── scenario-assistant.yaml
+│   │   ├── security-reviewer.yaml
+│   │   ├── seo-analyst.yaml
+│   │   └── test-generator.yaml
+│   ├── commands/                    # カスタムコマンド（11 ファイル）
+│   └── rules/                       # ルールファイル（10 ファイル）
 ├── .codex/
-│   ├── config.toml.example            # Codex CLI 設定テンプレート（使用環境緩和設定含む）
-│   ├── AGENTS.md                      # Codex CLI エージェント指示（日本語設定）
-│   └── prompts/                       # Codex CLI カスタムプロンプト（slash コマンド）
-│       └── *.md                       # `/prompts:<name>` で呼び出せるテンプレート
-├── .gemini/                             # プロジェクトレベル GEMINI 設定
-│   ├── settings.json.example          # GEMINI 設定テンプレート
-│   ├── GEMINI.md                      # GEMINI カスタム指示（日本語設定）
-│   └── commands/                      # GEMINI カスタムコマンド
-│       └── *.md                       # `/prompts:<name>` で呼び出せるテンプレート
-├── .gemini-global/                      # ユーザーレベル GEMINI 設定（~/.gemini/ に展開）
-│   ├── settings.json.example          # グローバル設定（プロジェクト非依存 MCP）
-│   └── GEMINI.md                       # グローバルカスタム指示（日本語設定）
-├── docs/
-│   └── prompts/
-│       ├── system.md                  # システムプロンプトテンプレート
-│       └── tasks/
-│           ├── feature-add.md         # 機能追加プロンプト
-│           ├── bug-fix.md             # バグ修正プロンプト
-│           ├── refactor.md            # リファクタリングプロンプト
-│           └── review.md              # コードレビュープロンプト
-└── README.md                          # このファイル
-
-scripts/
-└── setup/
-    └── init-ai-configs.sh              # 自動セットアップスクリプト
+│   ├── AGENTS.md                    # 自己完結型（全コンテキスト内包）
+│   ├── instructions/                # ルールファイル（10 ファイル）
+│   └── prompts/                     # スラッシュコマンド（34 ファイル）
+├── .gemini/
+│   ├── GEMINI.md                    # 自己完結型 + @AGENTS.md 参照
+│   ├── rules/                       # ルールファイル（10 ファイル）
+│   └── commands/                    # スラッシュコマンド（34 ファイル）
+├── skills/                          # Agent Skills テンプレート（22 スキル）
+└── README.md
 ```
 
-### プロジェクトレベル vs ユーザーレベル
+## 3CLI 統合戦略
 
-| レベル | 配置先 | 用途 | MCP サーバー |
-|--------|--------|------|-------------|
-| プロジェクト | `.claude/`, `.gemini/` | プロジェクト固有の設定 | serena, filesystem + 汎用6つ |
-| ユーザー | `~/.claude/`, `~/.config/claude-code/`, `~/.gemini/` | コンテナ全体の汎用設定 | 汎用サーバー群（playwright, markitdown, imagesorcery, context7, github, sequential-thinking, memory, git） |
+### AGENTS.md を正本とする設計
 
-ユーザーレベル設定により、プロジェクトディレクトリ外から CLI を起動しても日本語設定や MCP サーバーが利用可能になります。
+```
+AGENTS.md（プロジェクトルート） ← 正本。全 CLI が参照
+    │
+    ├── .claude/CLAUDE.md     → symlink or 差分のみ記載
+    │                           親の AGENTS.md を自動継承
+    │
+    ├── .codex/AGENTS.md      → 自己完結型コピー
+    │                           Codex CLI は階層探索するため全文を内包
+    │
+    └── .gemini/GEMINI.md     → @AGENTS.md で参照
+                                Gemini 固有の差分 + インポート指示
+```
 
-## 🚀 クイックスタート
+### テンプレートの 2 層構造
+
+| CLI | 方式 | 理由 |
+|-----|------|------|
+| Claude Code | **差分のみ** | `.claude/CLAUDE.md` は MCP 手順等の差分だけ。AGENTS.md + rules/ から自動継承 |
+| Codex CLI | **自己完結型** | 階層探索で深い位置が優先されるため、全コンテキストを内包 |
+| Gemini CLI | **自己完結型 + @参照** | `@AGENTS.md` インポート + Gemini 固有設定 |
+
+## デプロイ方法
 
 ### 自動セットアップ（推奨）
 
-**コンテナ起動時に自動で実行されます！**
+devcontainer 起動時に `scripts/setup/init-ai-configs.sh` が自動実行されます:
 
-devcontainer のビルド・起動時に `scripts/setup/init-ai-configs.sh` が自動実行され、
-以下が自動的に設定されます：
+- `templates/` から `.claude/`, `.codex/`, `.gemini/` へコピー
+- スキルを各 CLI のディスカバリーパスに配置
+- `.gitignore` の更新
 
-- Claude Code 設定ファイル (`settings.local.json`, `CLAUDE.md`, `commands/`, `agents/`) の作成
-- Codex CLI 設定ファイル (`config.toml`, `AGENTS.md`) の作成（プロジェクトパス自動設定）
-- GEMINI 設定ファイル (`settings.json`, `GEMINI.md`, `commands/`) の作成（プロジェクトパス自動設定）
-- プロンプトテンプレートのコピー
-- .gitignore の更新
-
-### 手動セットアップ（既存プロジェクト向け）
-
-既存のプロジェクトに適用する場合：
+### 手動セットアップ
 
 ```bash
-# セットアップスクリプトを実行
 bash scripts/setup/init-ai-configs.sh
 ```
 
-または、個別にセットアップする場合：
+### テンプレートの再生成
+
+既存設定を上書きしたい場合:
 
 ```bash
-# プロジェクトルートで実行
-cd /path/to/your/project
-
-# 設定ディレクトリを作成
-mkdir -p .claude .codex/prompts .gemini/commands docs/prompts/tasks
-mkdir -p ~/.codex/prompts
-
-# テンプレートをコピー
-cp templates/.claude/settings.local.json.example .claude/settings.local.json
-cp templates/.claude/CLAUDE.md .claude/CLAUDE.md
-cp templates/.codex/config.toml.example ~/.codex/config.toml
-cp templates/.codex/AGENTS.md AGENTS.md
-cp templates/.codex/prompts/*.md .codex/prompts/
-cp templates/.codex/prompts/*.md ~/.codex/prompts/
-cp templates/.gemini/settings.json.example .gemini/settings.json
-cp templates/.gemini/GEMINI.md .gemini/GEMINI.md
-cp templates/.gemini/commands/*.md .gemini/commands/
-
-# プロンプトテンプレートをコピー
-cp -r templates/docs/prompts/* docs/prompts/
-
-# .gitignore に追加
-cat >> .gitignore <<EOF
-
-# CLAUDE 設定（全体を個人設定として管理）
-.claude/
-!templates/.claude/
-
-# Codex 設定（全体を個人設定として管理）
-.codex/
-!templates/.codex/
-
-# GEMINI 設定（全体を個人設定として管理）
-.gemini/
-!templates/.gemini/
-EOF
+bash scripts/setup/reinit-ai-configs.sh
 ```
 
-### 設定のカスタマイズ
+## スキル一覧（22 スキル）
 
-#### 1. Claude Code (.claude/settings.local.json)
+### コア（開発支援）— 10 スキル
+
+| スキル | 概要 |
+|--------|------|
+| `search-first` | 実装前にコードベースの既存パターンを調査 |
+| `tdd-workflow` | Red-Green-Refactor の TDD サイクル |
+| `code-review` | 構造化されたコードレビュー手順 |
+| `refactor-safely` | 安全なリファクタリング手順 |
+| `verification-loop` | 変更後のビルド・テスト・lint 検証サイクル |
+| `debug-systematically` | 体系的デバッグ手法 |
+| `security-review` | セキュリティ脆弱性の検出 |
+| `api-design` | REST API 設計のベストプラクティス |
+| `documentation-first` | ドキュメント駆動開発 |
+| `git-workflow` | コミット・ブランチ・PR のベストプラクティス |
+
+### ドメイン拡張 — 6 カテゴリ 12 スキル
+
+| カテゴリ | スキル | 概要 |
+|----------|--------|------|
+| agent-config | `generate-agent-md` | CLAUDE.md / AGENTS.md / GEMINI.md 一括生成 |
+| agent-config | `audit-agent-md` | 既存 Agent.md の品質監査 |
+| design | `design-review` | UI/UX デザインレビュー |
+| design | `design-system` | デザインシステム構築 |
+| research | `deep-research` | 体系的リサーチ（SIFT・CRAAP） |
+| research | `summarize` | 構造化された要約生成 |
+| scenario | `scenario-review` | ゲームシナリオ品質検証 |
+| scenario | `scenario-write` | ゲームシナリオ執筆支援 |
+| seo | `seo-audit` | SEO 監査 |
+| seo | `seo-content` | SEO コンテンツ最適化 |
+| stock | `market-check` | 日次マーケットチェック |
+| stock | `stock-analysis` | 銘柄分析 |
+
+### スキルの配置先
+
+| ツール | パス | 呼び出し方 |
+|--------|------|-----------|
+| Claude Code | `.claude/skills/<name>/SKILL.md` | `/<name>` |
+| Codex CLI | `.codex/prompts/<name>.md` | `/prompts:<name>` |
+| Gemini CLI | `.gemini/commands/<name>.md` | `/prompts:<name>` |
+
+## エージェント（13 定義、6 ドメイン）
+
+| ドメイン | エージェント |
+|----------|-------------|
+| コア開発 | `architect`, `code-reviewer`, `test-generator`, `documentation-writer`, `build-error-resolver`, `planner`, `security-reviewer` |
+| agent-config | `context-engineer` |
+| design | `design-reviewer` |
+| research | `researcher` |
+| scenario | `scenario-assistant` |
+| seo | `seo-analyst` |
+| stock | `investment-analyst` |
+
+## ルールファイル（10 ファイル、全 CLI 共通）
+
+### 共通ルール（5 ファイル）
+
+| ファイル | 内容 |
+|---------|------|
+| `coding-style.md` | 命名規則・TypeScript/React 規約 |
+| `git-workflow.md` | コミット・ブランチ・PR 規約 |
+| `security.md` | 入力検証・機密情報管理 |
+| `testing.md` | テストパターン・カバレッジ目標 |
+| `agent-md-conventions.md` | Agent.md 設計規約 |
+
+### ドメイン拡張ルール（5 ファイル）
+
+| ファイル | 内容 |
+|---------|------|
+| `design-ui-ux-principles.md` | UI/UX デザイン原則 |
+| `research-research-methodology.md` | リサーチ方法論 |
+| `scenario-scenario-conventions.md` | シナリオ設計規約 |
+| `seo-seo-best-practices.md` | SEO ベストプラクティス |
+| `stock-investment-discipline.md` | 投資規律 |
+
+## テンプレートのカスタマイズ
+
+### templates-local/ によるオーバーライド
+
+`templates-local/` に同名ファイルを配置すると、公式テンプレートを上書きできます。
+`templates-local/` は gitignore 対象のため、個人設定を安全に管理できます。
+
+```
+templates-local/
+├── .codex/prompts/my-custom.md    # 個人用プロンプト追加
+└── .gemini/commands/my-custom.md  # 個人用コマンド追加
+```
+
+### local/AI/ によるドメイン拡張
+
+`local/AI/` 配下でドメイン別のスキル・ルール・エージェントを開発し、
+symlink で `.claude/skills/` 等に接続します。
 
 ```bash
-# ファイルを編集
-nano .claude/settings.local.json
+# 例: stock ドメインのスキルを接続
+ln -s /workspaces/claym/local/AI/stock/skills/market-check .claude/skills/market-check
 ```
 
-**カスタマイズポイント**:
-- `permissions.allow`: プロジェクトに必要な権限を追加
-- `permissions.ask`: 確認が必要な操作を設定
-- プロジェクトパスの更新
-
-#### 2. Claude Code カスタム指示 (.claude/CLAUDE.md)
+## テスト
 
 ```bash
-# ファイルを編集
-nano .claude/CLAUDE.md
-```
-
-**日本語でのやり取りを基本とする設定が含まれています**:
-- すべての応答を日本語で行う
-- コメント・ドキュメントは日本語
-- 丁寧語（です・ます調）の使用
-
-#### 3. Codex CLI (~/.codex/config.toml)
-
-```bash
-# ファイルを編集
-nano ~/.codex/config.toml
-```
-
-**すでに使用環境緩和設定が含まれています**:
-- `approval_policy = "auto"`: 基本的に自動承認
-- `language = "ja"`: 日本語を基本言語として使用
-- `bash_operations = "auto"`: Linuxコマンドを基本的に自動承認（危険なコマンドのみ確認）
-- `web_operations = "auto"`: Web検索・フェッチ操作を自動承認
-- タイムアウト設定の緩和（5分〜10分）
-- 出力制限の緩和（1MB、10000行）
-- サンドボックス無効化（コンテナ内のため）
-- カスタムシステムプロンプト（日本語設定）
-
-**危険なコマンドのブロックリスト**（確認が必要）:
-- ファイル削除系: `rm -rf`, システムディレクトリへの `rm`
-- 権限昇格系: `sudo`, `su`
-- システム変更系: `chmod -R`, `chown -R`, `dd`, `mkfs`, `fdisk`
-- ネットワーク系: `nc -l`, `iptables` ※curl/wgetは許可
-- パッケージ管理系: `apt remove`, `apt autoremove` ※installは許可
-- データベース操作系: `DROP DATABASE`, `TRUNCATE TABLE`
-- コンテナ操作系: `docker rm -f` 全削除, `docker system prune -a`
-
-**追加カスタマイズポイント**:
-- `model`: 使用するモデルを指定（例: "gpt-4-turbo"）
-- プロファイル設定を追加（development, production など）
-
-注: プロジェクトパスは自動セットアップで設定済みです。
-
-#### 4. Codex CLI カスタムプロンプト (.codex/prompts/*.md)
-
-```bash
-# プロジェクト共有用のプロンプトを編集
-nano .codex/prompts/yfinance.md
-
-# 個人設定を編集
-nano ~/.codex/prompts/yfinance.md
-```
-
-**カスタマイズポイント**:
-- 各 `.md` ファイルが `/prompts:<name>` で呼び出せるコマンドになる
-- プレースホルダー（$1, $FILE など）や YAML フロントマターで slash ポップアップを強化できる
-- templates-local/.codex/prompts/ 以下に同名ファイルを置くと、公式テンプレートを上書き可能
-
-**運用メモ**:
-- 自動セットアップ時は templates/.codex/prompts/ 内の Markdown が `.codex/prompts` と `~/.codex/prompts` にコピーされる
-- 既存ディレクトリがある場合は上書きされないため、再生成する場合は `reinit-ai-configs.sh` を利用する
-
-#### 5. Codex CLI エージェント指示 (AGENTS.md)
-
-```bash
-# ファイルを編集（プロジェクトルート）
-nano AGENTS.md
-```
-
-**AGENTS.md の特徴**:
-- プロジェクトルートに配置（チーム共有）
-- エージェント向けの「README」として機能
-- 階層的に読み込まれる（ホーム → リポジトリ → カレントディレクトリ）
-
-**カスタマイズポイント**:
-- プロジェクト固有のアーキテクチャ情報を追加
-- コーディング規約を詳細化
-- テスト手順を明確化
-- PR ガイドラインを更新
-
-**個人設定** (オプション):
-```bash
-# 個人的なカスタマイズは ~/.codex/AGENTS.md で
-nano ~/.codex/AGENTS.md
-```
-
-#### 6. GEMINI カスタム指示 (.gemini/GEMINI.md)
-
-```bash
-# ファイルを編集
-nano .gemini/GEMINI.md
-```
-
-**GEMINI 固有の機能**:
-- `/memory show`: 現在のコンテキストを確認
-- `/init`: プロジェクト用の GEMINI.md を生成
-- サブディレクトリにも配置可能
-
-#### 7. GEMINI カスタムコマンド (.gemini/commands/*.md)
-
-```bash
-# 公式テンプレートをローカルにコピー
-bash scripts/setup/copy-template-to-local.sh gemini-command yfinance.md
-
-# プロジェクト共有のコマンドを編集
-nano .gemini/commands/yfinance.md
-```
-
-- `/prompts:<name>` 形式で呼び出せるコマンドテンプレートを定義します
-- 番号付き手順や注意事項を明記すると安定した出力が得られます
-- 詳細ガイド: `templates/.gemini/commands/README.md`
-
-#### 8. システムプロンプト (docs/prompts/system.md)
-
-```bash
-# ファイルを編集
-nano docs/prompts/system.md
-```
-
-**カスタマイズポイント**:
-- `{{PLACEHOLDER}}` を実際の値に置換
-- プロジェクト情報を記入
-- コーディング規約を記述
-- ディレクトリ構造を更新
-
-## 📚 ドキュメント
-
-### プロンプトテンプレートの使い方
-
-#### 機能追加プロンプト
-
-```bash
-# AIに機能追加を依頼する際
-cat docs/prompts/tasks/feature-add.md
-```
-
-使用例：
-```
-以下のガイドラインに従って、ユーザー認証機能を追加してください：
-
-[docs/prompts/tasks/feature-add.md の内容を貼り付け]
-
-機能要件：
-- メールアドレスとパスワードでログイン
-- JWTトークンによる認証
-- パスワードのハッシュ化
-```
-
-#### バグ修正プロンプト
-
-```bash
-# AIにバグ修正を依頼する際
-cat docs/prompts/tasks/bug-fix.md
-```
-
-#### リファクタリングプロンプト
-
-```bash
-# AIにリファクタリングを依頼する際
-cat docs/prompts/tasks/refactor.md
-```
-
-#### コードレビュープロンプト
-
-```bash
-# AIにコードレビューを依頼する際
-cat docs/prompts/tasks/review.md
-```
-
-### Claude Code サブエージェント
-
-サブエージェントは、特定のタスクに特化したAIエージェントです。YAML形式で定義され、専門化されたプロンプトとツール設定を持ちます。
-
-#### 標準提供されるサブエージェント
-
-`.claude/agents/` には以下の3つのサブエージェントが自動的にセットアップされます：
-
-1. **code-reviewer.yaml** - コードレビュー専門家
-   - コードの品質と可読性の評価
-   - セキュリティ問題の検出
-   - パフォーマンス改善提案
-   - ベストプラクティスへの準拠チェック
-
-2. **test-generator.yaml** - テスト生成専門家
-   - ユニットテストの自動生成
-   - 統合テストの生成
-   - テストカバレッジの向上
-   - 多言語対応（Python, JavaScript, Java, Go, Ruby, Bash など）
-
-3. **documentation-writer.yaml** - ドキュメント作成専門家
-   - API ドキュメントの生成
-   - README の作成
-   - チュートリアルの作成
-   - コードコメントの自動生成
-
-#### サブエージェントの使用例
-
-```bash
-# カスタムサブエージェントの作成
-cp .claude/agents/code-reviewer.yaml .claude/agents/security-focused-reviewer.yaml
-
-# セキュリティに特化したレビュアーにカスタマイズ
-vim .claude/agents/security-focused-reviewer.yaml
-```
-
-#### YAML 設定例
-
-```yaml
-name: "custom-agent"
-description: "カスタムエージェントの説明"
-version: "1.0"
-
-prompt: |
-  エージェントのシステムプロンプト
-  タスクの実行方法や注意点を記述
-
-tools:
-  - Read
-  - Write
-  - Bash
-  - mcp__serena__find_symbol
-
-mode: "thorough"
-output_format: "markdown"
-
-settings:
-  max_files: 50
-  include_patterns:
-    - "**/*.py"
-  exclude_patterns:
-    - "**/node_modules/**"
-```
-
-**詳細**: サブエージェントの詳細については、[scripts/README.md](../scripts/README.md#claude-code-サブエージェント) を参照してください。
-
-## 🧪 テンプレート品質テスト
-
-テンプレートの品質を自動検証するテストスイートが `tests/templates/` に用意されています。
-
-### 実行方法
-
-```bash
-# テンプレート品質テストのみ実行（52テスト）
+# テンプレート品質テストのみ実行
 bash scripts/test/run-setup-tests.sh templates
 
-# セットアップテストも含む全テスト実行（91テスト）
+# セットアップテストも含む全テスト実行
 bash scripts/test/run-setup-tests.sh all
 ```
 
-### テスト内容
+テンプレートファイルを追加・変更した場合は、必ずテストを実行してください。
 
-| テストファイル | テスト数 | 検証内容 |
-|--------------|---------|---------|
-| `template-existence.bats` | 13 | ディレクトリ・ファイルの存在確認 |
-| `template-quality.bats` | 15 | 非空チェック・YAML フィールド・Markdown 構造・共通原則一貫性 |
-| `cross-tool-consistency.bats` | 8 | Claude/Codex/Gemini 間の共通コマンド・キーワード一貫性 |
-| `template-genericity.bats` | 8 | 技術スタック非依存の汎用性チェック |
-| `init-script-integration.bats` | 8 | init スクリプトの関数定義・呼び出し検証 |
+## 参考ドキュメント
 
-### テンプレート変更時の確認
-
-テンプレートファイルを追加・変更した場合は、必ずテストを実行して品質を確認してください。
-
-```bash
-bash scripts/test/run-setup-tests.sh templates
-```
-
-## 🔧 MCP サーバー設定
-
-### 推奨MCPサーバー
-
-| サーバー名 | 用途 | 優先度 |
-|-----------|------|--------|
-| serena | コードベース解析・編集 | 必須 |
-| filesystem | ファイル操作 | 必須 |
-| playwright | ブラウザ自動化 | 推奨 |
-| context7 | ドキュメント検索 | 推奨 |
-| github | GitHub API 統合 | 推奨 |
-| sequential-thinking | 段階的思考プロセス | 推奨 |
-| memory | ナレッジグラフ情報永続化 | 推奨 |
-| git | Git リポジトリ操作 | 推奨 |
-| markitdown | ドキュメント変換 | オプション |
-| imagesorcery | 画像処理 | オプション |
-| firecrawl | Web スクレイピング | オプション |
-
-### MCPサーバーのインストール
-
-```bash
-# Serena (Python)
-uv run --directory /opt/serena serena start-mcp-server --project $PWD
-
-# Playwright (Node.js)
-npx @playwright/mcp@latest
-
-# GitHub (Python、GITHUB_TOKEN 必須)
-uvx mcp-github
-
-# その他のNode.jsサーバー
-npx -y @modelcontextprotocol/server-filesystem "$PWD"
-npx -y @upstash/context7-mcp
-npx -y @modelcontextprotocol/server-sequential-thinking
-npx -y @modelcontextprotocol/server-memory
-
-# Git (Python)
-uvx mcp-server-git --repository .
-```
-
-## 🛡️ セキュリティ
-
-### 機密情報の管理
-
-設定ファイルには以下を含めないでください：
-
-- APIキー・トークン
-- パスワード
-- 個人情報
-- プライベートなURLやパス
-
-これらは環境変数で管理してください：
-
-```bash
-# .env ファイル（.gitignore に追加）
-ANTHROPIC_API_KEY=your_api_key
-OPENAI_API_KEY=your_api_key
-GEMINI_API_KEY=your_api_key
-GITHUB_TOKEN=your_token
-```
-
-### .gitignore の推奨設定
-
-```gitignore
-# AI拡張機能のローカル設定
-.claude/settings.local.json
-.codex/config.toml
-.gemini/settings.json
-
-# 環境変数
-.env
-.env.local
-
-# APIキー・トークン
-*.key
-*.token
-credentials.json
-```
-
-## 💡 ベストプラクティス
-
-### 1. 権限管理（Claude Code）
-
-- **最小権限の原則**: 必要最小限の権限のみ許可
-- **段階的許可**: 基本権限から始めて、必要に応じて拡張
-- **破壊的操作は ask に**: rm, sudo などは確認を求める
-
-### 2. MCPサーバー構成
-
-- **プロジェクトパスの変数化**: `${workspaceFolder}` を活用
-- **不要なサーバーは無効化**: パフォーマンスのため
-- **バージョン固定**: 本番環境では特定バージョンを指定
-
-### 3. プロンプトの活用
-
-- **コンテキストを与える**: システムプロンプトでプロジェクト情報を共有
-- **タスクテンプレートを参照**: 一貫した作業フロー
-- **カスタマイズ**: プロジェクト固有のルールを追加
-
-### 4. チーム開発
-
-- **サンプルファイルを共有**: `.example` ファイルをコミット
-- **ドキュメントを充実**: README, CONTRIBUTING を整備
-- **定期的なレビュー**: 設定の見直しを定期的に実施
-
-## 🔄 アップデート
-
-### テンプレートの更新
-
-```bash
-# 最新のテンプレートを取得
-cd /path/to/claym
-git pull origin main
-
-# 差分を確認
-diff templates/.claude/settings.local.json.example .claude/settings.local.json
-
-# 必要に応じてマージ
-```
-
-### バージョン管理
-
-テンプレートのバージョンは `docs/spec/vscode-extensions-defaults.md` の
-改訂履歴を参照してください。
-
-## 🐛 トラブルシューティング
-
-### Claude Code が起動しない
-
-1. VSCode のバージョンを確認（1.98.0以上）
-2. 設定ファイルのJSON構文をチェック
-3. 権限設定を見直す
-
-### MCPサーバーが動作しない
-
-1. サーバーがインストールされているか確認
-2. コマンドパスが正しいか確認
-3. ログを確認（VSCode Developer Tools）
-
-### 権限エラーが頻発
-
-1. `.claude/settings.local.json` の `allow` に追加
-2. ワイルドカードを活用（例: `Bash(git:*)`）
-
-## 📞 サポート
-
-- **Issue**: [GitHub Issues](https://github.com/tomohiroJin/claym/issues)
-- **ドキュメント**: [docs/](../docs/)
-- **スクリプトガイド**: [scripts/README.md](../scripts/README.md)
-
-## 📄 ライセンス
-
-このテンプレート集は、Claym プロジェクトの一部として提供されています。
-
-## 🙏 貢献
-
-改善提案や新しいテンプレートのアイデアがあれば、ぜひPRを送ってください！
-
----
-
-**作成日**: 2025-10-18
-**最終更新**: 2026-03-15
-**バージョン**: 1.1.0
-**メンテナ**: Claude Code
+- [3CLI 階層構造と境界動作ガイド](../docs/3cli-hierarchy-guide.md) — 各 CLI の境界動作、local/ サブプロジェクトのセットアップ手順

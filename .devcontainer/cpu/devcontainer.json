@@ -30,6 +30,8 @@
   ],
 
   // 認証トークン（あれば利用、無ければそのまま起動）
+  // GEMINI_API_KEY は Antigravity CLI (agy) の API キー認証でも参照される
+  // （設定は ~/.gemini 配下を共用。通常は agy 初回起動時の Google ログインを使う）
   "remoteEnv": {
     "ANTHROPIC_API_KEY": "${localEnv:ANTHROPIC_API_KEY}",
     "OPENAI_API_KEY": "${localEnv:OPENAI_API_KEY}",

@@ -7,7 +7,7 @@
 # SKILL.md が Agent Skills オープンスタンダード（agentskills.io）に
 # 準拠していることを検証するテスト。
 #
-# テスト数: 10
+# テスト数: 11
 
 # ==============================================================================
 # テストヘルパーのロード
@@ -23,10 +23,24 @@ load 'template_test_helper'
 # ==============================================================================
 
 # 期待されるスキル一覧
+#
+# コア（開発支援）
 EXPECTED_SKILLS=(
     "tdd-workflow" "code-review" "security-review" "search-first"
     "verification-loop" "api-design" "refactor-safely"
     "debug-systematically" "documentation-first" "git-workflow"
+    # agent-config ドメイン
+    "generate-agent-md" "audit-agent-md"
+    # design ドメイン
+    "design-review" "design-system"
+    # research ドメイン
+    "deep-research" "summarize"
+    # scenario ドメイン
+    "scenario-review" "scenario-write"
+    # seo ドメイン
+    "seo-audit" "seo-content"
+    # stock ドメイン
+    "market-check" "stock-analysis"
 )
 
 # ==============================================================================
@@ -119,12 +133,39 @@ EXPECTED_SKILLS=(
     done
 }
 
-@test "スキル数が10個である" {
+@test "実在するスキル数が期待一覧と一致する" {
+    # 固定値ではなく EXPECTED_SKILLS と突き合わせる。
+    # スキル追加時にテストの更新漏れ（一覧への未登録）を検出できる。
     local count=0
     for dir in "${SKILLS_DIR}"/*/; do
         if [[ -f "${dir}SKILL.md" ]]; then
             count=$((count + 1))
         fi
     done
-    assert_equal "${count}" "10"
+    assert_equal "${count}" "${#EXPECTED_SKILLS[@]}"
+}
+
+@test "README の収録スキル一覧が実態と一致する" {
+    # README の一覧に載っていないスキル、および実体の無い一覧行を検出する。
+    local readme="${SKILLS_DIR}/README.md"
+    local missing_in_readme=()
+    local skill
+
+    for skill in "${EXPECTED_SKILLS[@]}"; do
+        if ! grep -q "^| \`${skill}\` |" "$readme"; then
+            missing_in_readme+=("$skill")
+        fi
+    done
+
+    if [[ ${#missing_in_readme[@]} -gt 0 ]]; then
+        echo "# README に未記載のスキル: ${missing_in_readme[*]}" >&3
+        false
+    fi
+
+    # 「## 収録スキル一覧」セクション内の行のみを数える
+    # （後続の SKILL.md フォーマット表にも同形式の行があるため）
+    local readme_count
+    readme_count=$(sed -n '/^## 収録スキル一覧$/,/^## /p' "$readme" \
+        | grep -cE '^\| `[a-z-]+` \|')
+    assert_equal "${readme_count}" "${#EXPECTED_SKILLS[@]}"
 }

@@ -86,7 +86,7 @@ git config --global diff.colorMoved default
 | --- | --- | --- |
 | GoAccess | Web アクセスログのリアルタイム解析 | `goaccess access.log -o report.html` |
 | lnav | SQL で検索できるログビューア | `lnav /var/log/*.log` |
-| yq (npm 版) | YAML/JSON/TOML の変換・抽出 | `yq '.services' docker-compose.yml` |
+| yq | YAML/JSON/XML の変換・抽出（mikefarah 版 v4 系） | `yq '.services' docker-compose.yml` |
 | miller (mlr) | CSV/TSV/JSONL の整形・集計 | `mlr --icsv --opprint stats1 -a mean data.csv` |
 | moreutils | `sponge` などの便利ツール集 | `command | sponge file.txt` |
 
@@ -106,7 +106,12 @@ git config --global diff.colorMoved default
 | --- | --- | --- |
 | yfinance | Yahoo! Finance から株価取得 | `python -c "import yfinance as yf; print(yf.Ticker('AAPL').info['symbol'])"` |
 | pandas-datareader | 経済指標など外部データ取得 | `python -c "import pandas_datareader as pdr; pdr.DataReader('DEXJPUS', 'fred')"` |
-| qtrn | 金融市場データ表示 CLI | `qtrn quote AAPL` |
+| qtrn | 金融市場データ表示 CLI（※下記の注意を参照） | `qtrn quote AAPL` |
+
+> **qtrn の注意**: upstream (piquette/qtrn) は 2020-05-30 を最後に更新が止まっており、
+> Yahoo Finance が 2023 年に追加した crumb/cookie 認証に追随していません。
+> バイナリは起動しますが実データの取得に失敗する場合があります。
+> 確実に取得したい場合は Python の `yfinance` を使ってください。
 
 ## レポート・ドキュメント生成
 
@@ -124,6 +129,20 @@ git config --global diff.colorMoved default
 | FFmpeg | 音声・動画の変換・抽出 | `ffmpeg -i input.mp4 -vn audio.mp3` |
 | libwebp (cwebp) | WebP 形式の変換ツール | `cwebp input.png -o output.webp` |
 | Tesseract OCR | OCR エンジン（ImageSorcery のテキスト抽出にも利用） | `tesseract input.png output` |
+
+## 音声認識（ASR）・文字起こし
+
+音声を文字起こしする Whisper 系のツール群です。いずれも `/opt/mcp-venv` に導入されており、GPU（CUDA）が利用可能な構成では `compute_type="float16"` で高速推論できます。字幕タイミングの自動検出や TTS 音声の誤読検証には faster-whisper を推奨します。
+
+| 名前 | 概要 | 代表的なコマンド例 |
+| --- | --- | --- |
+| faster-whisper | Whisper を CTranslate2 で高速再実装（公式比 約4倍・省メモリ、単語タイムスタンプが正確）。CLI は持たず Python から利用 | `python -c "from faster_whisper import WhisperModel; m=WhisperModel('large-v3', device='cuda', compute_type='float16')"` |
+| openai-whisper | OpenAI 公式の Whisper 実装。`whisper` CLI で手軽に文字起こし | `whisper audio.mp3 --language Japanese --model large-v3 --output_format srt` |
+| CTranslate2 | faster-whisper のバックエンド推論エンジン（量子化・GPU 対応） | `python -c "import ctranslate2; print(ctranslate2.get_cuda_device_count())"` |
+| PyAV (av) | FFmpeg バインディング。faster-whisper の音声デコードに利用 | `python -c "import av; print(av.__version__)"` |
+| PyTorch / torchaudio | Whisper 系モデルの実行基盤（CUDA 対応ビルド） | `python -c "import torch; print(torch.cuda.is_available())"` |
+
+> 現行バージョン（2026-05-25 時点）: faster-whisper 1.2.1 / openai-whisper 20250625 / CTranslate2 4.7.2 / PyAV 17.0.1 / PyTorch 2.10.0+cu128
 
 ## Git / ネットワーク / セキュリティ
 
@@ -145,11 +164,32 @@ git config --global diff.colorMoved default
 
 ## プリインストール済み AI CLI
 
-| CLI | 概要 | 代表的なコマンド例 |
-| --- | --- | --- |
-| Claude Code | Anthropic 製 AI CLI | `claude` |
-| Codex CLI | OpenAI ベースの CLI | `codex chat` |
-| Gemini CLI | Google Gemini 用 CLI | `gemini chat` |
+| CLI | 概要 | 代表的なコマンド例 | 導入経路 | 更新方法 |
+| --- | --- | --- | --- | --- |
+| Claude Code | Anthropic 製 AI CLI | `claude` | 公式インストーラ（`~/.local/bin/claude`） | 自動更新（`claude update` で即時） |
+| Codex CLI | OpenAI ベースの CLI | `codex` | npm グローバル | `npm i -g @openai/codex@latest` |
+| Antigravity CLI | Google 製 AI CLI（Gemini CLI の後継） | `agy` | 公式インストーラ（`/usr/local/bin/agy`） | `agy update` |
+
+### 導入経路が npm でない理由
+
+- **Claude Code**: npm 12 以降はライフサイクルスクリプトを既定でブロックする。
+  `@anthropic-ai/claude-code` はネイティブバイナリの配置を `postinstall` に依存しているため、
+  npm でグローバル導入すると `claude native binary not installed.` で起動できない。
+  公式も[ネイティブインストーラを推奨](https://code.claude.com/docs/en/setup)している。
+- **Antigravity CLI**: Gemini CLI は 2026-06-18 に個人アカウント向けの提供を終了し、
+  後継の Antigravity CLI（Go 製、コマンド名 `agy`）へ統合された。
+  配布は npm ではなく `curl | bash` のインストーラのみ。
+
+### MCP 登録方法の違い
+
+| CLI | 登録方法 |
+| --- | --- |
+| Claude Code | `claude mcp add <name> -- <command>` |
+| Codex CLI | `codex mcp add <name> <command>`（SSE は `~/.codex/config.toml` を直接編集） |
+| Antigravity CLI | `mcp add` 相当のサブコマンドは無い。`~/.gemini/config/mcp_config.json` の `mcpServers` を編集するか、対話画面で `/mcp` を実行 |
+
+`.devcontainer/post-create-setup.sh` が 3 CLI すべてに対して冪等に登録を行います。
+Antigravity 分は `.devcontainer/scripts/helpers/antigravity_config_writer.py` が JSON をマージ更新します。
 
 ## バンドル済み MCP サーバー
 
@@ -168,3 +208,5 @@ git config --global diff.colorMoved default
 | mcp-server-git | Git リポジトリ操作 | `uvx mcp-server-git --repository .` |
 
 > それぞれのツールはコンテナ内ですぐに利用できます。バージョン確認や詳細オプションは `--help` で確認してください。
+
+> このほか、初期構成（Dockerfile）以降に追加された音声合成（VOICEVOX）・機械学習／画像生成（PyTorch・diffusers）・背景除去（rembg）などのソフトは `docs/added-tooling.md` にまとめています。

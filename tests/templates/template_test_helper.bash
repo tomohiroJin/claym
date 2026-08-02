@@ -39,6 +39,14 @@ CODEX_MD="${TEMPLATES_DIR}/.codex/AGENTS.md"
 GEMINI_MD="${TEMPLATES_DIR}/.gemini/GEMINI.md"
 readonly CLAUDE_MD CODEX_MD GEMINI_MD
 
+# 3 CLI に同期配置される共通ルール
+# 2層構造への再構成により、コーディング規約はメイン設定ファイルから
+# 各 CLI の rules/ 配下へ分離された（ADR-0001）
+CLAUDE_CODING_STYLE="${CLAUDE_RULES_DIR}/coding-style.md"
+CODEX_CODING_STYLE="${CODEX_INSTRUCTIONS_DIR}/coding-style.md"
+GEMINI_CODING_STYLE="${GEMINI_RULES_DIR}/coding-style.md"
+readonly CLAUDE_CODING_STYLE CODEX_CODING_STYLE GEMINI_CODING_STYLE
+
 # init スクリプトパス
 INIT_SCRIPT="${PROJECT_ROOT}/scripts/setup/init-ai-configs.sh"
 readonly INIT_SCRIPT
@@ -136,15 +144,32 @@ check_markdown_has_headings() {
     return 0
 }
 
-# 「共通原則」セクションの内容を抽出する
+# ルールファイルから frontmatter を除いた本文を抽出する
+#
+# Claude 用ルールのみ frontmatter（description / alwaysApply / paths）を持つため、
+# 3 CLI 間で本文を比較するには除去が必要。
 #
 # 引数:
 #   $1: ファイルパス
 #
-# 出力: 共通原則セクションの箇条書き部分
+# 出力: frontmatter と直後の空行を除いた本文
 #
-extract_common_principles() {
+extract_rule_body() {
     local file="$1"
-    # 「### 共通原則」から次の「###」行（または EOF）までの箇条書きを抽出
-    sed -n '/^### 共通原則$/,/^### /{/^### 共通原則$/d;/^### /d;/^$/d;p}' "$file"
+    awk '
+        NR == 1 && /^---$/       { in_fm = 1; next }
+        in_fm == 1               { if (/^---$/) { in_fm = 0; after_fm = 1 } next }
+        after_fm == 1 && /^$/    { after_fm = 0; next }
+                                 { after_fm = 0; print }
+    ' "$file"
+}
+
+# ルールファイル本文の箇条書き項目数を数える
+#
+# 引数:
+#   $1: ファイルパス
+#
+count_rule_bullets() {
+    local file="$1"
+    extract_rule_body "$file" | grep -c '^- ' || true
 }

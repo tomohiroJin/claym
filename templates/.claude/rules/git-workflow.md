@@ -1,3 +1,8 @@
+---
+description: Git ワークフロー規約（コミット・ブランチ・PR）
+alwaysApply: true
+---
+
 # Git ワークフロー規約
 
 ## コミットメッセージ

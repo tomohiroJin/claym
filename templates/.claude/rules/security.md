@@ -1,3 +1,9 @@
+---
+description: セキュリティ規約（入力検証・機密情報管理・通信セキュリティ）
+alwaysApply: false
+paths: **/*.{ts,tsx,js,jsx,py}, **/.env*, **/auth/**, **/security/**
+---
+
 # セキュリティ規約
 
 ## 入力検証

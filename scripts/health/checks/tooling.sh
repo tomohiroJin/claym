@@ -2,7 +2,7 @@
 # ツールチェーン関連のチェック
 
 check_cli_paths() {
-  local required=(claude codex gemini uv npx npm rg markitdown-mcp imagesorcery-mcp mcp-github)
+  local required=(claude codex agy uv npx npm rg markitdown-mcp imagesorcery-mcp mcp-github)
   local missing=()
   local cmd
   declare -A seen=()
@@ -24,7 +24,7 @@ check_cli_versions() {
   local commands=(
     "claude --version"
     "codex --version"
-    "gemini --version"
+    "agy --version"
     "uv --version"
     "npm --version"
   )

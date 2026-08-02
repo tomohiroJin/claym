@@ -13,6 +13,13 @@ yarn-error.log*
 .yarn/
 .pnp.*
 
+# pnpm（コンテンツアドレスストア・ログ・ビルドキャッシュ）
+.pnpm-store/
+pnpm-debug.log*
+.turbo/
+dist/
+*.tsbuildinfo
+
 # Python
 __pycache__/
 *.py[cod]
@@ -132,11 +139,9 @@ local/
 docs/prompts/
 !templates/docs/prompts/
 
-# AI拡張機能のローカル設定
-.claude/settings.local.json
-.claude/custom-instructions.md
-.claude/agents/
-
 # ユーザー独自テンプレート（gitignore対象）
 templates-local/*
 !templates-local/.gitkeep
+
+# AI の MCP に関連した設定（個人設定として管理）
+.playwright-mcp/

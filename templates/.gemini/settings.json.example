@@ -10,6 +10,21 @@
   "ui": {
     "theme": "Default"
   },
+  "mcp": {
+    "allowed": [
+      "serena",
+      "filesystem",
+      "playwright",
+      "markitdown",
+      "imagesorcery",
+      "github",
+      "context7",
+      "fetch",
+      "sequential-thinking",
+      "memory",
+      "git"
+    ]
+  },
   "mcpServers": {
     "serena": {
       "command": "uv",
