@@ -86,7 +86,7 @@ git config --global diff.colorMoved default
 | --- | --- | --- |
 | GoAccess | Web アクセスログのリアルタイム解析 | `goaccess access.log -o report.html` |
 | lnav | SQL で検索できるログビューア | `lnav /var/log/*.log` |
-| yq (npm 版) | YAML/JSON/TOML の変換・抽出 | `yq '.services' docker-compose.yml` |
+| yq | YAML/JSON/XML の変換・抽出（mikefarah 版 v4 系） | `yq '.services' docker-compose.yml` |
 | miller (mlr) | CSV/TSV/JSONL の整形・集計 | `mlr --icsv --opprint stats1 -a mean data.csv` |
 | moreutils | `sponge` などの便利ツール集 | `command | sponge file.txt` |
 
@@ -106,7 +106,12 @@ git config --global diff.colorMoved default
 | --- | --- | --- |
 | yfinance | Yahoo! Finance から株価取得 | `python -c "import yfinance as yf; print(yf.Ticker('AAPL').info['symbol'])"` |
 | pandas-datareader | 経済指標など外部データ取得 | `python -c "import pandas_datareader as pdr; pdr.DataReader('DEXJPUS', 'fred')"` |
-| qtrn | 金融市場データ表示 CLI | `qtrn quote AAPL` |
+| qtrn | 金融市場データ表示 CLI（※下記の注意を参照） | `qtrn quote AAPL` |
+
+> **qtrn の注意**: upstream (piquette/qtrn) は 2020-05-30 を最後に更新が止まっており、
+> Yahoo Finance が 2023 年に追加した crumb/cookie 認証に追随していません。
+> バイナリは起動しますが実データの取得に失敗する場合があります。
+> 確実に取得したい場合は Python の `yfinance` を使ってください。
 
 ## レポート・ドキュメント生成
 
