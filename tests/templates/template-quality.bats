@@ -8,9 +8,9 @@
 # - 非空チェック（全ファイル）
 # - YAML 必須フィールド（エージェント）
 # - Markdown 構造（コマンド・ルール）
-# - 共通原則の一貫性（メイン設定ファイル間）
+# - 共通ルールの一貫性（3 CLI の rules/ 配下）
 #
-# テスト数: 15
+# テスト数: 21
 
 # ==============================================================================
 # テストヘルパーのロード
@@ -173,43 +173,82 @@ load 'template_test_helper'
 }
 
 # ==============================================================================
-# 共通原則の一貫性
+# 共通ルールの一貫性
+#
+# 2層構造への再構成（ADR-0001）により、コーディング規約はメイン設定ファイルの
+# 「### 共通原則」から各 CLI の rules/ 配下へ分離された。
+# 分離後も 3 CLI 間で内容が同期していることを検証する。
 # ==============================================================================
 
-@test "共通原則が各ファイルで6項目である" {
+@test "共通ルール coding-style.md が 3 CLI すべてに存在する" {
+    local all_exist=true
+    local file
+
+    for file in "${CLAUDE_CODING_STYLE}" "${CODEX_CODING_STYLE}" "${GEMINI_CODING_STYLE}"; do
+        if [[ ! -s "$file" ]]; then
+            echo "# 共通ルールが存在しないか空です: ${file}" >&3
+            all_exist=false
+        fi
+    done
+
+    [[ "$all_exist" == "true" ]]
+}
+
+@test "Claude の共通ルールのみ frontmatter を持つ" {
+    # Claude Code は frontmatter の paths で条件ロードするため必須。
+    # Codex / Gemini は frontmatter を解釈しないため付けない。
+    if ! head -n 1 "${CLAUDE_CODING_STYLE}" | grep -q '^---$'; then
+        echo "# Claude ルールに frontmatter がありません: ${CLAUDE_CODING_STYLE}" >&3
+        false
+    fi
+
+    local file
+    for file in "${CODEX_CODING_STYLE}" "${GEMINI_CODING_STYLE}"; do
+        if head -n 1 "$file" | grep -q '^---$'; then
+            echo "# frontmatter は Claude 用のみに付与してください: ${file}" >&3
+            false
+        fi
+    done
+}
+
+@test "共通ルールの箇条書きが 3 CLI で同数である" {
     local claude_count codex_count gemini_count
 
-    claude_count=$(extract_common_principles "${CLAUDE_MD}" | wc -l)
-    codex_count=$(extract_common_principles "${CODEX_MD}" | wc -l)
-    gemini_count=$(extract_common_principles "${GEMINI_MD}" | wc -l)
+    claude_count=$(count_rule_bullets "${CLAUDE_CODING_STYLE}")
+    codex_count=$(count_rule_bullets "${CODEX_CODING_STYLE}")
+    gemini_count=$(count_rule_bullets "${GEMINI_CODING_STYLE}")
 
-    if [[ "$claude_count" -ne 6 ]]; then
-        echo "# CLAUDE.md の共通原則: ${claude_count}項目（期待: 6）" >&3
+    if [[ "$claude_count" -eq 0 ]]; then
+        echo "# Claude の共通ルールに箇条書きがありません" >&3
         false
     fi
-    if [[ "$codex_count" -ne 6 ]]; then
-        echo "# AGENTS.md の共通原則: ${codex_count}項目（期待: 6）" >&3
+    if [[ "$codex_count" -ne "$claude_count" ]]; then
+        echo "# Codex の箇条書き: ${codex_count}項目（期待: ${claude_count}）" >&3
         false
     fi
-    if [[ "$gemini_count" -ne 6 ]]; then
-        echo "# GEMINI.md の共通原則: ${gemini_count}項目（期待: 6）" >&3
+    if [[ "$gemini_count" -ne "$claude_count" ]]; then
+        echo "# Gemini の箇条書き: ${gemini_count}項目（期待: ${claude_count}）" >&3
         false
     fi
 }
 
-@test "3ファイルの共通原則が同一内容である" {
+@test "3 CLI の共通ルールが同一内容である（frontmatter を除く）" {
     local claude_content codex_content gemini_content
 
-    claude_content=$(extract_common_principles "${CLAUDE_MD}")
-    codex_content=$(extract_common_principles "${CODEX_MD}")
-    gemini_content=$(extract_common_principles "${GEMINI_MD}")
+    claude_content=$(extract_rule_body "${CLAUDE_CODING_STYLE}")
+    codex_content=$(extract_rule_body "${CODEX_CODING_STYLE}")
+    gemini_content=$(extract_rule_body "${GEMINI_CODING_STYLE}")
 
+    if [[ -z "$claude_content" ]]; then
+        echo "# Claude の共通ルール本文が空です: ${CLAUDE_CODING_STYLE}" >&3
+        false
+    fi
     if [[ "$claude_content" != "$codex_content" ]]; then
-        echo "# CLAUDE.md と AGENTS.md の共通原則が一致しません" >&3
+        echo "# Claude と Codex の共通ルールが一致しません" >&3
         false
     fi
     if [[ "$claude_content" != "$gemini_content" ]]; then
-        echo "# CLAUDE.md と GEMINI.md の共通原則が一致しません" >&3
+        echo "# Claude と Gemini の共通ルールが一致しません" >&3
         false
     fi
 }
