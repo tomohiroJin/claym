@@ -46,6 +46,7 @@ RUN set -eux; \
     zsh \
     locales \
     fonts-powerline \
+    fonts-noto-cjk \
     python3 \
     python3-pip \
     python3-venv \
