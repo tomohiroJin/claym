@@ -311,9 +311,25 @@ RUN su vscode -c 'export HOME=/home/vscode; curl -fsSL https://claude.ai/install
 # インストーラの -d でインストール先を指定できるため、全ユーザーから使えるよう
 # /usr/local/bin へ system-wide に配置します（ホームディレクトリに依存させない）。
 # 更新は `agy update` で行います。
-RUN curl -fsSL https://antigravity.google/cli/install.sh | bash -s -- -d /usr/local/bin \
-    && chmod 755 /usr/local/bin/agy \
-    && agy --version
+# 配信側が gzip のまま本文を返し、bash が構文エラーで落ちたことがあるため
+# （2026-09 の CI）、パイプで直接実行せずファイルに保存し、gzip なら解凍して
+# 先頭が `#!` であることを確かめてから実行します。取得は最大 3 回まで試みます。
+RUN set -eu; \
+    f=/tmp/agy-install.sh; \
+    for i in 1 2 3; do \
+        if curl -fsSL --compressed -o "$f" https://antigravity.google/cli/install.sh; then \
+            if gzip -t "$f" 2>/dev/null; then gzip -dc "$f" > "$f.tmp" && mv "$f.tmp" "$f"; fi; \
+            [ "$(head -c 2 "$f")" = '#!' ] && break; \
+            echo "install.sh がシェルスクリプトではありません（試行 $i/3）:" >&2; \
+            head -c 32 "$f" | od -An -c >&2; \
+        fi; \
+        [ "$i" -lt 3 ] || exit 1; \
+        sleep 5; \
+    done; \
+    bash "$f" -d /usr/local/bin; \
+    rm -f "$f"; \
+    chmod 755 /usr/local/bin/agy; \
+    agy --version
 
 # ----------------------------------------------------------------------------
 # モダン CLI ツールのインストール
