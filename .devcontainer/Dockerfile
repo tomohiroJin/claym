@@ -223,8 +223,13 @@ RUN npm install -g \
 # Playwright 実行に必要な apt パッケージが未導入の場合に自動で導入します
 # （既に存在するものは暗黙的にスキップされます）。
 # ブラウザを共有パスにインストールし、非 root ユーザーからもアクセス可能にします。
+# 所有者は vscode にします。プロジェクトが固定する Playwright の版は依存の更新で
+# 上がり、そのたびに別のリビジョンのブラウザが要ります（ここで入れるのは MCP の版の分だけ）。
+# root の持ち物のままだと、プロジェクトの `playwright install chromium` が sudo なしで
+# 入れられず、E2E が「Chromium revision NNNN が見つかりません」で止まります。
 ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers
 RUN npx playwright install chromium --with-deps \
+    && chown -R vscode:vscode /opt/playwright-browsers \
     && chmod -R 755 /opt/playwright-browsers
 
 # ----------------------------------------------------------------------------
@@ -292,6 +297,14 @@ RUN chown -R vscode:vscode /opt/serena
 
 # uv などユーザー領域にインストールされるツールのために ~/.local/bin を PATH に追加。
 ENV PATH="/home/vscode/.local/bin:$PATH"
+
+# pnpm の作業パッケージを仮想ストアの node_modules へ持ち上げない。
+# /workspaces（9p）が遅いので、プロジェクトによっては仮想ストアの実体を
+# ホームへ逃がしている（`--virtual-store-dir=<symlink>`）。pnpm 11.28 以降は、
+# その配置で作業パッケージを持ち上げようとすると `ERR_PNPM_INVALID_DEPENDENCY_NAME`
+# で install を拒み、スクリプトの実行前の依存の確認も同じ理由で止まる（pnpm test 等が一切動かない）。
+# 作業パッケージは各パッケージの依存として直接リンクされるので、持ち上げは要らない。
+ENV pnpm_config_hoist_workspace_packages=false
 
 # ----------------------------------------------------------------------------
 # AI CLI のインストール
