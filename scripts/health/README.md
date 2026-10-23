@@ -20,6 +20,30 @@
 - Serena・Playwright・Python 仮想環境（`/opt/mcp-venv` または `$VIRTUAL_ENV`）で管理される MCP 資産のスポットチェック
 - コンテナにエクスポートされている API キー一覧の表示
 - `safe.directory` 設定と ImageSorcery ログの参照可否の確認
+- 未適用の Ubuntu セキュリティ更新の有無（`apt-security-updates`）
+- Python 環境（`/opt/mcp-venv`・`/opt/serena/.venv`・`uv tool` で入れたツール）の既知の脆弱性（`python-vulnerabilities`。`pip-audit` を使用）
+
+脆弱性の 2 つのチェックはネットワークで最新のアドバイザリを取得するため、`--quick` では実行しません（1 分前後かかります）。
+
+### 脆弱性が見つかったときの更新手順
+
+```bash
+# Ubuntu のセキュリティ更新（Python 3.12 本体・OpenSSL・ca-certificates 等）
+sudo apt-get update && sudo apt-get upgrade -y
+
+# MCP 用 venv（fastmcp は imagesorcery-mcp の都合で 2.x に据え置く）
+/opt/mcp-venv/bin/pip install --upgrade "fastmcp>=2.10.0,<3" "<パッケージ>>=<修正版>"
+
+# Serena（uv run が起動のたびに uv.lock へ同期するので、venv ではなく lock を上げる）
+cd /opt/serena && git pull --ff-only && uv lock --upgrade-package <パッケージ> && uv sync
+
+# uv tool で入れたツール
+uv tool upgrade --all
+```
+
+- 更新後は `bash scripts/health/check-environment.sh` を再実行して PASS を確認し、MCP を使う CLI を再起動します。
+- 修正版が無い、またはこの環境では到達しない脆弱性は `checks/security.sh` の `SECURITY_IGNORED_VULNS` に理由つきで追加します。
+- コンテナの再ビルドでも OS 層の更新は適用されます（Dockerfile で `apt-get upgrade` を実行）。
 
 ### 使い方
 

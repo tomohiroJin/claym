@@ -26,8 +26,13 @@ WORKDIR /workspace
 # モダンな CLI ツール群と、快適な端末表示のためのフォントも導入します。
 # あわせて GitHub CLI の公式リポジトリ登録とネットワーク系ユーティリティの導入まで
 # 単一レイヤーで完結させ、APT キャッシュの再利用効率を高めます。
+#
+# ubuntu:24.04 のベースイメージは公開後のセキュリティ更新を含まないため、
+# 最初に apt-get upgrade で取り込みます（2026-10 時点で python3.12・openssl・
+# libexpat1・ca-certificates など 130 件が未適用のまま残っていた）。
 RUN set -eux; \
     apt-get update; \
+    apt-get upgrade -y; \
     apt-get install -y --no-install-recommends \
     build-essential \
     ca-certificates \
@@ -236,6 +241,9 @@ RUN npx playwright install chromium --with-deps \
 # - fastmcp<3: imagesorcery-mcp 0.11.4 が FastMCP(log_level=...) を使用しており、
 #   fastmcp 3.0 で廃止された引数のため TypeError で起動不可。上流修正まで 2.x に固定
 #   (markitdown-mcp, mcp-github は mcp SDK 内蔵の FastMCP を使用しており影響なし)
+#   2.x には 3.2.0 で直った脆弱性が 2 件残るが、どちらも Windows の
+#   `fastmcp install` と GitHub OAuthProxy に限られ、stdio 起動のこの環境には当たらない
+#   （scripts/health/checks/security.sh の既知の例外として登録済み）
 # - CLIP: imagesorcery の post-install より前に明示的インストール（推奨対処）
 # - post-install: 失敗しても続行するフォールバック付き
 ENV VIRTUAL_ENV=/opt/mcp-venv
@@ -258,6 +266,11 @@ ENV PATH="${VIRTUAL_ENV}/bin:$PATH"
 #
 # ビジネス向けデータ分析や市場データ取得に必要なライブラリを導入します。
 # これらは標準的なデータサイエンス・金融分析のワークフローで広く利用されています。
+#
+# landslide 2.0.0（2020 年で更新停止）は Jinja2==3.1.2 / Markdown==3.4.1 /
+# Pygments==2.14.0 を完全一致で要求し、通常のインストールでは脆弱な旧版に
+# 引き戻される。新しい版でも動作することを確認したうえで、依存は上の一覧で
+# 最新を入れ、landslide 本体だけ --no-deps で入れる。
 RUN "$VIRTUAL_ENV/bin/pip" install --no-cache-dir \
     # 数値・表データ分析
     pandas \
@@ -272,9 +285,12 @@ RUN "$VIRTUAL_ENV/bin/pip" install --no-cache-dir \
     # 市場・金融データ分析
     yfinance \
     pandas-datareader \
-    # レポート・プレゼンテーション生成
-    landslide \
-    jinja2
+    # レポート・プレゼンテーション生成（landslide の依存。本体は次の行で入れる）
+    jinja2 \
+    markdown \
+    pygments \
+    docutils \
+    && "$VIRTUAL_ENV/bin/pip" install --no-cache-dir --no-deps landslide
 
 # uv のインストール（Serena MCP が利用）。
 # インストーラは静的バイナリを ~/.local/bin に配置します。
