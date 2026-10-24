@@ -290,7 +290,11 @@ RUN "$VIRTUAL_ENV/bin/pip" install --no-cache-dir \
     markdown \
     pygments \
     docutils \
-    && "$VIRTUAL_ENV/bin/pip" install --no-cache-dir --no-deps landslide
+    && "$VIRTUAL_ENV/bin/pip" install --no-cache-dir --no-deps landslide \
+    # 依存の版を固定していないので、将来の更新で壊れたらここでビルドを止める
+    && printf '# t\n\n---\n\n# s\n' > /tmp/landslide-check.md \
+    && "$VIRTUAL_ENV/bin/landslide" /tmp/landslide-check.md -d /tmp/landslide-check.html \
+    && rm -f /tmp/landslide-check.md /tmp/landslide-check.html
 
 # uv のインストール（Serena MCP が利用）。
 # インストーラは静的バイナリを ~/.local/bin に配置します。
