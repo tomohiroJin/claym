@@ -196,6 +196,62 @@ test_shell_aliases_check() {
     grep -q "shell-aliases" <<<"$output"
 }
 
+# テスト16: 脆弱性チェックが登録されていること
+test_security_checks_registered() {
+    local output
+    output=$("$CHECK_SCRIPT" --list-checks 2>&1)
+    grep -q "apt-security-updates" <<<"$output" && \
+    grep -q "python-vulnerabilities" <<<"$output"
+}
+
+# テスト17: 脆弱性チェックが既知の陽性を検出すること
+# 「0件」だけでは異常なしと検査が死んでいるを区別できないため、
+# 古い ca-certificates を入れた体の dpkg status と、修正前の Pillow を入れた
+# 使い捨て venv を渡して、両方が WARN になることを確かめる（要ネットワーク）。
+test_security_checks_detect_known_positive() {
+    local tmp output
+    tmp=$(mktemp -d)
+    local installed
+    installed=$(dpkg-query -W -f='${Version}' ca-certificates)
+    sed "/^Package: ca-certificates$/,/^$/ s/^Version: .*/Version: 20240203/" \
+        /var/lib/dpkg/status >"$tmp/status"
+    python3 -m venv "$tmp/venv" && \
+        "$tmp/venv/bin/pip" install -q --disable-pip-version-check pillow==12.3.0 >/dev/null 2>&1
+
+    # 未適用の更新が多い環境でも ca-certificates が表示から切れないよう上限を外す
+    output=$(SECURITY_DPKG_STATUS="$tmp/status" SECURITY_PYTHON_ENVS="$tmp/venv" \
+        SECURITY_PREVIEW_LIMIT=100000 "$CHECK_SCRIPT" --no-color 2>&1 || true)
+    rm -rf "$tmp"
+
+    # --no-color でも print_status は [WARN] の直後にリセットの制御文字を出すため、間を .* で受ける
+    [[ -n "$installed" ]] && \
+    grep -q "\[WARN\].*Ubuntu security updates: .*ca-certificates" <<<"$output" && \
+    grep -q "\[WARN\].*Python package vulnerabilities: .*pillow 12.3.0" <<<"$output"
+}
+
+# テスト18: 脆弱性チェックが検査できないとき PASS にも異常終了にもならないこと
+# 依存の壊れた dpkg status（apt のシミュレーションが失敗する）と、空の venv を渡す。
+# 以前は前者が PASS、後者が --json を含めて検査全体を終了コード 1 で落としていた。
+test_security_checks_fail_safe() {
+    local tmp output exit_code=0
+    tmp=$(mktemp -d)
+    # ca-certificates の依存を、存在しないパッケージに差し替える
+    sed "/^Package: ca-certificates$/,/^$/ s/^Depends: .*/Depends: no-such-package-for-health-test/" \
+        /var/lib/dpkg/status >"$tmp/status"
+    python3 -m venv --without-pip "$tmp/venv"
+
+    # --json は既存の imagesorcery-diagnostics の hint にログの改行が混ざって壊れることがあるため、
+    # テキスト出力で判定する（異常終了は出力形式に関係なく終了コード 1 で現れる）
+    output=$(SECURITY_DPKG_STATUS="$tmp/status" SECURITY_PYTHON_ENVS="$tmp/venv" \
+        "$CHECK_SCRIPT" --no-color 2>&1) || exit_code=$?
+    rm -rf "$tmp"
+
+    [[ $exit_code -ne 1 ]] && \
+    grep -q "Summary:" <<<"$output" && \
+    grep -q "\[WARN\].*Ubuntu security updates: apt upgrade simulation failed" <<<"$output" && \
+    grep -q "\[PASS\].*Python package vulnerabilities:" <<<"$output"
+}
+
 # =============================================================================
 # メイン実行
 # =============================================================================
@@ -227,6 +283,9 @@ main() {
     run_test "mcp-registrations チェック" test_mcp_registrations_check
     run_test "git-delta-config チェック" test_git_delta_check
     run_test "shell-aliases チェック" test_shell_aliases_check
+    run_test "脆弱性チェックの登録" test_security_checks_registered
+    run_test "脆弱性チェックが既知の陽性を検出" test_security_checks_detect_known_positive
+    run_test "脆弱性チェックが検査不能時に PASS も異常終了もしない" test_security_checks_fail_safe
     echo ""
 
     # サマリ表示
