@@ -44,7 +44,7 @@ uv tool upgrade --all
 - 更新後は `bash scripts/health/check-environment.sh` を再実行して PASS を確認し、MCP を使う CLI を再起動します。
 - 修正版が無い、またはこの環境では到達しない脆弱性は `checks/security.sh` の `SECURITY_IGNORED_VULNS` に理由つきで追加します。
 - コンテナを**キャッシュなしで**再ビルドしても OS 層の更新は適用されます（Dockerfile で `apt-get upgrade` を実行）。通常の Rebuild は `apt-get upgrade` のレイヤーをキャッシュから再利用するので、更新は入りません（VS Code では「Rebuild Without Cache」を使います）。
-- `apt-security-updates` は、入っている版より新しい版が `noble-security` にあるパッケージを数えます。`noble-updates` にしか無い更新（セキュリティ以外の修正）は数えません。
+- `apt-security-updates` は、入っている版より新しい版が `noble-security` にあるパッケージを数えます。`noble-updates` にしか無い更新（セキュリティ以外の修正）は数えません。`apt-mark hold` したパッケージも数えません。
 
 ### 使い方
 

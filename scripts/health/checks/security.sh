@@ -148,12 +148,17 @@ check_python_vulnerabilities() {
     name=$(basename "${env%/.venv}")
     # 結果ファイル名はパス全体から作る（basename だけだと別の環境と衝突する）
     file="$tmp/$(tr '/' '_' <<<"$env")"
+    # freeze できない環境は「空の venv」と区別して失敗として数える
+    local frozen
+    if ! frozen=$(uv pip freeze --python "$env/bin/python" 2>/dev/null); then
+      errors+=("$name (freeze)")
+      continue
+    fi
     # 編集可能インストールと直接 URL 指定は PyPI で照合できないので除く。
     # 同名パッケージが重複して出ることがある（nvidia-* 等）ため先勝ちで1つにする。
     # 空の venv では grep が 1 を返すが、errexit で検査全体を落とさないよう失敗を許す。
-    { uv pip freeze --python "$env/bin/python" 2>/dev/null || true; } \
-      | { grep -vE '^(-e |.* @ )' || true; } \
-      | awk -F'==' '!seen[tolower($1)]++' >"$file.txt"
+    { grep -vE '^(-e |.* @ )' <<<"$frozen" || true; } \
+      | awk -F'==' 'NF && !seen[tolower($1)]++' >"$file.txt"
     if [[ ! -s "$file.txt" ]]; then
       continue
     fi
@@ -193,7 +198,7 @@ PY
     parts+=("Vulnerable Python packages — ${joined%; }")
   fi
   if ((${#errors[@]})); then
-    parts+=("pip-audit failed for: ${errors[*]}")
+    parts+=("Audit failed for: ${errors[*]}")
   fi
   if ((${#parts[@]})); then
     local message
