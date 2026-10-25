@@ -223,17 +223,8 @@ RUN npm install -g \
     # v0.3.0: 段階的思考プロセスMCP（事前インストールで初回起動を高速化）
     @modelcontextprotocol/server-sequential-thinking
 
-# Playwright MCP が使う Google Chrome を入れます。
-# MCP はブラウザを指定しないと chrome チャネル（/opt/google/chrome/chrome）を使い、
-# 無ければ起動に失敗します。Chromium と違いリビジョンに縛られないので、
-# @playwright/mcp@latest の版が上がっても入れ直しは要りません。
-# .deb が Google の apt リポジトリを登録するので、以後は apt-get upgrade で更新されます。
-# MCP 自身のインストーラを使います（イメージは amd64 固定）。
-# chrome と一緒に入る FFmpeg も共有パスに置くよう、PLAYWRIGHT_BROWSERS_PATH を先に設定します。
-ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers
-RUN playwright-mcp install-browser --with-deps chrome \
-    && /opt/google/chrome/chrome --version \
-    && rm -rf /var/lib/apt/lists/*
+# Playwright MCP が使う Google Chrome はイメージに入れず、post-create-setup.sh で入れます。
+# イメージに焼き込むと約 530MB 増え、CI のランナーがイメージの書き出し中に止められるようになったため。
 
 # プロジェクトの E2E 向けに、Playwright の Chromium とシステム依存関係を事前取得します。
 # --with-deps フラグは、Playwright 実行に必要な apt パッケージが未導入の場合に自動で導入します
@@ -244,6 +235,7 @@ RUN playwright-mcp install-browser --with-deps chrome \
 # npx が解決した Playwright の版のリビジョンだけで、プロジェクトの版と揃うとは限りません）。
 # root の持ち物のままだと、プロジェクトの `playwright install chromium` が sudo なしで
 # 入れられず、E2E が起動時に `Executable doesn't exist at /opt/playwright-browsers/...` で止まります。
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers
 RUN npx playwright install chromium --with-deps \
     && chown -R vscode:vscode /opt/playwright-browsers \
     && chmod -R 755 /opt/playwright-browsers

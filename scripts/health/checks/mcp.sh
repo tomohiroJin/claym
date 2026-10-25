@@ -98,7 +98,7 @@ check_playwright_assets() {
   local chrome="${PLAYWRIGHT_MCP_CHROME:-/opt/google/chrome/chrome}"
   if [[ ! -f "$chrome" || ! -x "$chrome" ]]; then
     set_result "WARN" "Google Chrome for Playwright MCP missing or not executable at $chrome" \
-      "Run 'sudo --preserve-env=PLAYWRIGHT_BROWSERS_PATH playwright-mcp install-browser --with-deps chrome'"
+      "Run 'sudo --preserve-env=PLAYWRIGHT_BROWSERS_PATH env PLAYWRIGHT_SKIP_BROWSER_GC=1 playwright-mcp install-browser --with-deps chrome'"
     return
   fi
   # ブラウザ置き場は Dockerfile の PLAYWRIGHT_BROWSERS_PATH に合わせる（既定はユーザーのキャッシュ）

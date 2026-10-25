@@ -72,7 +72,48 @@ ensure_imagesorcery_log_dir() {
 }
 
 
+# Playwright MCP が既定で使う Google Chrome を入れる（冪等）。
+# MCP はブラウザを指定しないと chrome チャネル（/opt/google/chrome/chrome）を使い、無ければ起動に失敗する。
+# Chromium と違いリビジョンに縛られないので、@playwright/mcp@latest の版が上がっても入れ直しは要らない。
+# .deb が Google の apt リポジトリを登録するので、以後は apt-get upgrade で更新される。
+# イメージに焼き込むと CI のランナーが書き出し中に止められるため、作成時に入れる（Dockerfile を参照）。
+ensure_playwright_chrome() {
+  local chrome="/opt/google/chrome/chrome"
+  if [[ -x "$chrome" ]]; then
+    info "Google Chrome は導入済みです: $("$chrome" --version 2>/dev/null || echo '版の取得に失敗')"
+    return
+  fi
+  if ! have playwright-mcp; then
+    warn "playwright-mcp が見つからないため Google Chrome の導入をスキップしました。"
+    return
+  fi
+
+  info "Playwright MCP 用の Google Chrome を導入中..."
+  local log
+  log=$(mktemp)
+  # 一緒に入る FFmpeg も共有パスに置くよう、sudo でも PLAYWRIGHT_BROWSERS_PATH を引き継ぐ。
+  # PLAYWRIGHT_SKIP_BROWSER_GC=1 は、インストーラが「どの .links からも参照されない」と判断した
+  # ブラウザを共有パスから消す掃除を止める（プロジェクトの E2E 用の Chromium が消された実例がある）。
+  # ログは vscode のファイルに書く（root の出力を受けるだけなので sudo の外で開いてよい）。
+  # shellcheck disable=SC2024
+  if ! sudo --preserve-env=PLAYWRIGHT_BROWSERS_PATH env PLAYWRIGHT_SKIP_BROWSER_GC=1 \
+    playwright-mcp install-browser --with-deps chrome >"$log" 2>&1; then
+    warn "Google Chrome の導入に失敗しました（Playwright MCP は使えません）。ログの末尾:"
+    tail -n 20 "$log" >&2
+    rm -f "$log"
+    return
+  fi
+  rm -f "$log"
+  # root で入った FFmpeg も、プロジェクトが sudo なしで扱えるようにする
+  if [[ -n "${PLAYWRIGHT_BROWSERS_PATH:-}" && -d "$PLAYWRIGHT_BROWSERS_PATH" ]]; then
+    sudo chown -R vscode:vscode "$PLAYWRIGHT_BROWSERS_PATH" >/dev/null 2>&1 \
+      || warn "ブラウザ置き場の所有者変更に失敗しました: $PLAYWRIGHT_BROWSERS_PATH"
+  fi
+  info "Google Chrome を導入しました: $("$chrome" --version 2>/dev/null || echo '版の取得に失敗')"
+}
+
 ensure_imagesorcery_log_dir
+ensure_playwright_chrome
 
 if ! mcp_detect_available_clis; then
   exit 0

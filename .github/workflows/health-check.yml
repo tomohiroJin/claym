@@ -17,8 +17,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # イメージの書き出し中にエラー文なしでジョブが止まることがある（原因を調査中）。
-      # ディスクは空いていた（約 86GB）ので、メモリとカーネルのログを残して切り分ける。
+      # ランナーの資源をログに残す（イメージの書き出し中にランナーが止められたときの切り分け用）
       - name: Show runner resources
         run: |
           df -h /
@@ -42,15 +41,6 @@ jobs:
             cat health-check-result.json
             # Run health check and allow warnings (exit code 2)
             scripts/health/check-environment.sh --no-color || [ $? -eq 2 ]
-
-      - name: Show runner diagnostics on failure
-        if: failure()
-        run: |
-          df -h /
-          free -h
-          # OOM killer がプロセスを止めていれば、ここに記録が残る
-          sudo dmesg | grep -iE 'out of memory|oom|killed process' || echo "no OOM records in dmesg"
-          docker ps -a || true
 
       - name: Upload health check results
         if: always()
