@@ -17,16 +17,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # devcontainer のイメージが大きく（Chrome を入れて約 530MB 増えた）、ランナーの
-      # ディスクが足りないとイメージの書き出し中にエラー文なしでジョブが止まる。
-      # 使わないプリインストールのツールを消して空きを作り、前後の空き容量をログに残す。
-      - name: Free disk space on runner
+      # イメージの書き出し中にエラー文なしでジョブが止まることがある（原因を調査中）。
+      # ディスクは空いていた（約 86GB）ので、メモリとカーネルのログを残して切り分ける。
+      - name: Show runner resources
         run: |
           df -h /
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup \
-            /opt/hostedtoolcache/CodeQL /usr/local/share/boost /usr/local/share/powershell
-          sudo docker image prune --all --force
-          df -h /
+          free -h
+          nproc
 
       - name: Run setup scripts tests in dev container
         uses: devcontainers/ci@v0.3
@@ -45,6 +42,15 @@ jobs:
             cat health-check-result.json
             # Run health check and allow warnings (exit code 2)
             scripts/health/check-environment.sh --no-color || [ $? -eq 2 ]
+
+      - name: Show runner diagnostics on failure
+        if: failure()
+        run: |
+          df -h /
+          free -h
+          # OOM killer がプロセスを止めていれば、ここに記録が残る
+          sudo dmesg | grep -iE 'out of memory|oom|killed process' || echo "no OOM records in dmesg"
+          docker ps -a || true
 
       - name: Upload health check results
         if: always()
