@@ -252,6 +252,26 @@ test_security_checks_fail_safe() {
     grep -q "\[PASS\].*Python package vulnerabilities:" <<<"$output"
 }
 
+# テスト19: Playwright の検査が MCP 用の Chrome とブラウザ置き場を見ていること
+# 以前は ~/.cache/ms-playwright を見ていて、PLAYWRIGHT_BROWSERS_PATH の中身を見ずに常に WARN だった。
+# 偽の Chrome とブラウザ置き場を渡し、実際のコンテナの状態に左右されないようにする。
+test_playwright_assets_check() {
+    local tmp missing present
+    tmp=$(mktemp -d)
+    mkdir -p "$tmp/browsers/chromium-9999"
+    printf '#!/bin/sh\n' >"$tmp/chrome" && chmod +x "$tmp/chrome"
+    local -a skip=(--skip apt-security-updates --skip python-vulnerabilities)
+
+    missing=$(PLAYWRIGHT_MCP_CHROME="$tmp/no-chrome" PLAYWRIGHT_BROWSERS_PATH="$tmp/browsers" \
+        "$CHECK_SCRIPT" --no-color "${skip[@]}" 2>&1 || true)
+    present=$(PLAYWRIGHT_MCP_CHROME="$tmp/chrome" PLAYWRIGHT_BROWSERS_PATH="$tmp/browsers" \
+        "$CHECK_SCRIPT" --no-color "${skip[@]}" 2>&1 || true)
+    rm -rf "$tmp"
+
+    grep -q "\[WARN\].*Playwright assets: Google Chrome for Playwright MCP missing" <<<"$missing" && \
+    grep -q "\[PASS\].*Playwright assets:.*chromium-9999" <<<"$present"
+}
+
 # =============================================================================
 # メイン実行
 # =============================================================================
@@ -286,6 +306,7 @@ main() {
     run_test "脆弱性チェックの登録" test_security_checks_registered
     run_test "脆弱性チェックが既知の陽性を検出" test_security_checks_detect_known_positive
     run_test "脆弱性チェックが検査不能時に PASS も異常終了もしない" test_security_checks_fail_safe
+    run_test "Playwright の検査が MCP 用の Chrome とブラウザ置き場を見る" test_playwright_assets_check
     echo ""
 
     # サマリ表示

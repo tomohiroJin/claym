@@ -94,18 +94,23 @@ check_serena_ready() {
 }
 
 check_playwright_assets() {
-  local cache_dir="${HOME}/.cache/ms-playwright"
-  if [[ ! -d "$cache_dir" ]]; then
-    set_result "WARN" "Playwright cache dir missing at $cache_dir" "Run 'npx playwright install chromium --with-deps'"
+  # Playwright MCP はブラウザ指定なしだと chrome チャネルを使うので、まず Chrome を見る
+  local chrome="${PLAYWRIGHT_MCP_CHROME:-/opt/google/chrome/chrome}"
+  if [[ ! -x "$chrome" ]]; then
+    set_result "WARN" "Google Chrome for Playwright MCP missing at $chrome" \
+      "Run 'sudo node /usr/lib/node_modules/@playwright/mcp/node_modules/playwright-core/cli.js install --with-deps chrome'"
     return
   fi
+  # ブラウザ置き場は Dockerfile の PLAYWRIGHT_BROWSERS_PATH に合わせる（既定はユーザーのキャッシュ）
+  local browsers_dir="${PLAYWRIGHT_BROWSERS_PATH:-${HOME}/.cache/ms-playwright}"
   local chromium_dir
-  chromium_dir=$(find "$cache_dir" -maxdepth 1 -type d -name 'chromium-*' | head -n1 || true)
+  chromium_dir=$(find "$browsers_dir" -maxdepth 1 -type d -name 'chromium-*' 2>/dev/null | head -n1 || true)
   if [[ -z "$chromium_dir" ]]; then
-    set_result "WARN" "No chromium bundle found in $cache_dir" "Re-run Playwright install step"
+    set_result "WARN" "Chrome present, but no Chromium bundle in $browsers_dir" \
+      "Run 'npx playwright install chromium' (needed only for project E2E tests)"
     return
   fi
-  set_result "PASS" "Playwright Chromium assets present" ""
+  set_result "PASS" "Chrome for MCP and Chromium bundle ($(basename "$chromium_dir")) present" ""
 }
 
 check_log_diagnostics() {
