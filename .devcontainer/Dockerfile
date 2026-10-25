@@ -223,16 +223,18 @@ RUN npm install -g \
     # v0.3.0: 段階的思考プロセスMCP（事前インストールで初回起動を高速化）
     @modelcontextprotocol/server-sequential-thinking
 
-# Playwright のブラウザ本体とシステム依存関係を事前取得して、
-# MCP の初回利用時の待ち時間をなくします。--with-deps フラグは、
-# Playwright 実行に必要な apt パッケージが未導入の場合に自動で導入します
+# Playwright MCP が使う Google Chrome はイメージに入れず、post-create-setup.sh で入れます。
+# イメージに焼き込むと約 530MB 増え、CI のランナーがイメージの書き出し中に止められるようになったため。
+
+# プロジェクトの E2E 向けに、Playwright の Chromium とシステム依存関係を事前取得します。
+# --with-deps フラグは、Playwright 実行に必要な apt パッケージが未導入の場合に自動で導入します
 # （既に存在するものは暗黙的にスキップされます）。
 # ブラウザを共有パスにインストールし、非 root ユーザーからもアクセス可能にします。
 # 所有者は vscode にします。プロジェクトが固定する Playwright の版は依存の更新で
 # 上がり、そのたびに別のリビジョンのブラウザが要ります（ここで入れるのは、ビルド時に
-# npx が解決した Playwright の版のリビジョンだけで、MCP やプロジェクトの版と揃うとは限りません）。
+# npx が解決した Playwright の版のリビジョンだけで、プロジェクトの版と揃うとは限りません）。
 # root の持ち物のままだと、プロジェクトの `playwright install chromium` が sudo なしで
-# 入れられず、E2E が「Chromium revision NNNN が見つかりません」で止まります。
+# 入れられず、E2E が起動時に `Executable doesn't exist at /opt/playwright-browsers/...` で止まります。
 ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers
 RUN npx playwright install chromium --with-deps \
     && chown -R vscode:vscode /opt/playwright-browsers \

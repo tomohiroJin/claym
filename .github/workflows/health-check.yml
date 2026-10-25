@@ -17,6 +17,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # ランナーの資源をログに残す（イメージの書き出し中にランナーが止められたときの切り分け用）
+      - name: Show runner resources
+        run: |
+          df -h /
+          free -h
+          nproc
+
       - name: Run setup scripts tests in dev container
         uses: devcontainers/ci@v0.3
         with:
