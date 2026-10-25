@@ -228,9 +228,10 @@ RUN npm install -g \
 # 無ければ起動に失敗します。Chromium と違いリビジョンに縛られないので、
 # @playwright/mcp@latest の版が上がっても入れ直しは要りません。
 # .deb が Google の apt リポジトリを登録するので、以後は apt-get upgrade で更新されます。
-# MCP 自身が依存する playwright-core のインストーラを使います（イメージは amd64 固定）。
-RUN node /usr/lib/node_modules/@playwright/mcp/node_modules/playwright-core/cli.js \
-        install --with-deps chrome \
+# MCP 自身のインストーラを使います（イメージは amd64 固定）。
+# chrome と一緒に入る FFmpeg も共有パスに置くよう、PLAYWRIGHT_BROWSERS_PATH を先に設定します。
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers
+RUN playwright-mcp install-browser --with-deps chrome \
     && /opt/google/chrome/chrome --version \
     && rm -rf /var/lib/apt/lists/*
 
@@ -243,7 +244,6 @@ RUN node /usr/lib/node_modules/@playwright/mcp/node_modules/playwright-core/cli.
 # npx が解決した Playwright の版のリビジョンだけで、プロジェクトの版と揃うとは限りません）。
 # root の持ち物のままだと、プロジェクトの `playwright install chromium` が sudo なしで
 # 入れられず、E2E が起動時に `Executable doesn't exist at /opt/playwright-browsers/...` で止まります。
-ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers
 RUN npx playwright install chromium --with-deps \
     && chown -R vscode:vscode /opt/playwright-browsers \
     && chmod -R 755 /opt/playwright-browsers

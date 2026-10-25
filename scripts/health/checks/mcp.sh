@@ -96,9 +96,9 @@ check_serena_ready() {
 check_playwright_assets() {
   # Playwright MCP はブラウザ指定なしだと chrome チャネルを使うので、まず Chrome を見る
   local chrome="${PLAYWRIGHT_MCP_CHROME:-/opt/google/chrome/chrome}"
-  if [[ ! -x "$chrome" ]]; then
-    set_result "WARN" "Google Chrome for Playwright MCP missing at $chrome" \
-      "Run 'sudo node /usr/lib/node_modules/@playwright/mcp/node_modules/playwright-core/cli.js install --with-deps chrome'"
+  if [[ ! -f "$chrome" || ! -x "$chrome" ]]; then
+    set_result "WARN" "Google Chrome for Playwright MCP missing or not executable at $chrome" \
+      "Run 'sudo playwright-mcp install-browser --with-deps chrome'"
     return
   fi
   # ブラウザ置き場は Dockerfile の PLAYWRIGHT_BROWSERS_PATH に合わせる（既定はユーザーのキャッシュ）

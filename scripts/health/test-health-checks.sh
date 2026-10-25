@@ -256,20 +256,31 @@ test_security_checks_fail_safe() {
 # 以前は ~/.cache/ms-playwright を見ていて、PLAYWRIGHT_BROWSERS_PATH の中身を見ずに常に WARN だった。
 # 偽の Chrome とブラウザ置き場を渡し、実際のコンテナの状態に左右されないようにする。
 test_playwright_assets_check() {
-    local tmp missing present
+    local tmp
     tmp=$(mktemp -d)
-    mkdir -p "$tmp/browsers/chromium-9999"
+    mkdir -p "$tmp/browsers/chromium-9999" "$tmp/empty"
     printf '#!/bin/sh\n' >"$tmp/chrome" && chmod +x "$tmp/chrome"
-    local -a skip=(--skip apt-security-updates --skip python-vulnerabilities)
+    printf '#!/bin/sh\n' >"$tmp/chrome-noexec"
 
-    missing=$(PLAYWRIGHT_MCP_CHROME="$tmp/no-chrome" PLAYWRIGHT_BROWSERS_PATH="$tmp/browsers" \
-        "$CHECK_SCRIPT" --no-color "${skip[@]}" 2>&1 || true)
-    present=$(PLAYWRIGHT_MCP_CHROME="$tmp/chrome" PLAYWRIGHT_BROWSERS_PATH="$tmp/browsers" \
-        "$CHECK_SCRIPT" --no-color "${skip[@]}" 2>&1 || true)
+    # 1 回の実行で見られるのは 1 通りなので、条件ごとに実行して結果の行だけを集める
+    run_pw() {
+        PLAYWRIGHT_MCP_CHROME="$1" PLAYWRIGHT_BROWSERS_PATH="$2" "$CHECK_SCRIPT" --no-color \
+            --skip apt-security-updates --skip python-vulnerabilities 2>&1 | grep "Playwright assets:" || true
+    }
+    local missing noexec no_chromium no_dir present
+    missing=$(run_pw "$tmp/no-chrome" "$tmp/browsers")
+    noexec=$(run_pw "$tmp/chrome-noexec" "$tmp/browsers")
+    no_chromium=$(run_pw "$tmp/chrome" "$tmp/empty")
+    # 存在しないブラウザ置き場でも検査全体を落とさず WARN を返すこと
+    no_dir=$(run_pw "$tmp/chrome" "$tmp/no-such-dir")
+    present=$(run_pw "$tmp/chrome" "$tmp/browsers")
     rm -rf "$tmp"
 
-    grep -q "\[WARN\].*Playwright assets: Google Chrome for Playwright MCP missing" <<<"$missing" && \
-    grep -q "\[PASS\].*Playwright assets:.*chromium-9999" <<<"$present"
+    grep -q "\[WARN\].*Google Chrome for Playwright MCP missing" <<<"$missing" && \
+    grep -q "\[WARN\].*Google Chrome for Playwright MCP missing or not executable" <<<"$noexec" && \
+    grep -q "\[WARN\].*no Chromium bundle" <<<"$no_chromium" && \
+    grep -q "\[WARN\].*no Chromium bundle" <<<"$no_dir" && \
+    grep -q "\[PASS\].*chromium-9999" <<<"$present"
 }
 
 # =============================================================================
